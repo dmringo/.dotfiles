@@ -102,23 +102,28 @@
 (setq vc-make-backup-files t)
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
 
-(use-package undo-tree :init (global-undo-tree-mode))
+(use-package undo-tree :config (global-undo-tree-mode))
 (use-package magit
   :bind (("C-M-g" . magit-status)))
 (use-package gitignore-mode)
 (use-package intero)
 (use-package haskell-mode
-  :init (add-hook 'haskell-mode-hook 'intero-mode))
+  :config (add-hook 'haskell-mode-hook 'intero-mode))
 (use-package company)
 (use-package company-ghc
-  :init
+  :config
   (add-to-list 'company-backends 'company-ghc))
 (use-package exec-path-from-shell
   :init (when (memq window-system '(mac ns x))
           (exec-path-from-shell-initialize)))
 (use-package smart-mode-line)
+(use-package idris-mode
+  :bind (:map idris-repl-mode-map
+              ("C-c C-k" . idris-repl-clear-buffer))
+  )
+(use-package helm-idris)
 (use-package smartparens
-  :init (add-hook 'prog-mode-hook 'smartparens-mode)
+  :config (add-hook 'prog-mode-hook 'smartparens-mode) 
   :bind (:map smartparens-mode-map
               ("C-c u w" . sp-unwrap-sexp))
   )
@@ -127,10 +132,10 @@
 ;; Whitespace-related
 (setq whitespace-style '(face tabs lines-tail empty trailing))
 (use-package whitespace-cleanup-mode
-  :init (add-hook 'prog-mode-hook 'whitespace-cleanup-mode))
+  :config (add-hook 'prog-mode-hook 'whitespace-cleanup-mode))
 
 (use-package rainbow-delimiters
-  :init (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
+  :config (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
 (use-package hydra)
 (use-package beacon
   :init
@@ -145,7 +150,7 @@
 (use-package my-split-window
   :ensure f
   :load-path "lisp/"
-  :init
+  :config
   (setq split-window-preferred-function 'my-split-window-sensibly))
 
 (use-package pdf-tools)
@@ -153,12 +158,37 @@
 (use-package fill-column-indicator)
 (use-package rainbow-mode)
 (use-package centered-window-mode)
+(use-package math-symbol-lists
+  :config
+  (quail-define-package "math" "UTF-8" "Ω" t)
+  (quail-define-rules ; add whatever extra rules you want to define here...
+   ("->"        "→")
+   ("\\from"    #X2190)
+   ("\\to"      #X2192)
+   ("\\lhd"     #X22B2)
+   ("\\rhd"     #X22B3)
+   ("\\unlhd"   #X22B4)
+   ("\\unrhd"   #X22B5))
+  (mapc (lambda (x)
+          (if (cddr x)
+              (quail-defrule (cadr x) (car (cddr x)))))
+        (append math-symbol-list-basic math-symbol-list-extended))
+  )
 
 (use-package racket-mode)
 (use-package markdown-mode+)
 (use-package pandoc-mode)
 (use-package markdown-mode
-  :init (add-hook 'markdown-mode-hook 'pandoc-mode))
+  :config
+  (add-hook 'markdown-mode-hook 'pandoc-mode)
+  (add-hook 'markdown-mode-hook 'smartparens-mode)
+  (sp-with-modes 'markdown-mode
+    (sp-local-pair "```" "```")
+    (sp-local-pair "*" "*")
+    (sp-local-pair "_" "_")
+    )
+  
+  )
 
 (use-package smooth-scrolling :init (smooth-scrolling-mode))
 
@@ -167,7 +197,7 @@
 
 (use-package helm
   :diminish helm-mode
-  :init
+  :config
   (progn
     (require 'helm-config)
     (setq helm-candidate-number-limit 100)
@@ -225,7 +255,7 @@
     ("88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" "a7f650df529ed4ab5800925efcfa7361579a2497161a024a470bd5080cf126d3" "aa4dbd81f4771c8589613b327ac85d5ae33b2c3b3056e17064da67f9204a6c18" "efde9eaaa10eea5403ab7f52e01f19bd81d0e8f3bc6edbc32033d9f0b34b329d" "04dc5f91125f3af369c7e13ed4ade69939309fa25f0adb4147e4ea3f168b368c" "b4eb2237584b265184a39bdd44e01d24ff1dd2e31fb2536c047e7b2ec44bbd9c" "a34e11dca3fc94c9d6e5f4ebbef222e060884eb6187a56286d36973b9c0f3776" default)))
  '(package-selected-packages
    (quote
-    (whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree kaolin-theme rainbow-delimiters smartparens use-package))))
+    (math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree kaolin-theme rainbow-delimiters smartparens use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
