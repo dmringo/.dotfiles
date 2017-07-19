@@ -7,8 +7,8 @@
 
 ;; Good to have some secrets
 (let ((s-file (expand-file-name "secrets.el" "~/.emacs.d")))
-        (when (file-exists-p s-file)
-          (load s-file)))
+  (when (file-exists-p s-file)
+    (load s-file)))
 
 
 (setq package-archives
@@ -89,6 +89,18 @@
 
 
 (setq-default fill-column 80)
+
+;; Monospaced font with great Unicode support for mathy symbols
+;; http://www.evertype.com/emono/
+(defconst everson-mono "Everson Mono-13:bold")
+(add-to-list 'default-frame-alist `(font . ,everson-mono))
+;; note for future me: backtick permits use of commas for evaluation inside a
+;; quoted thing
+
+
+
+;; Don't like the startup screen
+(setq inhibit-startup-screen t)
 
 ;; Make C look the way I want it to
 (setq c-default-style "linux"
