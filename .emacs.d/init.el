@@ -114,7 +114,12 @@
 (setq vc-make-backup-files t)
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
 
-(use-package undo-tree :config (global-undo-tree-mode))
+;; Undo-tree is great - enable it globally and remove it from the modeline
+;; (since it should always be active)
+(use-package undo-tree
+  :diminish undo-tree-mode
+  :config (global-undo-tree-mode))
+
 (use-package magit
   :bind (("C-M-g" . magit-status)))
 (use-package gitignore-mode)
