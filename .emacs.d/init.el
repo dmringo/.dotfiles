@@ -188,6 +188,7 @@
   (quail-define-package "math" "UTF-8" "Ω" t)
   (quail-define-rules ; add whatever extra rules you want to define here...
    ("->"      "→")
+   ("\\bolt"  "⭍") ; Note: This is not covered by Everson Mono
    ("\\from"  #X2190)
    ("\\to"    #X2192)
    ("\\lhd"   #X22B2)
