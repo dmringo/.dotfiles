@@ -333,7 +333,6 @@
     (helm-mode))
   :bind (("C-c h"     . helm-mini)
          ("C-h a"     . helm-apropos)
-         ("C-x C-b"   . helm-buffers-list)
          ("C-x b"     . helm-buffers-list)
          ("C-x C-f"   . helm-find-files)
          ("M-y"       . helm-show-kill-ring)
