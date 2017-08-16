@@ -167,16 +167,29 @@
   (beacon-mode 1)
   (setq beacon-blink-when-point-moves-horizontally nil
         beacon-blink-when-point-moves-vertically nil
-        beacon-blink-when-window-scrolls 0))
+        beacon-blink-when-window-scrolls 0
+        beacon-color "navajo white"))
 
-(use-package my-kaolin-theme
-  :ensure f
-  :load-path "lisp/")
+;; Local "packages"
+(let ((theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
+  (add-to-list 'custom-theme-load-path theme-dir))
+
+
+;; (use-package my-kaolin-theme
+;;   :ensure f
+;;   :load-path "lisp/"
+;;   :config (load-theme "my-kaolin")
+;;   )
 (use-package my-split-window
   :ensure f
   :load-path "lisp/"
   :config
   (setq split-window-preferred-function 'my-split-window-sensibly))
+(use-package unfill
+  :ensure f
+  :load-path "lisp/"
+  :bind ("M-Q" . unfill-paragraph)
+  )
 
 (use-package pdf-tools)
 (use-package nav-flash)
@@ -369,16 +382,19 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(beacon-color "navajo white")
+
  '(custom-safe-themes
    (quote
-    ("88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" "a7f650df529ed4ab5800925efcfa7361579a2497161a024a470bd5080cf126d3" "aa4dbd81f4771c8589613b327ac85d5ae33b2c3b3056e17064da67f9204a6c18" "efde9eaaa10eea5403ab7f52e01f19bd81d0e8f3bc6edbc32033d9f0b34b329d" "04dc5f91125f3af369c7e13ed4ade69939309fa25f0adb4147e4ea3f168b368c" "b4eb2237584b265184a39bdd44e01d24ff1dd2e31fb2536c047e7b2ec44bbd9c" "a34e11dca3fc94c9d6e5f4ebbef222e060884eb6187a56286d36973b9c0f3776" default)))
+    ("88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" default)))
  '(package-selected-packages
    (quote
-    (edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree kaolin-theme rainbow-delimiters smartparens use-package))))
+    (edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+;; let Custom declare this safe before loading it
+(load-theme 'my-kaolin)
