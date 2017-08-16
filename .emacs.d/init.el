@@ -208,6 +208,8 @@
    ("\\rhd"   #X22B3)
    ("\\unlhd" #X22B4)
    ("\\unrhd" #X22B5)
+   ("\\Land"  "⋀") ; n-ary logical and
+   ("\\Lor"   "⋁") ; n-ary logical or
    ("\\ltE"   "Ɛ") ; latin capital letter open E
    ("\\lthkD" "Ɗ") ; latin capital letter D with hook
    ("\\lthkP" "Ƥ") ; latin capital letter P with hook
@@ -320,8 +322,6 @@
   :config
   (add-hook 'markdown-mode-hook 'pandoc-mode)
   (add-hook 'markdown-mode-hook 'smartparens-mode)
-  
-  
   )
 
 (use-package smooth-scrolling :init (smooth-scrolling-mode))
