@@ -202,12 +202,12 @@
   (quail-define-rules ; add whatever extra rules you want to define here...
    ("->"      "→")
    ("\\bolt"  "⭍") ; Note: This is not covered by Everson Mono
-   ("\\from"  #X2190)
-   ("\\to"    #X2192)
-   ("\\lhd"   #X22B2)
-   ("\\rhd"   #X22B3)
-   ("\\unlhd" #X22B4)
-   ("\\unrhd" #X22B5)
+   ("\\from"  "←")
+   ("\\to"    "→")
+   ("\\lhd"   "⊲")
+   ("\\rhd"   "⊳")
+   ("\\unlhd" "⊴")
+   ("\\unrhd" "⊵")
    ("\\Land"  "⋀") ; n-ary logical and
    ("\\Lor"   "⋁") ; n-ary logical or
    ("\\ltE"   "Ɛ") ; latin capital letter open E
@@ -217,6 +217,7 @@
    ("\\lthkB" "Ɓ") ; latin capital letter B with hook
    ("\\lthkK" "Ƙ") ; latin capital letter K with hook
    ("\\hdots" "…") ; better than \cdots (not midline)
+   ;Everything below this is stolen from the TeX input method
    ("^("      "⁽")
    ("^)"      "⁾")
    ("^+"      "⁺")
