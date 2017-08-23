@@ -1,5 +1,7 @@
 *
-!lisp/*
-!lisp  
+!/lisp
+!/lisp/*
+!/lisp/themes
+!/lisp/themes/*
 !init.el
 !.gitignore
