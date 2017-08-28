@@ -382,7 +382,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-
  '(custom-safe-themes
    (quote
     ("88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" default)))
@@ -394,7 +393,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(fringe ((t (:background "#1b1b1b")))))
 
 ;; let Custom declare this safe before loading it
 (load-theme 'my-kaolin)
