@@ -175,11 +175,6 @@
   (add-to-list 'custom-theme-load-path theme-dir))
 
 
-;; (use-package my-kaolin-theme
-;;   :ensure f
-;;   :load-path "lisp/"
-;;   :config (load-theme "my-kaolin")
-;;   )
 (use-package my-split-window
   :ensure f
   :load-path "lisp/"
