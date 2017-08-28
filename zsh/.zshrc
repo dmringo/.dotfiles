@@ -1,3 +1,19 @@
+# The following lines were added by compinstall
+zstyle :compinstall filename '/home/david/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.histfile
+HISTSIZE=10000
+SAVEHIST=10000
+setopt appendhistory autocd extendedglob nomatch notify
+unsetopt beep
+bindkey -e
+# End of lines configured by zsh-newuser-install
+
+
 # Check if zplug is installed
 export ZPLUG_HOME="$MY_ZSH_HOME/.zplug"
 
@@ -18,6 +34,7 @@ zplug "knu/z", use:z.sh, defer:2
 
 # my own fancy prompt and theme
 zplug "$MY_ZSH_HOME", from:local, as:theme, use:"dmr.zsh-theme"
+
 
 # l with fancy colors and git info
 zplug "supercrabtree/k"
