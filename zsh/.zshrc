@@ -1,4 +1,18 @@
 # The following lines were added by compinstall
+
+zstyle ':completion:*' completer _expand _complete _ignored _match _approximate _prefix
+zstyle ':completion:*' completions 1
+zstyle ':completion:*' format 'Completing %d ...'
+zstyle ':completion:*' glob 1
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*' list-colors ''
+zstyle ':completion:*' matcher-list 'm:{[:lower:]}={[:upper:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'r:|[._-]=** r:|=**' 'l:|=* r:|=*'
+zstyle ':completion:*' max-errors 2
+zstyle ':completion:*' menu select=0
+zstyle ':completion:*' prompt '%e errors corrected for completion'
+zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
+zstyle ':completion:*' substitute 1
+zstyle ':completion:*' word true
 zstyle :compinstall filename '/home/david/.zshrc'
 
 autoload -Uz compinit
@@ -12,7 +26,6 @@ setopt appendhistory autocd extendedglob nomatch notify
 unsetopt beep
 bindkey -e
 # End of lines configured by zsh-newuser-install
-
 
 # Check if zplug is installed
 export ZPLUG_HOME="$MY_ZSH_HOME/.zplug"
@@ -56,6 +69,8 @@ type brew 2>&1 > /dev/null && zplug "vasyharan/zsh-brew-services"
 
 # ZSH scripting hints
 zplug "joepvd/zsh-hints"
+
+zplug "BurntSushi/ripgrep", as:command, use:'complete/_rg'
 
 # Install packages that have not been installed yet
 if ! zplug check --verbose; then
