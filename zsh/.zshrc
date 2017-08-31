@@ -1,5 +1,4 @@
 # The following lines were added by compinstall
-
 zstyle ':completion:*' completer _expand _complete _ignored _match _approximate _prefix
 zstyle ':completion:*' completions 1
 zstyle ':completion:*' format 'Completing %d ...'
@@ -13,7 +12,7 @@ zstyle ':completion:*' prompt '%e errors corrected for completion'
 zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
 zstyle ':completion:*' substitute 1
 zstyle ':completion:*' word true
-zstyle :compinstall filename '/home/david/.zshrc'
+zstyle :compinstall filename '/$HOME/.zshrc'
 
 autoload -Uz compinit
 compinit
