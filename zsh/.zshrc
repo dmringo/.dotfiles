@@ -60,6 +60,9 @@ zplug "plugins/git", from:oh-my-zsh
 # Haskell stack
 zplug "plugins/stack", from:oh-my-zsh
 
+# pandoc completion
+zplug "srijanshetty/zsh-pandoc-completion"
+
 # Keybase.io
 type keybase 2>&1 > /dev/null && zplug "rbirnie/oh-my-zsh-keybase"
 
