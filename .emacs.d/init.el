@@ -146,10 +146,15 @@
     (sp-local-pair "```" "```")
     (sp-local-pair "*" "*")
     (sp-local-pair "_" "_")
+    (sp-local-pair "$" "$")  ; for pandoc LaTeX math extension
     (sp-local-pair "⟦" "⟧")  ; fancy brackets for semantic functions
     )
   :bind (:map smartparens-mode-map
-              ("C-c u w" . sp-unwrap-sexp))
+              ("C-c u w" . sp-unwrap-sexp)
+              ("C-M-f"   . sp-foward-sexp)
+              ("C-M-b"   . sp-backward-sexp)
+              ("C-M-k"   . sp-kill-sexp)
+              )
   )
 
 
@@ -200,6 +205,8 @@
   (quail-define-package "math" "UTF-8" "Ω" t)
   (quail-define-rules ; add whatever extra rules you want to define here...
    ("->"      "→")
+   ("<=>"     "↔")
+   ("\\iff"   "↔")
    ("\\bolt"  "⭍") ; Note: This is not covered by Everson Mono
    ("\\from"  "←")
    ("\\to"    "→")
