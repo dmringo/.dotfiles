@@ -175,26 +175,6 @@
         beacon-blink-when-window-scrolls 0
         beacon-color "navajo white"))
 
-;; Local "packages"
-(let ((theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
-  (add-to-list 'custom-theme-load-path theme-dir))
-
-
-(use-package my-split-window
-  :ensure f
-  :load-path "lisp/"
-  :config
-  (setq split-window-preferred-function 'my-split-window-sensibly))
-(use-package unfill
-  :ensure f
-  :load-path "lisp/"
-  :bind ("M-Q" . unfill-paragraph)
-  )
-(use-package ulam
-  :ensure f
-  :load-path "lisp/"
-  )
-
 (use-package pdf-tools)
 (use-package nav-flash)
 (use-package fill-column-indicator)
@@ -373,12 +353,29 @@
 (use-package helm-ag)
 (use-package helm-ghc)
 (use-package helm-unicode)
-
 (use-package helm-descbinds
   :defer t
   :bind (("C-h b" . helm-descbinds)
          ("C-h w" . helm-descbinds)))
 
+;; Local "packages"
+(let ((theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
+  (add-to-list 'custom-theme-load-path theme-dir))
+
+(use-package my-utils
+  :demand
+  :ensure f
+  :load-path "lisp/"
+  :bind ("M-Q" . unfill-paragraph)
+  :config
+  (require 'pandoc-mode)
+  (!cons '("lines" . my/pandoc-include-lines) pandoc-directives))
+
+;; for Ackley's Living Computation course. C-derived major-mode
+(use-package ulam 
+  :ensure f
+  :load-path "lisp/"
+  )
 
 ;; Help emacs print Unicode stuff?
 (setq ps-multibyte-buffer :bdf-font-except-latin)
@@ -394,7 +391,7 @@
     ("88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" default)))
  '(package-selected-packages
    (quote
-    (edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package))))
+    (my-utils edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
