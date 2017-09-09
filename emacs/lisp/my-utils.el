@@ -11,13 +11,13 @@
 ;; This is a likely fragile function used for a pandoc-mode @@-directive to
 ;; include lines from a file.
 (defun my/pandoc-include-lines (_ &optional spec)
-  (let* ((split (split-string spec ":"))
+  (let* ((split    (split-string spec ":"))
          (filename (car split))
-         (start (cadr split))
-         (end   (caddr split))
-         (cmd   (format
-                 "sed -ne '%s,%sp' %s"
-                 start end filename)))
+         (start    (cadr split))
+         (end      (caddr split))
+         (cmd      (format
+                    "sed -ne '%s,%sp' %s"
+                    start end filename)))
     (shell-command-to-string cmd)
     ))
 
