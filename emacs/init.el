@@ -69,9 +69,9 @@
 (setq-default split-height-threshold 80
               split-width-threshold 160)
 
-;; Full-screen 4 lyfe
-(toggle-frame-fullscreen)
-
+;; Full-screen binding
+(global-set-key (kbd "s-<return>") 'toggle-frame-fullscreen)
+  
 ;; Make paste over selection *replace* the selection
 (delete-selection-mode)
 
@@ -369,7 +369,7 @@
   :bind ("M-Q" . unfill-paragraph)
   :config
   (require 'pandoc-mode)
-  (!cons '("lines" . my/pandoc-include-lines) pandoc-directives))
+  (push '("lines" . my/pandoc-include-lines) pandoc-directives))
 
 ;; for Ackley's Living Computation course. C-derived major-mode
 (use-package ulam 
