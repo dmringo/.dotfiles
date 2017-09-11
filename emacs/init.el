@@ -6,19 +6,16 @@
 (setq gc-cons-threshold (* 100 1024 1024))
 (package-initialize)
 
-
 ;; Good to have some secrets
 (let ((s-file (expand-file-name "secrets.el" "~/.emacs.d")))
   (when (file-exists-p s-file)
     (load s-file)))
-
 
 (setq package-archives
       '(("gnu"          . "https://elpa.gnu.org/packages/")
         ("marmalade"    . "https://marmalade-repo.org/packages/")
         ("melpa-stable" . "https://stable.melpa.org/packages/")
         ("melpa"        . "https://melpa.org/packages/")))
-
 
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
@@ -31,90 +28,8 @@
 (require 'diminish)                ;; if you use :diminish
 (require 'bind-key)                ;; if you use any :bind variant
 
-
 (use-package auto-compile
   :config (auto-compile-on-load-mode))
-
-;; Always move to help window after opening (easier to close)
-(setq help-window-select t)
-
-
-;; Personal global keybindings
-(mapcar
- (lambda (pr) (global-set-key (kbd (car pr)) (cdr pr)))        
- '(
-   ;; Simpler buffer and window nav
-   ("C-<tab>" . other-window)
-   ("<C-iso-lefttab>" . (lambda () (interactive) (other-window -1)))
-   ("M-["     . previous-buffer)
-   ("M-]"     . next-buffer)
-   ;; Slightly quicker Kill this buffer
-   ("C-x C-k" . kill-this-buffer)
-   ;; I'm always aligning things
-   ("C-M-;"   . align-regexp)
-   )
- )
-
-;; Be Lazy, prefer Y or N to Yes or No
-(fset 'yes-or-no-p 'y-or-n-p)
-
-;; Bars suck
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
-
-;; Make the fringes smaller
-(setq default-left-fringe-width 5
-      default-right-fringe-width 5)
-
-;; prefer vertical splits
-(setq-default split-height-threshold 80
-              split-width-threshold 160)
-
-;; Full-screen binding
-(global-set-key (kbd "s-<return>") 'toggle-frame-fullscreen)
-  
-;; Make paste over selection *replace* the selection
-(delete-selection-mode)
-
-;; Column numbers are good though
-(column-number-mode)
-
-;; Good to know where the cursor is
-(global-hl-line-mode)
-
-;; Basic indentation rules
-(setq-default indent-tabs-mode nil
-              tab-width 2
-              indent-line-function 'insert-tab)
-
-
-
-(setq-default fill-column 80)
-
-;; Monospaced font with great Unicode support for mathy symbols
-;; http://www.evertype.com/emono/
-(defconst everson-mono "Everson Mono-14:bold")
-(add-to-list 'default-frame-alist `(font . ,everson-mono))
-;; note for future me: backtick permits use of commas for evaluation inside a
-;; quoted thing
-
-
-
-;; Don't like the startup screen
-(setq inhibit-startup-screen t)
-
-;; Make C look the way I want it to
-(setq c-default-style "linux"
-      c-basic-offset 2)
-
-
-;; Backup policy
-(setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
-(setq delete-old-versions -1)
-(setq version-control t)
-(setq vc-make-backup-files t)
-(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
 
 ;; Undo-tree is great - enable it globally and remove it from the modeline
 ;; (since it should always be active)
@@ -132,9 +47,7 @@
 (use-package company-ghc
   :config
   (add-to-list 'company-backends 'company-ghc))
-(use-package exec-path-from-shell
-  :init (when (memq window-system '(mac ns x))
-          (exec-path-from-shell-initialize)))
+(use-package exec-path-from-shell)
 (use-package smart-mode-line)
 (use-package idris-mode
   :bind (:map idris-repl-mode-map
@@ -159,13 +72,9 @@
               )
   )
 
-
-
 ;; Whitespace-related
-(setq whitespace-style '(face tabs lines-tail empty trailing))
 (use-package whitespace-cleanup-mode
   :config (add-hook 'prog-mode-hook 'whitespace-cleanup-mode))
-
 (use-package rainbow-delimiters
   :config (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
 (use-package hydra)
@@ -176,7 +85,6 @@
         beacon-blink-when-point-moves-vertically nil
         beacon-blink-when-window-scrolls 0
         beacon-color "navajo white"))
-
 (use-package pdf-tools)
 (use-package nav-flash)
 (use-package fill-column-indicator)
@@ -189,7 +97,6 @@
    ("->"      "→")
    ("<=>"     "↔")
    ("\\iff"   "↔")
-   ("\\bolt"  "⭍") ; Note: This is not covered by Everson Mono
    ("\\from"  "←")
    ("\\to"    "→")
    ("\\lhd"   "⊲")
@@ -303,7 +210,6 @@
               (quail-defrule (cadr x) (car (cddr x)))))
         (append math-symbol-list-basic math-symbol-list-extended))
   )
-
 (use-package racket-mode)
 (use-package markdown-mode+)
 (use-package pandoc-mode)
@@ -312,9 +218,7 @@
   (add-hook 'markdown-mode-hook 'pandoc-mode)
   (add-hook 'markdown-mode-hook 'smartparens-mode)
   )
-
 (use-package smooth-scrolling :init (smooth-scrolling-mode))
-
 (use-package yasnippet)
 (use-package haskell-snippets)
 
@@ -339,12 +243,6 @@
          ("C-x C-f"   . helm-find-files)
          ("M-y"       . helm-show-kill-ring)
          ("M-x"       . helm-M-x)
-         ("C-x c o"   . helm-occur)
-         ("C-x c s"   . helm-swoop)
-         ("C-x c y"   . helm-yas-complete)
-         ("C-x c Y"   . helm-yas-create-snippet-on-region)
-         ("C-x c b"   . my/helm-do-grep-book-notes)
-         ("C-x c SPC" . helm-all-mark-rings)
          :map helm-map
          ("<tab>"     . helm-execute-persistent-action)
          ("C-i"       . helm-execute-persistent-action)
@@ -379,9 +277,102 @@
   :load-path "lisp/"
   )
 
+;; Use-package stuff ends here.  Below is more standard Elisp config
+
+;; The normal exec-path fix doesn't work so well when emacs is started as a
+;; server.  This might fix that?
+(defun client-fix-path (_)
+  (require 'exec-path-from-shell)
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
+(add-hook 'after-make-frame-functions #'client-fix-path)
+
+;; Always move to help window after opening (easier to close)
+(setq help-window-select t)
+
+;; Prefer horizontal (i.e. [L] | [R]) splits, without making stupidly narrow
+;; windows
+(setq split-height-threshold nil)
+(setq split-width-threshold 120)
+
+;; Personal global keybindings
+(mapcar
+ (lambda (pr) (global-set-key (kbd (car pr)) (cdr pr)))        
+ '(
+   ;; Simpler buffer and window nav
+   ("C-<tab>" . other-window)
+   ("<C-iso-lefttab>" . (lambda () (interactive) (other-window -1)))
+   ("M-["     . previous-buffer)
+   ("M-]"     . next-buffer)
+   ;; Slightly quicker Kill this buffer
+   ("C-x C-k" . kill-this-buffer)
+   ;; I'm always aligning things
+   ("C-M-;"   . align-regexp)
+   ;; Usually like fullscreen.  Don't know how to start an emacsclient-created
+   ;; frame in fullscreen
+   ("s-<return>" . toggle-frame-fullscreen)
+   )
+ )
+
+;; Be Lazy, prefer Y or N to Yes or No
+(fset 'yes-or-no-p 'y-or-n-p)
+
+;; Bars suck
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+
+;; Make the fringes smaller
+(setq default-left-fringe-width 5
+      default-right-fringe-width 5)
+
+;; prefer vertical splits
+(setq-default split-height-threshold 80
+              split-width-threshold 160)
+  
+;; Make paste over selection *replace* the selection
+(delete-selection-mode)
+
+;; Column numbers are good though
+(column-number-mode)
+
+;; Good to know where the cursor is
+(global-hl-line-mode)
+
+;; Basic indentation rules
+(setq-default indent-tabs-mode nil
+              tab-width 2
+              indent-line-function 'insert-tab)
+
+(setq-default fill-column 80)
+
+(setq whitespace-style '(face tabs lines-tail empty trailing))
+
+;; Monospaced font with great Unicode support for mathy symbols
+;; http://www.evertype.com/emono/
+(defconst everson-mono "Everson Mono-14:bold")
+(add-to-list 'default-frame-alist `(font . ,everson-mono))
+;; note for future me: backtick permits use of commas for evaluation inside a
+;; quoted thing
+
+;; Don't like the startup screen
+(setq inhibit-startup-screen t)
+
+;; Make C look the way I want it to
+(setq c-default-style "linux"
+      c-basic-offset 2)
+
+;; Backup policy
+(setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
+(setq delete-old-versions -1)
+(setq version-control t)
+(setq vc-make-backup-files t)
+(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+
 ;; Help emacs print Unicode stuff?
 (setq ps-multibyte-buffer :bdf-font-except-latin)
 (setq bdf-directory-list "/usr/share/emacs/fonts/bdf")
+
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -393,7 +384,8 @@
     ("88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" default)))
  '(package-selected-packages
    (quote
-    (my-utils edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package))))
+    (my-utils edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package)))
+ '(safe-local-variable-values (quote ((intero-targets "cs558:lib" "cs558:test:spec")))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
