@@ -17,14 +17,14 @@ in which the pandoc input file lives. START and END should be
 numeric.  START always refers to the first line to include from
 the given file. If no endspec (\"+END\" or \"-END\") is given,
 only the first line is included.  If the endspec is of form
-\"\"\"+END\", END is taken as the number of subsequent lines to
-include.  If it takes the form \"-END\", END is taken as the last
-line to include.
+\"\"\"+END\", END is taken as the total number of lines to
+include, starting from START.  If it takes the form \"-END\", END
+is taken as the last line to include.
 
 Examples:
 
 @@lines{foo.txt:13} - Include only line 13 from foo.txt
-@@lines{foo.txt:13+4} - Include lines 13 to 17, inclusive
+@@lines{foo.txt:13+4} - Include lines 13 to 16, inclusive
 @@lines{foo.txt:13-20} - Include lines 13 to 20, inclusive
 
 This assumes that there is a pair in the variable `pandoc-directives'
@@ -50,13 +50,42 @@ This assumes that there is a pair in the variable `pandoc-directives'
        (operator (match-string 4 spec))
        (endspec (funcall safe-read (match-string 5 spec)))
        (end (cond ((string= operator "+")
-                   (+ start endspec))
+                   (+ start endspec (- 1)))
                   ((string= operator "-")
                    endspec)
                   (t start))))
     (if match
         (shell-command-to-string
          (format "sed -ne '%d,%dp' %s" start end filename))
-      (error (format "bad spec for @@lines directive: \"%s\"" spec)))))
+      (error (format "bad lines spec: \"%s\"" spec)))))
+
+(defun my/pandoc-include-tag (_ spec)
+  (let* ((re-filename    "\\(.+?\\)")
+         (re-tag         "\\(.+\\)")
+         (regex          (concat "^" re-filename ":" re-tag "$"))
+         (match          (string-match regex spec))
+         (filename       (match-string 1 spec))
+         (tag            (match-string 2 spec))
+         (re-tag-in-file (concat "^" (regexp-quote (or tag "")))))
+    (if match
+        (with-temp-buffer
+          (insert-file-contents filename)
+          (goto-char 1)
+          (let ((beg (re-search-forward re-tag-in-file nil t))
+                (end (re-search-forward re-tag-in-file nil t)))
+            (if (and beg end)
+                (progn
+                  (goto-char beg)
+                  (forward-line 1)
+                  (push-mark)
+                  (goto-char end)
+                  (beginning-of-line)
+                  (buffer-substring (region-beginning) (region-end))
+                  )
+              (error (format
+                      "Couldn't find two occurrences of \"%s\" in %s"
+                      tag filename))
+              )))
+      (error (format "bad tag spec: \"%s\"" spec)))))
 
 (provide 'my-utils)
