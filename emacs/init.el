@@ -210,6 +210,10 @@
               (quail-defrule (cadr x) (car (cddr x)))))
         (append math-symbol-list-basic math-symbol-list-extended))
   )
+(use-package dokuwiki-mode
+  :config
+  (add-to-list 'auto-mode-alist '("\\.dokuwiki\\'" . dokuwiki-mode))
+  )
 (use-package racket-mode)
 (use-package markdown-mode+)
 (use-package pandoc-mode)
@@ -250,13 +254,19 @@
          )
   )
 
+(eval-after-load 'tramp '(setenv "SHELL" "/bin/bash"))
+
 (use-package helm-ag)
+(use-package helm-tramp)
 (use-package helm-ghc)
 (use-package helm-unicode)
 (use-package helm-descbinds
   :defer t
   :bind (("C-h b" . helm-descbinds)
          ("C-h w" . helm-descbinds)))
+
+(use-package basic-theme)
+(use-package alect-themes)
 
 ;; Local "packages"
 (let ((theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
@@ -269,7 +279,8 @@
   :bind ("M-Q" . unfill-paragraph)
   :config
   (require 'pandoc-mode)
-  (push '("lines" . my/pandoc-include-lines) pandoc-directives))
+  (push '("lines" . my/pandoc-include-lines) pandoc-directives)
+  (push '("tag" . my/pandoc-include-tag) pandoc-directives))
 
 ;; for Ackley's Living Computation course. C-derived major-mode
 (use-package ulam 
@@ -280,7 +291,7 @@
 ;; Use-package stuff ends here.  Below is more standard Elisp config
 
 ;; The normal exec-path fix doesn't work so well when emacs is started as a
-;; server.  This might fix that?
+;; server.  This might fix that? Note: doesn't seem to ...
 (defun client-fix-path (_)
   (require 'exec-path-from-shell)
   (when (memq window-system '(mac ns x))
@@ -350,7 +361,7 @@
 
 ;; Monospaced font with great Unicode support for mathy symbols
 ;; http://www.evertype.com/emono/
-(defconst everson-mono "Everson Mono-14:bold")
+(defconst everson-mono "Everson Mono-13:bold")
 (add-to-list 'default-frame-alist `(font . ,everson-mono))
 ;; note for future me: backtick permits use of commas for evaluation inside a
 ;; quoted thing
@@ -379,13 +390,39 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(ansi-color-names-vector
+   [("#181818" . "#282828")
+    ("#ab4642" . "#dc9656")
+    ("#a1b56c" . "#383838")
+    ("#f7ca88" . "#383838")
+    ("#7cafc2" . "#585858")
+    ("#ba8baf" . "#b8b8b8")
+    ("#86c1b9" . "#d8d8d8")
+    ("#ffffff" . "#ffffff")])
  '(custom-safe-themes
    (quote
-    ("88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" default)))
+    ("5e3fc08bcadce4c6785fc49be686a4a82a356db569f55d411258984e952f194a" "7153b82e50b6f7452b4519097f880d968a6eaf6f6ef38cc45a144958e553fbc6" "78559045fb299f3542c232166ad635c59cf0c6578d80a58b885deafe98a36c66" "88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" default)))
  '(package-selected-packages
    (quote
-    (my-utils edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package)))
- '(safe-local-variable-values (quote ((intero-targets "cs558:lib" "cs558:test:spec")))))
+    (dokuwiki-mode alect-themes basic-theme helm-tramp my-utils edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package)))
+ '(safe-local-variable-values (quote ((intero-targets "cs558:lib" "cs558:test:spec"))))
+ '(vc-annotate-background "#ffffff")
+ '(vc-annotate-color-map
+   (quote
+    ((20 . "#ab4642")
+     (50 . "#dc9656")
+     (80 . "#f7ca88")
+     (110 . "#a1b56c")
+     (140 . "#86c1b9")
+     (170 . "#7cafc2")
+     (200 . "#ba8baf")
+     (230 . "#a16046")
+     (260 . "#181818")
+     (290 . "#282828")
+     (320 . "#383838")
+     (350 . "#585858"))))
+ '(vc-annotate-very-old-color "#585858")
+ '(yas-global-mode t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
