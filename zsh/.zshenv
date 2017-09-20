@@ -14,8 +14,7 @@ $HOME/.rvm/bin:\
 /bin:\
 /usr/sbin:\
 /sbin:\
-/opt/X11/bin:\
-/Library/TeX/texbin"
+/opt/X11/bin:"
 
 export EDITOR="emacs"
 
