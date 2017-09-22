@@ -20,8 +20,16 @@ export EDITOR="emacs"
 
 alias l='ls -lh --color="auto" --group-directories-first'
 alias la='ls -lhar --color="auto" --group-directories-first'
-alias pbcopy='xclip -i -selection clipboard'
-alias pbpaste='xclip -o selection clipboard'
+
+ostype=`uname -s`
+case $ostype in
+    Linux*)
+        alias pbcopy='xclip -i -selection clipboard'
+        alias pbpaste='xclip -o selection clipboard'
+        ;;
+    *)
+        ;;
+esac
 
 
 # Load RVM into a shell session *as a function*
