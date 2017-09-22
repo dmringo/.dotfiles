@@ -33,28 +33,23 @@ _ln(){
 
     if [[ -e $trg ]]
     then
-        # Try to see if there is already a link
-        if [[ -e $src && `stat -Lf '%i' $src` = `stat -Lf '%i' $trg` ]]
-        then
-            _log -f "%s is already linked as %s\n" $src $trg
-        else
-            read 'ans?'"$trg already exists. (r)eplace/(s)kip/(b)ackup?"
-            case ans in
-                [rR] )
-                    rm -rf $trg ;;
-                [sS] )
-                    let "lnStat |= $?"
-                    return ;;
-                [bB] )
-                    bkp=$trg.`date +''%F!%T`.bak
-                    _log -f "backing up %s as %s\n" $trg $bkp
-                    mv $trg $bkp
-                    ;;
-                *    )
-                    _log -f "unrecognized response: %s\n" $ans
-                    return 1
-            esac
-        fi
+        read -r -k 1 'ans?'"$trg already exists. (r)eplace/(s)kip/(b)ackup?"
+        case $ans in
+            [rR] )
+                rm -rf $trg ;;
+            [sS] )
+                # skipping means we didn't link something
+                let "lnStat |= 1"
+                return ;;
+            [bB] )
+                bkp=$trg.`date +''%F!%T`.bak
+                _log -f "backing up %s as %s\n" $trg $bkp
+                mv $trg $bkp
+                ;;
+            *    )
+                _log -f "unrecognized response: %s\n" $ans
+                return 1
+        esac
     fi
 
 
@@ -71,10 +66,10 @@ _ln(){
 
 _log "using $DOT_HOME as base location of '.dotfiles' repo"
 
-_ln zsh/.zshrc $HOME/.zshrc
-_ln zsh/.zshenv $HOME/.zshrc
-_ln emacs $HOME/.emacs.d
-_ln emacs/init.el $HOME/.emacs # convenient, but not necessary
+_ln $DOTHOME/zsh/.zshrc $HOME/.zshrc
+_ln $DOTHOME/zsh/.zshenv $HOME/.zshrc
+_ln $DOTHOME/emacs $HOME/.emacs.d
+_ln $DOTHOME/emacs/init.el $HOME/.emacs # convenient, but not necessary
 
 if [[ $lnStat -ne 0 ]]
 then
