@@ -3,5 +3,9 @@
 !/lisp/*
 !/lisp/themes
 !/lisp/themes/*
+!/snippets
+!/snippets/*
+!/pandoc-mode
+!/pandoc-mode/*  
 !init.el
 !.gitignore
