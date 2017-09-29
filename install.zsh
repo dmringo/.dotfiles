@@ -10,6 +10,7 @@
 
 # fail hard, plz
 set -e
+set -x
 
 # Unless DOT_HOME is set, use absolute path of this script
 DOT_HOME=${DOT_HOME:-${0:A:h}}
@@ -18,6 +19,8 @@ DOT_HOME=${DOT_HOME:-${0:A:h}}
 lnStat=0
 
 
+# Eventually will make this a real log-ish function, probably with
+# verbosity level either as a parameter or set in some global variable.
 _log(){
     print $@
 }
@@ -39,7 +42,7 @@ _ln(){
                 rm -rf $trg ;;
             [sS] )
                 # skipping means we didn't link something
-                let "lnStat |= 1"
+                lnStat=1
                 return ;;
             [bB] )
                 bkp=$trg.`date +''%F!%T`.bak
@@ -52,15 +55,10 @@ _ln(){
         esac
     fi
 
-
-    if [[ -e $trg && `stat -Lf '%i' $src` = `stat -Lf '%i' $trg` ]]
-    then
-
-    else
-        _log -f "linking %s --> %s\n" $src $trg
-        ln -si $src $trg
-        let "lnStat |= $?"
-    fi
+    _log -f "linking %s --> %s\n" $src $trg
+    ln -s $src $trg
+    lnStat=$((lnStat | ?))
+    return 0
 }
 
 
