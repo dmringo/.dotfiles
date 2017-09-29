@@ -40,9 +40,6 @@ source $ZPLUG_HOME/init.zsh
 # Make sure to use double quotes to prevent shell expansion
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
 
-# Jump around by Frecency. Fork of rupa/z with better completion
-export _Z_CMD=j
-zplug "knu/z", use:z.sh, defer:2
 
 # my own fancy prompt and theme
 zplug "$MY_ZSH_HOME", from:local, as:theme, use:"dmr.zsh-theme"
