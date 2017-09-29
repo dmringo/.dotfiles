@@ -45,9 +45,11 @@
 (use-package haskell-mode
   :config (add-hook 'haskell-mode-hook 'intero-mode))
 (use-package company)
-(use-package company-ghc
-  :config
-  (add-to-list 'company-backends 'company-ghc))
+;; Note: Company seems to cause emacs to hang when writing in comments.
+;; Not sure why though...
+;; (use-package company-ghc
+;;   :config
+;;   (add-to-list 'company-backends 'company-ghc))
 (use-package exec-path-from-shell)
 (use-package smart-mode-line)
 (use-package idris-mode
