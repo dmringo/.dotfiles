@@ -65,7 +65,7 @@ _ln(){
 _log "using $DOT_HOME as base location of '.dotfiles' repo"
 
 _ln $DOTHOME/zsh/.zshrc $HOME/.zshrc
-_ln $DOTHOME/zsh/.zshenv $HOME/.zshrc
+_ln $DOTHOME/zsh/.zshenv $HOME/.zshenv
 _ln $DOTHOME/emacs $HOME/.emacs.d
 _ln $DOTHOME/emacs/init.el $HOME/.emacs # convenient, but not necessary
 
