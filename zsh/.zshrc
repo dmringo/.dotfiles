@@ -1,3 +1,5 @@
+[[ $TERM == "dumb" ]] && unsetopt zle && PS1='$ ' && return;
+
 # The following lines were added by compinstall
 zstyle ':completion:*' completer _expand _complete _ignored _match _approximate _prefix
 zstyle ':completion:*' completions 1
