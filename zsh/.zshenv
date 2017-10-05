@@ -1,5 +1,7 @@
 export GOPATH="$HOME/go"
-export MY_ZSH_HOME="$HOME/.dotfiles/zsh"
+
+# at some point, this should maybe be set by an m4 macro during install export
+MY_ZSH_HOME="$HOME/.dotfiles/zsh"
 
 # github API rate limit?
 export HOMEBREW_GITHUB_API_TOKEN=a986d55cf8916c44b2d9221b31e3349e3d3301f6
@@ -24,10 +26,10 @@ alias la='ls -lhar --color="auto" --group-directories-first'
 ostype=`uname -s`
 case $ostype in
     Linux*)
-        alias pbcopy='xclip -i -selection clipboard'
-        alias pbpaste='xclip -o selection clipboard'
+        source $MY_ZSH_HOME/linux.zsh
         ;;
     *)
+
         ;;
 esac
 
