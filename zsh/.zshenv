@@ -26,7 +26,7 @@ alias la='ls -lhar --color="auto" --group-directories-first'
 ostype=`uname -s`
 case $ostype in
     Linux*)
-        source $MY_ZSH_HOME/linux.zsh
+        source $MY_ZSH_HOME/linuxenv.zsh
         ;;
     *)
 
