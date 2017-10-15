@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp -*-
 
 ;; pandoc-mode global settings file
-;; saved on 2017.09.28 22:38
+;; saved on 2017.10.15 17:14
 
 ((latexmathml)
  (mathml)

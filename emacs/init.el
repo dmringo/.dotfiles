@@ -287,14 +287,16 @@
   (push '("tag" . my/pandoc-include-tag) pandoc-directives))
 
 ;; for Ackley's Living Computation course. C-derived major-mode
-(use-package ulam 
+(use-package ulam-mode
   :ensure f
+  :demand
   :load-path "lisp/"
+;;  :mode "\\.ulam\\'"
+  :bind (("C-c C-k" . ulam/make)
+         ("C-c C-r" . ulam/run))
   :config
   (defun ulam/make () (interactive) (compile "make -k"))
   (defun ulam/run () (interactive) (compile "make run"))
-  :bind (("C-c C-k" . ulam/make)
-         ("C-c C-r" . ulam/run))
   )
 
 ;; Use-package stuff ends here.  Below is more standard Elisp config
