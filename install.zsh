@@ -54,7 +54,7 @@ _ln(){
                 return 1
         esac
     fi
-
+    # TODO: Check if directory path for $trg exists.  Create it if it doesn't
     _log -f "linking %s --> %s\n" $src $trg
     ln -s $src $trg
     lnStat=$((lnStat | ?))
@@ -68,6 +68,7 @@ _ln $DOTHOME/zsh/.zshrc $HOME/.zshrc
 _ln $DOTHOME/zsh/.zshenv $HOME/.zshenv
 _ln $DOTHOME/emacs $HOME/.emacs.d
 _ln $DOTHOME/emacs/init.el $HOME/.emacs # convenient, but not necessary
+_ln $DOTHOME/ssh/config $HOME/.ssh/config
 
 if [[ $lnStat -ne 0 ]]
 then

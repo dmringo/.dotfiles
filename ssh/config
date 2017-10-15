@@ -1,0 +1,5 @@
+Host moons trucks b146-*
+  HostName %h.cs.unm.edu
+  User davidringo
+  IdentityFile ~/.ssh/id_rsa
+  
