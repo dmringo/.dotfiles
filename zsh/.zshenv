@@ -19,6 +19,7 @@ $HOME/.rvm/bin:\
 /opt/X11/bin:"
 
 export EDITOR="emacs"
+export ESHELL="/usr/bin/zsh"
 
 alias l='ls -lh --color="auto" --group-directories-first'
 alias la='ls -lhar --color="auto" --group-directories-first'
