@@ -1,3 +1,4 @@
+# Checking for dumb terminals - makes Tramp work when editing remote files
 [[ $TERM == "dumb" ]] && unsetopt zle && PS1='$ ' && return;
 
 # The following lines were added by compinstall
@@ -33,7 +34,7 @@ export ZPLUG_HOME="$MY_ZSH_HOME/.zplug"
 
 if [[ ! -d $ZPLUG_HOME ]]; then
   git clone https://github.com/zplug/zplug $ZPLUG_HOME
-  source $ZPLUG_HOME/init.zsh && zplug update --self
+  source $ZPLUG_HOME/init.zsh && zplug --self-manage
 fi
 
 # Essential
@@ -61,6 +62,9 @@ zplug "plugins/stack", from:oh-my-zsh
 
 # pandoc completion
 zplug "srijanshetty/zsh-pandoc-completion"
+
+# GTK settings manager
+type gsettings 2>&1 > /dev/null && zplug "jmatsuzawa/zsh-comp-gsettings"
 
 # Keybase.io
 type keybase 2>&1 > /dev/null && zplug "rbirnie/oh-my-zsh-keybase"
