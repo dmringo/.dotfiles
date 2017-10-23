@@ -1,3 +1,5 @@
+;;; -*- lexical-binding: t -*-
+
 ;;; Stolen from https://www.emacswiki.org/emacs/UnfillParagraph
 ;;; Stefan Monnier <foo at acm.org>. It is the opposite of fill-paragraph
 (defun my/unfill-paragraph (&optional region)

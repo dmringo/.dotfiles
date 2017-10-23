@@ -286,6 +286,8 @@
   (push '("lines" . my/pandoc-include-lines) pandoc-directives)
   (push '("tag" . my/pandoc-include-tag) pandoc-directives))
 
+
+
 ;; for Ackley's Living Computation course. C-derived major-mode
 (use-package ulam-mode
   :ensure f
@@ -343,6 +345,10 @@
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
+
+;; disable bell and screen flashing
+(defun my/do-nothing () nil)
+(setq ring-bell-function 'my/do-nothing)
 
 ;; Make the fringes smaller
 (setq default-left-fringe-width 5
