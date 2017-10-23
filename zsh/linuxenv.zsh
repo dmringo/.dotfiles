@@ -21,7 +21,7 @@ clip(){
 }
 
 
-if command -v brew 2&>1 > /dev/null
+if command -v brew 2>&1 > /dev/null
 then
   # from linuxbrew profile examples, usually found at
   # /usr/share/doc/linuxbrew-wrapper/examples/profile
