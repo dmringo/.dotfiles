@@ -1,11 +1,15 @@
+# Ignore everything
 *
-!/lisp
-!/lisp/*
-!/lisp/themes
-!/lisp/themes/*
-!/snippets
-!/snippets/*
-!/pandoc-mode
-!/pandoc-mode/*  
+# Except for the following:
 !init.el
 !.gitignore
+# Keep these too. This is annoying, but I don't know a better way.
+# It appears that both the '!dir' and '!dir/**' patterns are necessary.
+!lisp
+!lisp/**
+!lisp/themes
+!lisp/themes/**
+!snippets
+!snippets/**
+!pandoc-mode
+!pandoc-mode/**
