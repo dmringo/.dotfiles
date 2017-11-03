@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# name: pandoc-directive
+# contributor: David Ringo <davidmringo@gmail.com>
+# key: @@
+#
+# This snippet is meant for use with pandoc-mode
+# (https://joostkremers.github.io/pandoc-mode/)
+# and a custom pandoc directive I define in my Emacs config
+# (https://github.com/dmringo/.dotfiles/blob/master/emacs)
+#
+# --
+@@${1:$$(yas-choose-value '("tag" "include" "lisp"))}{${2:$$(let*
+ ((ty (yas-field-value 1))
+  (suf (if (equal ty "tag") ":" "")))
+(unless (or yas-modified-p (equal ty "lisp"))
+     (concat (file-relative-name
+     (read-file-name "filename: ") default-directory) suf)))}$0}

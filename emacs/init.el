@@ -54,8 +54,8 @@
 (use-package smart-mode-line)
 (use-package idris-mode
   :bind (:map idris-repl-mode-map
-              ("C-c C-k" . idris-repl-clear-buffer))
-  )
+              ("C-c C-k" . idris-repl-clear-buffer)))
+
 (use-package helm-idris)
 (use-package smartparens
   :config
@@ -311,6 +311,7 @@
     (exec-path-from-shell-initialize)))
 (add-hook 'after-make-frame-functions #'client-fix-path)
 
+
 ;; Always move to help window after opening (easier to close)
 (setq help-window-select t)
 
@@ -416,6 +417,7 @@
     ("#ba8baf" . "#b8b8b8")
     ("#86c1b9" . "#d8d8d8")
     ("#ffffff" . "#ffffff")])
+ '(cursor-type (quote box))
  '(custom-safe-themes
    (quote
     ("3c9f63378e7f1d64452d063b3475c8c0e7d8726b0c681c1e3943b2c605a26bed" "6fa6524f51574b984e239e203b59b2f81da1a1b282c2ac09bba8e6198892c924" "5e3fc08bcadce4c6785fc49be686a4a82a356db569f55d411258984e952f194a" "7153b82e50b6f7452b4519097f880d968a6eaf6f6ef38cc45a144958e553fbc6" "78559045fb299f3542c232166ad635c59cf0c6578d80a58b885deafe98a36c66" "88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" default)))
