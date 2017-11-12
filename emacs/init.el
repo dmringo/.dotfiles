@@ -386,7 +386,7 @@
 
 ;; Monospaced font with great Unicode support for mathy symbols
 ;; http://www.evertype.com/emono/
-(defconst everson-mono "Everson Mono-13:bold")
+(defconst everson-mono "Everson Mono-11:bold")
 (add-to-list 'default-frame-alist `(font . ,everson-mono))
 ;; note for future me: backtick permits use of commas for evaluation inside a
 ;; quoted thing
