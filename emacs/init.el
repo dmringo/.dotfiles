@@ -13,7 +13,7 @@
 
 (setq package-archives
       '(("gnu"          . "https://elpa.gnu.org/packages/")
-        ("marmalade"    . "https://marmalade-repo.org/packages/")
+        ;; ("marmalade"    . "https://marmalade-repo.org/packages/")
         ("melpa-stable" . "https://stable.melpa.org/packages/")
         ("melpa"        . "https://melpa.org/packages/")))
 
