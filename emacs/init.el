@@ -50,7 +50,10 @@
 ;; (use-package company-ghc
 ;;   :config
 ;;   (add-to-list 'company-backends 'company-ghc))
-(use-package exec-path-from-shell)
+(use-package exec-path-from-shell
+  :config
+  (exec-path-from-shell-initialize)
+  )
 (use-package smart-mode-line)
 (use-package idris-mode
   :bind (:map idris-repl-mode-map
@@ -72,8 +75,7 @@
               ("C-M-f"   . sp-forward-sexp)
               ("C-M-b"   . sp-backward-sexp)
               ("C-M-k"   . sp-kill-sexp)
-              )
-  )
+              ))
 
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
@@ -88,7 +90,9 @@
         beacon-blink-when-point-moves-vertically nil
         beacon-blink-when-window-scrolls 0
         beacon-color "navajo white"))
-(use-package pdf-tools)
+(use-package pdf-tools
+  :config
+  (pdf-tools-install))
 (use-package nav-flash)
 (use-package fill-column-indicator)
 (use-package rainbow-mode)
@@ -320,6 +324,9 @@
 (setq split-height-threshold nil)
 (setq split-width-threshold 120)
 
+;; Don't prompt when reverting PDFs
+(setq revert-without-query '(".*\\.pdf"))
+
 ;; Personal global keybindings
 (mapcar
  (lambda (pr) (global-set-key (kbd (car pr)) (cdr pr)))        
@@ -420,10 +427,10 @@
  '(cursor-type (quote box))
  '(custom-safe-themes
    (quote
-    ("3c9f63378e7f1d64452d063b3475c8c0e7d8726b0c681c1e3943b2c605a26bed" "6fa6524f51574b984e239e203b59b2f81da1a1b282c2ac09bba8e6198892c924" "5e3fc08bcadce4c6785fc49be686a4a82a356db569f55d411258984e952f194a" "7153b82e50b6f7452b4519097f880d968a6eaf6f6ef38cc45a144958e553fbc6" "78559045fb299f3542c232166ad635c59cf0c6578d80a58b885deafe98a36c66" "88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" default)))
+    ("8d55185d74000bc7caaea2105f4b8410cd0f82e1148e7ba93e2bcdcea275dbbf" "3c9f63378e7f1d64452d063b3475c8c0e7d8726b0c681c1e3943b2c605a26bed" "6fa6524f51574b984e239e203b59b2f81da1a1b282c2ac09bba8e6198892c924" "5e3fc08bcadce4c6785fc49be686a4a82a356db569f55d411258984e952f194a" "7153b82e50b6f7452b4519097f880d968a6eaf6f6ef38cc45a144958e553fbc6" "78559045fb299f3542c232166ad635c59cf0c6578d80a58b885deafe98a36c66" "88b3e618978518e7117518706043cd68b55eaab0059e6e0528cf876f4ca0acd6" default)))
  '(package-selected-packages
    (quote
-    (mmm-mode dokuwiki-mode alect-themes basic-theme helm-tramp my-utils edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package)))
+    (pandoc-mode mmm-mode dokuwiki-mode alect-themes basic-theme helm-tramp my-utils edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package)))
  '(safe-local-variable-values (quote ((intero-targets "cs558:lib" "cs558:test:spec"))))
  '(vc-annotate-background "#ffffff")
  '(vc-annotate-color-map
