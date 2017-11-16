@@ -64,30 +64,31 @@ This assumes that there is a pair in the variable `pandoc-directives'
 (defun my/pandoc-include-tag (_ spec)
   (let* ((re-filename    "\\(.+?\\)")
          (re-tag         "\\(.+\\)")
-         (regex          (concat "^" re-filename ":" re-tag "$"))
-         (match          (string-match regex spec))
+         (re-spec        (concat "^" re-filename ":" re-tag "$"))
+         (good-spec      (string-match re-spec spec))
          (filename       (match-string 1 spec))
          (tag            (match-string 2 spec))
+         (found-any      nil)
+         (results        nil)
          (re-tag-in-file (concat "^" (regexp-quote (or tag "")) " *$")))
-    (if match
+    (if good-spec
         (with-temp-buffer
           (insert-file-contents filename)
           (goto-char 1)
-          (let ((beg (re-search-forward re-tag-in-file nil t))
-                (end (re-search-forward re-tag-in-file nil t)))
-            (if (and beg end)
-                (progn
-                  (goto-char beg)
-                  (forward-line 1)
-                  (push-mark)
-                  (goto-char end)
-                  (beginning-of-line)
-                  (buffer-substring (region-beginning) (region-end)))
-              (error (format
-                      "Couldn't find two occurrences of \"%s\" in %s"
-                      tag filename)))))
+          (while (re-search-forward re-tag-in-file nil t)
+            (setq found-any t)
+            (let ((beg (+ 1 (point)))
+                  (end (re-search-forward re-tag-in-file nil t)))
+              (if (and beg end)
+                  (push (buffer-substring beg (line-beginning-position))
+                        results)
+                (error "Unmatched occurrences of \"%s\" in %s"
+                       tag filename))))
+          (if found-any
+              (string-join (reverse results))
+            (error "No tag found matching \"%s\" in %s"
+                   tag filename)))
       (error (format "bad tag spec: \"%s\"" spec)))))
-
 
 (defun my/insert-date (&optional timespec)
   (interactive)
