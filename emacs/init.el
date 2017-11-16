@@ -258,9 +258,7 @@
          :map helm-map
          ("<tab>"     . helm-execute-persistent-action)
          ("C-i"       . helm-execute-persistent-action)
-         ("C-z"       . helm-select-action))
-         
-  )
+         ("C-z"       . helm-select-action)))
 
 (eval-after-load 'tramp '(setenv "SHELL" "/bin/bash"))
 

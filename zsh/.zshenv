@@ -6,6 +6,8 @@ MY_ZSH_HOME="$HOME/.dotfiles/zsh"
 # github API rate limit?
 export HOMEBREW_GITHUB_API_TOKEN=a986d55cf8916c44b2d9221b31e3349e3d3301f6
 
+export GOPATH=$HOME/.local/go
+
 export PATH="\
 $HOME/.local/bin:\
 $GOPATH/bin:\
