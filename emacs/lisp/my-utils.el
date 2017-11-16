@@ -68,7 +68,7 @@ This assumes that there is a pair in the variable `pandoc-directives'
          (match          (string-match regex spec))
          (filename       (match-string 1 spec))
          (tag            (match-string 2 spec))
-         (re-tag-in-file (concat "^" (regexp-quote (or tag "")))))
+         (re-tag-in-file (concat "^" (regexp-quote (or tag "")) " *$")))
     (if match
         (with-temp-buffer
           (insert-file-contents filename)
@@ -82,12 +82,16 @@ This assumes that there is a pair in the variable `pandoc-directives'
                   (push-mark)
                   (goto-char end)
                   (beginning-of-line)
-                  (buffer-substring (region-beginning) (region-end))
-                  )
+                  (buffer-substring (region-beginning) (region-end)))
               (error (format
                       "Couldn't find two occurrences of \"%s\" in %s"
-                      tag filename))
-              )))
+                      tag filename)))))
       (error (format "bad tag spec: \"%s\"" spec)))))
+
+
+(defun my/insert-date (&optional timespec)
+  (interactive)
+  (let ((spec (or timespec  "%b %e, %Y")))
+    (insert (format-time-string spec))))
 
 (provide 'my-utils)
