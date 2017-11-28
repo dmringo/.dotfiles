@@ -215,20 +215,24 @@
   (mapc (lambda (x)
           (if (cddr x)
               (quail-defrule (cadr x) (car (cddr x)))))
-        (append math-symbol-list-basic math-symbol-list-extended))
-  )
+        (append math-symbol-list-basic math-symbol-list-extended)))
+
 (use-package dokuwiki-mode
   :config
-  (add-to-list 'auto-mode-alist '("\\.dokuwiki\\'" . dokuwiki-mode))
-  )
-(use-package racket-mode)
+  (add-to-list 'auto-mode-alist '("\\.dokuwiki\\'" . dokuwiki-mode)))
+
+
 (use-package markdown-mode+)
+(use-package writeroom-mode
+  :config
+  (setq writeroom-width 100))
+
 (use-package pandoc-mode)
 (use-package markdown-mode
   :config
   (add-hook 'markdown-mode-hook 'pandoc-mode)
-  (add-hook 'markdown-mode-hook 'smartparens-mode)
-  )
+  (add-hook 'markdown-mode-hook 'smartparens-mode))
+
 (use-package mmm-mode)
 (use-package smooth-scrolling :init (smooth-scrolling-mode))
 (use-package yasnippet)
@@ -271,9 +275,6 @@
   :bind (("C-h b" . helm-descbinds)
          ("C-h w" . helm-descbinds)))
 
-;; (use-package basic-theme)
-;; (use-package alect-themes)
-
 ;; Local "packages"
 (let ((theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
   (add-to-list 'custom-theme-load-path theme-dir))
@@ -289,19 +290,20 @@
   (push '("tag" . my/pandoc-include-tag) pandoc-directives))
 
 
-
-;; for Ackley's Living Computation course. C-derived major-mode
+;; for Ackley's Living Computation course. Java-derived major-mode
 (use-package ulam-mode
   :ensure f
   :demand
   :load-path "lisp/"
-;;  :mode "\\.ulam\\'"
-  :bind (("C-c C-k" . ulam/make)
-         ("C-c C-r" . ulam/run))
   :config
   (defun ulam/make () (interactive) (compile "make -k"))
-  (defun ulam/run () (interactive) (compile "make run"))
-  )
+  (defun ulam/run (&optional args)
+    (interactive "smfzrun arguments:\n")
+    (let ((cmd (format "make run ARGS=%s"
+                       (shell-quote-argument args))))
+      (compile cmd)))
+  :bind (("C-c C-k" . ulam/make)
+         ("C-c C-r" . ulam/run)))
 
 ;; Use-package stuff ends here.  Below is more standard Elisp config
 
@@ -330,19 +332,18 @@
  (lambda (pr) (global-set-key (kbd (car pr)) (cdr pr)))        
  '(
    ;; Simpler buffer and window nav
-   ("C-<tab>" . other-window)
+   ("C-<tab>"         . other-window)
    ("<C-iso-lefttab>" . (lambda () (interactive) (other-window -1)))
-   ("M-["     . previous-buffer)
-   ("M-]"     . next-buffer)
+   ("M-["             . previous-buffer)
+   ("M-]"             . next-buffer)
    ;; Slightly quicker Kill this buffer
-   ("C-x C-k" . kill-this-buffer)
+   ("C-x C-k"         . kill-this-buffer)
    ;; I'm always aligning things
-   ("C-M-;"   . align-regexp)
+   ("C-M-;"           . align-regexp)
    ;; Usually like fullscreen.  Don't know how to start an emacsclient-created
    ;; frame in fullscreen
-   ("s-<return>" . toggle-frame-fullscreen)
-   )
- )
+   ("s-<return>"      . toggle-frame-fullscreen)
+   ))
 
 ;; Be Lazy, prefer Y or N to Yes or No
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -452,6 +453,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(fixed-pitch ((t (:family "Everson Mono"))))
  '(fringe ((t (:background "#1b1b1b")))))
 
 ;; let Custom declare this safe before loading it
