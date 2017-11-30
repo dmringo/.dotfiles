@@ -222,8 +222,9 @@
     (let ((cmd (format "make run ARGS=%s"
                        (shell-quote-argument args))))
       (compile cmd)))
-  :bind (("C-c C-k" . ulam/make)
-         ("C-c C-r" . ulam/run)))
+  :bind (:map ulam-mode-map
+              ("C-c C-k" . ulam/make)
+              ("C-c C-r" . ulam/run)))
 
 ;; Use-package stuff ends here.  Below is more standard Elisp config
 
