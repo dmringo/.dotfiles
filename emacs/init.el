@@ -55,11 +55,6 @@
   (exec-path-from-shell-initialize)
   )
 
-(use-package idris-mode
-  :bind (:map idris-repl-mode-map
-              ("C-c C-k" . idris-repl-clear-buffer)))
-(use-package helm-idris)
-
 (use-package smart-mode-line)
 (use-package smartparens
   :config
