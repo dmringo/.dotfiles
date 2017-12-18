@@ -17,9 +17,12 @@
         ("melpa-stable" . "https://stable.melpa.org/packages/")
         ("melpa"        . "https://melpa.org/packages/")))
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+(package-refresh-contents)
+(mapc (lambda (pkg)
+	(unless (package-installed-p pkg)
+	  (package-install pkg)))
+      '(use-package diminish bind-key))
+	   
 (setq use-package-verbose       t
       use-package-always-ensure t)
 
