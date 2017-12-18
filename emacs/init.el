@@ -212,6 +212,10 @@
   (push '("lines" . my/pandoc-include-lines) pandoc-directives)
   (push '("tag" . my/pandoc-include-tag) pandoc-directives))
 
+(use-package my-c-setup
+  :ensure f
+  :load-path "lisp/")
+
 
 ;; for Ackley's Living Computation course. Java-derived major-mode
 (use-package ulam-mode
