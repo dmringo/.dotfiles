@@ -48,15 +48,19 @@
 (use-package haskell-mode
   :config (add-hook 'haskell-mode-hook 'intero-mode))
 (use-package company)
-;; Note: Company seems to cause emacs to hang when writing in comments.
+(use-package company-c-headers
+  :init
+  (add-to-list 'company-backends 'company-c-headers))
+;; Note: Company-ghc seems to cause emacs to hang when writing in comments.
 ;; Not sure why though...
 ;; (use-package company-ghc
 ;;   :config
 ;;   (add-to-list 'company-backends 'company-ghc))
 (use-package exec-path-from-shell
   :config
-  (exec-path-from-shell-initialize)
-  )
+  (exec-path-from-shell-initialize))
+
+(use-package cmake-mode)
 
 (use-package smart-mode-line)
 (use-package smartparens
@@ -187,6 +191,22 @@
 (eval-after-load 'tramp '(setenv "SHELL" "/bin/bash"))
 
 (use-package helm-ag)
+(use-package helm-gtags
+  :init
+  (progn
+    (setq helm-gtags-ignore-case t
+          helm-gtags-auto-update t
+          helm-gtags-use-input-at-cursor t
+          helm-gtags-pulse-at-cursor t
+          helm-gtags-prefix-key "\C-cg"
+          helm-gtags-suggested-key-mapping t)
+    (add-hook 'c-mode-hook   'helm-gtags-mode)
+    (add-hook 'c++-mode-hook 'helm-gtags-mode)
+    (add-hook 'dired-mode    'helm-gtags-mode)
+
+  :bind (:map helm-gtags-mode-map
+              ("M-." . helm-gtags-dwim)))
+
 (use-package helm-tramp)
 (use-package helm-ghc)
 (use-package helm-unicode)
@@ -194,6 +214,8 @@
   :defer t
   :bind (("C-h b" . helm-descbinds)
          ("C-h w" . helm-descbinds)))
+
+
 
 (use-package which-key
   :config
