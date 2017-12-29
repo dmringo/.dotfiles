@@ -69,6 +69,12 @@ _ln $DOTHOME/zsh/.zshenv $HOME/.zshenv
 _ln $DOTHOME/emacs $HOME/.emacs.d
 _ln $DOTHOME/emacs/init.el $HOME/.emacs # convenient, but not necessary
 _ln $DOTHOME/ssh/config $HOME/.ssh/config
+for f in $DOTHOME/bin/*
+do
+    _ln $f $HOME/.local/bin/$(basename $f)
+done
+
+
 
 if [[ $lnStat -ne 0 ]]
 then
