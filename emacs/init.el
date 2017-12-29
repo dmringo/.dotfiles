@@ -351,7 +351,19 @@
  '(package-selected-packages
    (quote
     (which-key keyfreq pandoc-mode mmm-mode dokuwiki-mode alect-themes basic-theme helm-tramp my-utils edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode helm-unicode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package)))
- '(safe-local-variable-values (quote ((intero-targets "cs558:lib" "cs558:test:spec"))))
+ '(safe-local-variable-values
+   (quote
+    ((eval local-set-key
+           (kbd "C-c C-k")
+           (lambda nil
+             (interactive)
+             (compile "make clean")))
+     (eval local-set-key
+           (kbd "C-c C-c")
+           (lambda nil
+             (interactive)
+             (compile "make")))
+     (intero-targets "cs558:lib" "cs558:test:spec"))))
  '(vc-annotate-background "#ffffff")
  '(vc-annotate-color-map
    (quote
