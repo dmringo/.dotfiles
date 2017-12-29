@@ -64,12 +64,12 @@ _ln(){
 
 _log "using $DOT_HOME as base location of '.dotfiles' repo"
 
-_ln $DOTHOME/zsh/.zshrc $HOME/.zshrc
-_ln $DOTHOME/zsh/.zshenv $HOME/.zshenv
-_ln $DOTHOME/emacs $HOME/.emacs.d
-_ln $DOTHOME/emacs/init.el $HOME/.emacs # convenient, but not necessary
-_ln $DOTHOME/ssh/config $HOME/.ssh/config
-for f in $DOTHOME/bin/*
+_ln $DOT_HOME/zsh/.zshrc $HOME/.zshrc
+_ln $DOT_HOME/zsh/.zshenv $HOME/.zshenv
+_ln $DOT_HOME/emacs $HOME/.emacs.d
+_ln $DOT_HOME/emacs/init.el $HOME/.emacs # convenient, but not necessary
+_ln $DOT_HOME/ssh/config $HOME/.ssh/config
+for f in $DOT_HOME/bin/*
 do
     _ln $f $HOME/.local/bin/$(basename $f)
 done
