@@ -1,0 +1,101 @@
+#!/usr/bin/env zsh
+
+sysdir="/sys/class/backlight/intel_backlight"
+# This path is good for the HP Spectre 15 with the Elementary OS setup.
+# Probably depends on hardware and maybe rivers installed?
+#
+# TODO: Try to find this programmatically
+# It is always as /sys/class/backlight/<backlight>
+# Could try all available? Is that bad?
+#
+# Note: Had to make a few UDEV rules to allow users in the 'video' group to
+# write to the appropriate file. See:
+# https://wiki.archlinux.org/index.php/backlight#Udev_rule
+
+
+# argument to this script should be a number between 0 and 100, interpreted as a
+# percentage value.
+#
+# - If prefixed by a plus (+), the percentage is added to the current
+# brightness.
+#
+# - If prefixed by a minus (-), the precentage is subtracted from the current.
+#
+# - If there is no prefix, the brightness is set to exactly the percentage
+# specified.
+#
+# The number may optionally be given a percentage sign (%) suffix, but it
+# changes nothing in the behavior
+arg_regex="^([+-]?)([0-9]+)%?$"
+
+# Do we have a properly formatted argument
+if [[ $1 =~ $arg_regex ]]
+then
+    op=$match[1]
+    num=$match[2]
+else
+    print "Bad or no argument. See comments in $0 for useage"
+    exit 1
+fi
+
+# Is it in range?
+if [[ $num -lt 0 || $num -gt 100 ]]
+then
+    print "Argument '$num' out of range. Exiting."
+    exit 1
+fi
+
+# Does the sysfs dir exist?
+if [[ ! -d $sysdir ]]
+then
+    print "Don't know where the system directory is for brightness."
+    print "(Not at '$sysdir') Exiting.."
+    exit 1
+fi
+
+# Can I control the brightness by writing to the sysfs?
+if [[ ! -w $sysdir/brightness ]]
+then
+    print "Can't write to $sysdir/brightness. Exiting.."
+    exit 1
+fi
+
+# Can I read the current brightness?
+if [[ ! -r $sysdir/actual_brightness ]]
+then
+    print "Can't read from $sysdir/actual_brightness. Exiting.."
+    exit 1
+fi
+
+# Can I figure out how to increase by percentages?
+if [[ ! -r $sysdir/max_brightness ]]
+then
+    print "Can't read from $sysdir/max_brightness. Exiting.."
+    exit 1
+fi
+
+max=`cat $sysdir/max_brightness`
+cur=`cat $sysdir/actual_brightness`
+curp=$(( (cur * 100) / max ))
+
+case $op in
+    '-' )
+        newp=$(( curp - num))
+        ;;
+    '+' )
+        newp=$(( curp + num))
+        ;;
+    *)
+        newp=$num
+        ;;
+esac
+
+if [[ $newp -lt 0   ]]; then newp=0  ; fi
+if [[ $newp -gt 100 ]]; then newp=100; fi
+
+new=$(( (newp * max) / 100 ))
+
+print $new > $sysdir/brightness
+
+        
+        
