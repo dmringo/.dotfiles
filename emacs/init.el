@@ -191,21 +191,6 @@
 (eval-after-load 'tramp '(setenv "SHELL" "/bin/bash"))
 
 (use-package helm-ag)
-(use-package helm-gtags
-  :init
-  (progn
-    (setq helm-gtags-ignore-case t
-          helm-gtags-auto-update t
-          helm-gtags-use-input-at-cursor t
-          helm-gtags-pulse-at-cursor t
-          helm-gtags-prefix-key "\C-cg"
-          helm-gtags-suggested-key-mapping t)
-    (add-hook 'c-mode-hook   'helm-gtags-mode)
-    (add-hook 'c++-mode-hook 'helm-gtags-mode)
-    (add-hook 'dired-mode    'helm-gtags-mode)
-
-  :bind (:map helm-gtags-mode-map
-              ("M-." . helm-gtags-dwim)))
 
 (use-package helm-tramp)
 (use-package helm-ghc)
@@ -236,9 +221,9 @@
   (push '("lines" . my/pandoc-include-lines) pandoc-directives)
   (push '("tag" . my/pandoc-include-tag) pandoc-directives))
 
-(use-package my-c-setup
-  :ensure f
-  :load-path "lisp/")
+;; (use-package my-c-setup
+;;   :ensure f
+;;   :load-path "lisp/")
 
 ;; for Ackley's Living Computation course. Java-derived major-mode
 (use-package ulam-mode
