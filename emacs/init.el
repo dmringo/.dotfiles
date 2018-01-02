@@ -71,14 +71,14 @@
     (sp-local-pair "*" "*")
     (sp-local-pair "_" "_")
     (sp-local-pair "$" "$")  ; for pandoc LaTeX math extension
-    (sp-local-pair "⟦" "⟧")  ; fancy brackets for semantic functions
-    )
+    (sp-local-pair "⟦" "⟧")) ; fancy brackets for semantic functions
+  (sp-with-modes 'c++-mode
+    (sp-local-pair "/*" "*/"))
   :bind (:map smartparens-mode-map
               ("C-c u w" . sp-unwrap-sexp)
               ("C-M-f"   . sp-forward-sexp)
               ("C-M-b"   . sp-backward-sexp)
-              ("C-M-k"   . sp-kill-sexp)
-              ))
+              ("C-M-k"   . sp-kill-sexp)))
 
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
