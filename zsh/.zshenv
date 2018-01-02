@@ -10,6 +10,7 @@ export GOPATH=$HOME/.local/go
 
 export PATH="\
 $HOME/.local/bin:\
+$HOME/perl5/bin:\
 $GOPATH/bin:\
 $HOME/.cabal/bin:\
 $HOME/.rvm/bin:\
@@ -19,6 +20,13 @@ $HOME/.rvm/bin:\
 /usr/sbin:\
 /sbin:\
 /opt/X11/bin:"
+
+
+# CPAN initialization suggested adding these (as well as the perl5 path in $PATH)
+export PERL5LIB="/home/david/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"
+export PERL_LOCAL_LIB_ROOT="/home/david/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
+export PERL_MB_OPT="--install_base \"/home/david/perl5\""
+export PERL_MM_OPT="INSTALL_BASE=/home/david/perl5"
 
 export EDITOR="emacs"
 export ESHELL="/usr/bin/zsh"

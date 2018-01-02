@@ -2,4 +2,8 @@ Host moons trucks b146-*
   HostName %h.cs.unm.edu
   User davidringo
   IdentityFile ~/.ssh/id_rsa
-  
+
+Host darwin
+  HostName darwin-fe.lanl.gov
+  User dringo
+  IdentityFile ~/.ssh/id_rsa

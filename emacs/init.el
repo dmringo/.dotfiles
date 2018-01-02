@@ -150,7 +150,7 @@
   (add-hook 'markdown-mode-hook 'pandoc-mode)
   (add-hook 'markdown-mode-hook 'smartparens-mode))
 (use-package markdown-mode+)
-(use-package pandoc-mode)
+(use-package pandoc-mode :diminish)
 
 (use-package smooth-scrolling :init (smooth-scrolling-mode))
 (use-package keyfreq
