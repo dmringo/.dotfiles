@@ -327,6 +327,9 @@
 ;; note for future me: backtick permits use of commas for evaluation inside a
 ;; quoted thing
 
+;; make Proced auto-update
+(setq proced-auto-update-flag t)
+
 ;; Don't like the startup screen
 (setq inhibit-startup-screen t)
 
