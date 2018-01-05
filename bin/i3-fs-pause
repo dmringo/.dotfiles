@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# i3-fs-pause will disable fullscreen temporarily, wait and resume it upon
+# receiving SIGUSR1, at which point it exits.  It can be called with -k to send
+# SIGUSR1 to all running instances.
+
+# Requires jq to be installed for JSON handling
+if ! command -v jq > /dev/null
+then
+    echo "jq not installed, exiting"
+    return 1
+fi
+    
+
+# Don't know if this will work on multihead.  Might have to make another
+# conditional to grab the output that is active if there can be focused things
+# on each monitor.
+isFS() {
+    recursive='..'
+    onlyObjs='select(type=="object")'
+    onlyFocused='select(contains({focused:true}))'
+    isFullScreen='.fullscreen_mode == 1'
+    i3-msg -t get_tree | \
+        jq --exit-status \
+           "$recursive | $onlyObjs | $onlyFocused | $isFullScreen" \
+           > /dev/null    
+}
+
+maybeToggle(){
+    if ! isFS && [ $toggle ]; then i3-msg 'fullscreen enable'; fi
+}
+
+
+if [ "$1" = "-k" ]; then killall -USR1 i3-fs-pause; fi
+
+if isFS; then toggle=`i3-msg 'fullscreen disable' | jq '.[].success'`; fi
+
+trap maybeToggle USR1
+sleep infinity &
+wait
