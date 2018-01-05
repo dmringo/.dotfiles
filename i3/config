@@ -173,9 +173,9 @@ bindsym $mod+Escape $fs-pause, mode "$mode_system"
 set $mode_system (l)ock, (e)xit, switch_(u)ser, (s)uspend, (h)ibernate, (r)eboot, (Shift+s)hutdown
 mode "$mode_system" {
   bindsym l exec       --no-startup-id i3exit lock,        $fs-pause -k, mode "default"
-  bindsym e exec       --no-startup-id i3exit suspend,     $fs-pause -k, mode "default"
+  bindsym e exec       --no-startup-id i3exit logout,      $fs-pause -k, mode "default"
   bindsym u exec       --no-startup-id i3exit switch_user, $fs-pause -k, mode "default"
-  bindsym s exec       --no-startup-id i3exit logout,      $fs-pause -k, mode "default"
+  bindsym s exec       --no-startup-id i3exit suspend,     $fs-pause -k, mode "default"
   bindsym h exec       --no-startup-id i3exit hibernate,   $fs-pause -k, mode "default"
   bindsym r exec       --no-startup-id i3exit reboot,      $fs-pause -k, mode "default"
   bindsym Shift+s exec --no-startup-id i3exit shutdown,    $fs-pause -k, mode "default"  
