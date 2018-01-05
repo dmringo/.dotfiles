@@ -25,6 +25,11 @@ _log(){
     print $@
 }
 
+# Check if directory path exists.  Create it if it doesn't
+maybe_mkdir(){
+    if [[ ! -d $1 ]]; then mkdir -p $1; fi;
+}
+
 # Convenience linking function.  It expects exactly two arguments (source and
 # target for linking) which should be fully "specified".  That is, relative
 # paths are fine, but specifying the target as an existing destination directory
@@ -54,7 +59,9 @@ _ln(){
                 return 1
         esac
     fi
-    # TODO: Check if directory path for $trg exists.  Create it if it doesn't
+
+    # create path if necessary
+    maybe_mkdir `dirname $trg`
     _log -f "linking %s --> %s\n" $src $trg
     ln -s $src $trg
     lnStat=$((lnStat | ?))
@@ -64,11 +71,17 @@ _ln(){
 
 _log "using $DOT_HOME as base location of '.dotfiles' repo"
 
-_ln $DOT_HOME/zsh/.zshrc $HOME/.zshrc
-_ln $DOT_HOME/zsh/.zshenv $HOME/.zshenv
-_ln $DOT_HOME/emacs $HOME/.emacs.d
-_ln $DOT_HOME/emacs/init.el $HOME/.emacs # convenient, but not necessary
-_ln $DOT_HOME/ssh/config $HOME/.ssh/config
+_ln $DOT_HOME/zsh/.zshrc         $HOME/.zshrc
+_ln $DOT_HOME/zsh/.zshenv        $HOME/.zshenv
+_ln $DOT_HOME/emacs              $HOME/.emacs.d
+_ln $DOT_HOME/emacs/init.el      $HOME/.emacs # convenient, but not necessary
+_ln $DOT_HOME/ssh/config         $HOME/.ssh/config
+
+# TODO: Need to generate these per system somehow.  Good case for switching to
+# xmonad
+# _ln $DOT_HOME/i3/config          $HOME/.config/i3/config
+# _ln $DOT_HOME/i3/i3status-config $HOME/.config/i3status/config
+
 for f in $DOT_HOME/bin/*
 do
     _ln $f $HOME/.local/bin/$(basename $f)
@@ -78,7 +91,7 @@ done
 
 if [[ $lnStat -ne 0 ]]
 then
-    _log "Oh no! Some linking failed!"
+    _log "Oh no! Some linking failed! Better inspect things."
     return 1
 else
     _log "Install completed successfully.  Probably."
