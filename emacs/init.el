@@ -86,6 +86,7 @@
 (use-package rainbow-delimiters
   :config (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
 
+;; Show me where the cursor is, when it changes
 (use-package beacon
   :init
   (beacon-mode 1)
@@ -97,6 +98,16 @@
 (use-package pdf-tools
   :config
   (pdf-tools-install))
+
+
+;; C++ stuff
+(add-hook 'c++-mode-hook 'flycheck-mode)
+
+(use-package rtags)
+(use-package cmake-ide
+  :config
+  (require 'rtags)
+  (cmake-ide-setup))
 
 (use-package fill-column-indicator)
 (use-package rainbow-mode)
