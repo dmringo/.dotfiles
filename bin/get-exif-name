@@ -1,0 +1,56 @@
+#!/usr/bin/env zsh
+
+# TODO: Consider some helpful renaming functionality
+#    
+#  - Could use a '-p' option to print the name, and otherwise rename a set of
+#    FILE arguments.  Maybe have -d DIR to optionally specify output
+#
+
+set -euo pipefail
+
+if ! command -v exiftool > /dev/null 2>&1
+then
+    >&2 print -l 'exiftool is not installed.' \
+        'exiftool is required to read EXIF metadata to generate good filenames.'
+    return 1
+fi
+
+if [[ -z $1 ]]
+then
+    >&2 cat <<EOF
+  usage:  $0 FILE
+
+  $0 uses EXIF Title metadata to create a name for FILE according to what I
+  think is a good naming convention. At present, this means replacing all spaces
+  and punctuation with the underscore ('_') character and downcases all
+  alphabetic characters.
+
+EOF
+    return 1
+fi
+
+local file=$1
+
+if [[ -f $file ]]
+then
+    local c='_'
+    local sedExprs=(
+        "s/[[:space:]]\+$\|^[[:space:]]\+//" # trim leading and trailing space
+        "s/[[:punct:]]/ /g"                  # substitute all punctuation with spaces
+        "s/[[:space:]]\+/$c/g"               # substitute all spaces with $c
+        #"s/$c\{2,\}/$c/g"                   # truncate long sets of $c
+        "s/./\L&/g"                          # map upper to lower
+        )
+    local title=$(exiftool -Title -T $file | sed -e${^sedExprs})
+
+    if [[ -z $title ]]
+    then
+        >&2 print -l "Trouble finding a good name for \"$file\"." "Exiting early"
+        return 1
+    fi
+    
+    print $title.${file##*.}
+else
+    >$2 print "No such file: $1"
+fi
+
