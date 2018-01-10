@@ -47,7 +47,17 @@
 (use-package intero)
 (use-package haskell-mode
   :config (add-hook 'haskell-mode-hook 'intero-mode))
-(use-package company)
+(use-package company-quickhelp)
+(use-package company 
+  :config
+  (defun my/company-next () (interactive) (company-complete-common-or-cycle 1))
+  (defun my/company-prev () (interactive) (company-complete-common-or-cycle -1))
+  :bind (("M-<return>" . company-complete)
+         :map company-active-map 
+              ("C-c h" . company-quickhelp-manual-begin)
+              ("C-n" . my/company-next)
+              ("C-p" . my/company-prev)))
+
 (use-package company-c-headers
   :init
   (add-to-list 'company-backends 'company-c-headers))
@@ -60,7 +70,7 @@
   :config
   (exec-path-from-shell-initialize))
 
-(use-package cmake-mode)
+
 
 (use-package smart-mode-line)
 (use-package smartparens
@@ -101,9 +111,34 @@
 
 
 ;; C++ stuff
-(add-hook 'c++-mode-hook 'flycheck-mode)
 
+
+(use-package cmake-mode)
 (use-package rtags)
+(use-package flycheck-rtags
+  :config
+  (defun my/flycheck-rtags-setup ()
+    (flycheck-select-checker 'rtags)
+    (setq-local flycheck-highlighting-mode nil) ;; RTags creates more accurate overlays.
+    (setq-local flycheck-check-syntax-automatically nil)))
+
+(use-package irony-eldoc) ; https://github.com/Sarcasm/irony-eldoc
+(use-package flycheck-irony ; https://github.com/Sarcasm/flycheck-irony
+  :init (eval-after-load 'flycheck
+          '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup)))
+(use-package company-irony
+  :init (eval-after-load 'company
+          '(add-to-list 'company-backends 'company-irony)))
+(use-package irony
+  :config
+  (add-hook 'c++-mode-hook 'irony-mode)
+  (add-hook 'irony-mode-hook 'irony-eldoc)
+  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
+
+(add-hook 'c++-mode-hook 'flycheck-mode)
+(add-hook 'c++-mode-hook #'my/flycheck-rtags-setup)
+(add-hook 'c++-mode-hook 'company-mode)
+  
 (use-package cmake-ide
   :config
   (require 'rtags)
