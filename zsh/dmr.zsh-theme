@@ -1,4 +1,5 @@
-# much stolen from/inspired by other themes: lukerandall, apple
+# -*- mode: sh -*-
+# stolen from/inspired by other themes: lukerandall, apple
 
 autoload -Uz vcs_info
 zstyle ':vcs_info:*' check-for-changes true
@@ -22,7 +23,10 @@ local the_login='%F{111}%n@%m%f '
 local the_vcs='${vcs_info_msg_0_}%f '
 local the_tail='%(?.%F{036}.%F{160}[%?] )$%f '
 
-PROMPT="$the_login$the_path$the_vcs$the_tail"
+if [[ $TERM = eterm-color ]]
+then PROMPT="%1~ $ "
+else PROMPT="$the_login$the_path$the_vcs$the_tail"
+fi
 
 autoload -U add-zsh-hook
 add-zsh-hook precmd theme_precmd
