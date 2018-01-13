@@ -42,7 +42,13 @@
   :config (global-undo-tree-mode))
 
 (use-package magit
-  :bind (("C-M-g" . magit-status)))
+  :bind (("C-M-g" . magit-status)
+         :map magit-status-mode-map
+         ;; I like this for window-switching
+         ("C-<tab>" . nil)
+         ;; cycling is normally C-<tab>, while <tab> just toggles
+         ;; I like the cycling behavior, and don't really need plain toggling
+         ("<tab>"   . magit-section-cycle)))
 (use-package gitignore-mode)
 (use-package intero)
 (use-package haskell-mode
@@ -54,9 +60,9 @@
   (defun my/company-prev () (interactive) (company-complete-common-or-cycle -1))
   :bind (("M-<return>" . company-complete)
          :map company-active-map 
-              ("C-c h" . company-quickhelp-manual-begin)
-              ("C-n" . my/company-next)
-              ("C-p" . my/company-prev)))
+         ("C-c h" . company-quickhelp-manual-begin)
+         ("C-n" . my/company-next)
+         ("C-p" . my/company-prev)))
 
 (use-package company-c-headers
   :init
