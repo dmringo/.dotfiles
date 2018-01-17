@@ -132,10 +132,10 @@ mode "resize" {
         # Pressing right will grow the window’s width.
         # Pressing up will shrink the window’s height.
         # Pressing down will grow the window’s height.
-        bindsym j resize shrink width 10 px or 1 ppt
-        bindsym k resize grow height 10 px or 1 ppt
-        bindsym l resize shrink height 10 px or 1 ppt
-        bindsym semicolon resize grow width 10 px or 1 ppt
+        bindsym j         resize shrink width  10 px or 1 ppt
+        bindsym k         resize grow   height 10 px or 1 ppt
+        bindsym l         resize shrink height 10 px or 1 ppt
+        bindsym semicolon resize grow   width  10 px or 1 ppt
 
         # same bindings, but for the arrow keys
         bindsym Left resize shrink width 10 px or 10 ppt
@@ -186,20 +186,46 @@ mode "$mode_system" {
   bindsym $mod+Escape $fs-pause -k, mode "default"
 }
 
+# Brightness uses custom script at:
+# https://github.com/dmringo/.dotfiles/blob/master/bin/setbacklight  
+bindsym XF86MonBrightnessUp exec setbacklight +5
+bindsym XF86MonBrightnessDown exec setbacklight -5 
+
 
 # Pulse Audio controls
-bindsym $mod+F6 exec --no-startup-id pactl set-sink-mute   0 toggle # mute sound  
-bindsym $mod+F7 exec --no-startup-id pactl set-sink-volume 0 -5% #decrease sound volume
-bindsym $mod+F8 exec --no-startup-id pactl set-sink-volume 0 +5% #increase sound volume
+set     $volToggl exec --no-startup-id pactl set-sink-mute   0 toggle
+set     $volRaise exec --no-startup-id pactl set-sink-volume 0 +5%
+set     $volLower exec --no-startup-id pactl set-sink-volume 0 -5%
 
-# Sreen brightness controls
-# bindsym XF86MonBrightnessUp exec xbacklight -inc 20 # increase screen brightness
-# bindsym XF86MonBrightnessDown exec xbacklight -dec 20 # decrease screen brightness
+bindsym $mod+F6 $volToggl
+bindsym $mod+F7 $volLower
+bindsym $mod+F8 $volRaise  
 
-# Touchpad controls
-# bindsym XF86TouchpadToggle exec /some/path/toggletouchpad.sh # toggle touchpad
+bindsym XF86AudioMute        $volToggl
+bindsym XF86AudioLowerVolume $volLower
+bindsym XF86AudioRaiseVolume $volRaise
 
 # Media player controls
 bindsym $mod+F10 exec playerctl previous
 bindsym $mod+F11 exec playerctl play-pause
 bindsym $mod+F12 exec playerctl next
+
+  
+# Brightness uses custom script at:
+# https://github.com/dmringo/.dotfiles/blob/master/bin/setbacklight  
+bindsym XF86MonBrightnessUp exec setbacklight +5
+bindsym XF86MonBrightnessDown exec setbacklight -5 
+
+# set the proper DPI (for HP Spectre 15t)
+# TODO: call a script that sets it based on the machine I'm using
+exec --no-startup-id xrandr --dpi 282
+
+# set a better keyboard repeat delay and rate - 200ms delay before repeat, 100
+# repetitions per second. Note: the delay is pretty accurate, I think, but the
+# number of repetitions is nowhere near 100.  It's just the value that produces
+# a good rate for me
+exec --no-startup-id xset r rate 200 100
+
+# Make the capslock key an extra control key
+# TODO: Should this be a configuration parameter in some file?
+exec --no-startup-id setxkbmap -option ctrl:nocaps
