@@ -84,8 +84,8 @@ _ln $DOT_HOME/ssh/config         $HOME/.ssh/config
 
 # TODO: Need to generate these per system somehow.  Good case for switching to
 # xmonad
-# _ln $DOT_HOME/i3/config          $HOME/.config/i3/config
-# _ln $DOT_HOME/i3/i3status-config $HOME/.config/i3status/config
+_ln $DOT_HOME/i3/config          $HOME/.config/i3/config
+_ln $DOT_HOME/i3/i3status-config $HOME/.config/i3status/config
 
 for f in $DOT_HOME/bin/*
 do
