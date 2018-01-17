@@ -36,12 +36,17 @@ maybe_mkdir(){
 # alone is not (unlike `ln`).
 _ln(){
 
-    src=$DOT_HOME/$1
+    src=$1
     trg=$2
 
-    if [[ -e $trg ]]
+    if [[ -e $trg || -h $trg ]]
     then
+
+        # If the files/directories are the same, just return.
+        if diff -rq $trg $src > /dev/null; then return 0; fi
+
         read -r -k 1 'ans?'"$trg already exists. (r)eplace/(s)kip/(b)ackup?"
+        echo # newline after response
         case $ans in
             [rR] )
                 rm -rf $trg ;;
