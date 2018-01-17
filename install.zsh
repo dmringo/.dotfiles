@@ -10,7 +10,7 @@
 
 # fail hard, plz
 set -e
-set -x
+# set -x
 
 # Unless DOT_HOME is set, use absolute path of this script
 DOT_HOME=${DOT_HOME:-${0:A:h}}
