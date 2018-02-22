@@ -268,6 +268,30 @@
          ("C-h w" . helm-descbinds)))
 
 
+;; Python stuff
+;; (use-package elpy :config (elpy-enable))
+(use-package py-autopep8)
+
+(use-package conda
+  :config
+  (conda-env-initialize-interactive-shells)
+  (conda-env-initialize-eshell))
+
+(use-package anaconda-mode
+  :config
+  (add-hook 'python-mode-hook 'anaconda-mode)
+  (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
+
+
+(use-package projectile
+  :config (projectile-mode)
+  (use-package projectile-ripgrep
+    :bind (:map projectile-mode-map
+                ("C-c p s r" . projectile-ripgrep))))
+
+
+(use-package elm-mode)
+(use-package treemacs)
 
 (use-package which-key
   :config
