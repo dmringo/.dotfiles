@@ -128,38 +128,42 @@
 
 
 ;; C++ stuff
+;; (use-package cmake-mode)
+
+(use-package rtags
+  :config
+  (setq rtags-completions-enabled t)
+  (rtags-enable-standard-keybindings))
+
+(use-package company-rtags
+  :init (add-to-list 'company-backends 'company-rtags))
 
 
-(use-package cmake-mode)
-(use-package rtags)
 (use-package flycheck-rtags
   :config
   (defun my/flycheck-rtags-setup ()
-    (flycheck-select-checker 'rtags)
-    (setq-local flycheck-highlighting-mode nil) ;; RTags creates more accurate overlays.
-    (setq-local flycheck-check-syntax-automatically nil)))
+    (flycheck-select-checker 'rtags)))
 
-(use-package irony-eldoc) ; https://github.com/Sarcasm/irony-eldoc
-(use-package flycheck-irony ; https://github.com/Sarcasm/flycheck-irony
-  :init (eval-after-load 'flycheck
-          '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup)))
-(use-package company-irony
-  :init (eval-after-load 'company
-          '(add-to-list 'company-backends 'company-irony)))
-(use-package irony
-  :config
-  (add-hook 'c++-mode-hook 'irony-mode)
-  (add-hook 'irony-mode-hook 'irony-eldoc)
-  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
+;; (use-package irony-eldoc) ; https://github.com/Sarcasm/irony-eldoc
+;; (use-package flycheck-irony ; https://github.com/Sarcasm/flycheck-irony
+;;   :init (add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
+;; (use-package company-irony
+;;   :init (eval-after-load 'company
+;;           '(add-to-list 'company-backends 'company-irony))
+;;   :config ())
+;; (use-package irony
+;;   :config
+;;   (add-hook 'c++-mode-hook 'irony-mode)
+;;   (add-hook 'irony-mode-hook 'irony-eldoc)
+;;   (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+;;   :bind (:map irony-mode-map
+;;               ("<remap> <completion-at-point>" . irony-completion-at-point-async)
+;;               ("<remap> <complete-symbol>"     . irony-completion-at-point-async)))
 
 (add-hook 'c++-mode-hook 'flycheck-mode)
 (add-hook 'c++-mode-hook #'my/flycheck-rtags-setup)
 (add-hook 'c++-mode-hook 'company-mode)
   
-(use-package cmake-ide
-  :config
-  (require 'rtags)
-  (cmake-ide-setup))
 
 (use-package fill-column-indicator)
 (use-package rainbow-mode)
