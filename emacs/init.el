@@ -15,7 +15,8 @@
       '(("gnu"          . "https://elpa.gnu.org/packages/")
         ;; ("marmalade"    . "https://marmalade-repo.org/packages/")
         ("melpa-stable" . "https://stable.melpa.org/packages/")
-        ("melpa"        . "https://melpa.org/packages/")))
+        ("melpa"        . "https://melpa.org/packages/")
+        ("org"          . "https://orgmode.org/elpa/")))
 
 (package-refresh-contents)
 (mapc (lambda (pkg)
@@ -34,6 +35,17 @@
 
 (use-package auto-compile
   :config (auto-compile-on-load-mode))
+
+(use-package org
+  :ensure org-plus-contrib)
+
+(defun my/org-babel-load-langs ()
+  (org-babel-do-load-languages
+              'org-babel-load-languages
+              '((python . t)
+                (emacs-lisp  . t))))
+
+(add-hook 'after-init-hook 'my/org-babel-load-langs)
 
 ;; Undo-tree is great - enable it globally and remove it from the modeline
 ;; (since it should always be active)
@@ -67,6 +79,7 @@
 (use-package company-c-headers
   :init
   (add-to-list 'company-backends 'company-c-headers))
+
 ;; Note: Company-ghc seems to cause emacs to hang when writing in comments.
 ;; Not sure why though...
 ;; (use-package company-ghc
@@ -75,8 +88,6 @@
 (use-package exec-path-from-shell
   :config
   (exec-path-from-shell-initialize))
-
-
 
 (use-package smart-mode-line)
 (use-package smartparens
@@ -273,9 +284,6 @@
   (push '("lines" . my/pandoc-include-lines) pandoc-directives)
   (push '("tag" . my/pandoc-include-tag) pandoc-directives))
 
-;; (use-package my-c-setup
-;;   :ensure f
-;;   :load-path "lisp/")
 
 ;; for Ackley's Living Computation course. Java-derived major-mode
 (use-package ulam-mode
@@ -323,13 +331,20 @@
    ("<C-iso-lefttab>" . (lambda () (interactive) (other-window -1)))
    ("M-["             . previous-buffer)
    ("M-]"             . next-buffer)
+
+   ;; More convenient than M-DEL (DEL == backspace)
+   ("M-D"             . backward-kill-word)
+   
    ;; Slightly quicker Kill this buffer
    ("C-x C-k"         . kill-this-buffer)
+
    ;; I'm always aligning things
    ("C-M-;"           . align-regexp)
+
    ;; Usually like fullscreen.  Don't know how to start an emacsclient-created
    ;; frame in fullscreen
    ("s-<return>"      . toggle-frame-fullscreen)
+
    ;; Get into eshell quicker
    ("C-S-t"           . eshell)
    ))
@@ -374,7 +389,7 @@
 
 ;; Monospaced font with great Unicode support for mathy symbols
 ;; http://www.evertype.com/emono/
-(defconst everson-mono "Everson Mono-11:bold")
+(defconst everson-mono "Everson Mono-12:bold")
 (add-to-list 'default-frame-alist `(font . ,everson-mono))
 ;; note for future me: backtick permits use of commas for evaluation inside a
 ;; quoted thing
