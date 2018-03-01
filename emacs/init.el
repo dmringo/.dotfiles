@@ -110,8 +110,8 @@
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
   :config (add-hook 'prog-mode-hook 'whitespace-cleanup-mode))
-(use-package rainbow-delimiters
-  :config (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
+
+(use-package rainbow-delimiters)
 
 ;; Show me where the cursor is, when it changes
 (use-package beacon
