@@ -12,7 +12,8 @@ order += "load"
 order += "cpu_usage"
 order += "disk /"
 order += "disk /home"
-order += "wireless wlan0"  
+order += "battery 0"  
+order += "wireless wlo1"  
 order += "ethernet eno1"
 order += "tztime local"
 
@@ -38,9 +39,24 @@ disk "/" {
 
 disk "/home" {
 	format = "home:%used/%total" 
-}    
+}
 
-wireless wlan0 {
+battery 0 {
+    format = "%status %percentage %remaining"
+    format_down = ""
+    # last_full_capacity = true
+    # integer_battery_capacity = true
+    low_threshold = 20
+    threshold_type = percentage
+    hide_seconds = true
+    # status_chr = " "
+    # status_bat = " "
+    # status_unk = " "
+    # status_full = " "
+}
+  
+
+wireless wlo1 {
 	format_up = "W: (%quality at %essid) %ip "
 	format_down = "W"
 }
