@@ -80,10 +80,10 @@ curp=$(( (cur * 100) / max ))
 
 case $op in
     '-' )
-        newp=$(( curp - num))
+        newp=$(( curp - num ))
         ;;
     '+' )
-        newp=$(( curp + num))
+        newp=$(( curp + num ))
         ;;
     *)
         newp=$num

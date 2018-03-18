@@ -16,7 +16,6 @@ clip(){
             return 1
             ;;
     esac
-
     xclip -selection clipboard $mode ${@:2}
 }
 

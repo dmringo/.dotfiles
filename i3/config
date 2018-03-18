@@ -172,7 +172,7 @@ bar {
 
 exec_always --no-startup-id feh --bg-fill ~/Pictures/wp/current
 exec --no-startup-id setxkbmap -option ctrl:nocaps
-exec --no-startup-id xset r rate 200 100
+exec --no-startup-id xset r rate 280 150
 
 set $fs-pause exec --no-startup-id i3-fs-pause
 
@@ -229,8 +229,8 @@ bindsym XF86AudioNext $mediaNext
   
 # Brightness uses custom script at:
 # https://github.com/dmringo/.dotfiles/blob/master/bin/setbacklight  
-bindsym XF86MonBrightnessUp exec setbacklight +5
-bindsym XF86MonBrightnessDown exec setbacklight -5 
+bindsym XF86MonBrightnessUp exec setbacklight +2
+bindsym XF86MonBrightnessDown exec setbacklight -2
 
 # set the proper DPI (for HP Spectre 15t)
 # TODO: call a script that sets it based on the machine I'm using
