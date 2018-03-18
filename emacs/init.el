@@ -144,25 +144,13 @@
   (defun my/flycheck-rtags-setup ()
     (flycheck-select-checker 'rtags)))
 
-;; (use-package irony-eldoc) ; https://github.com/Sarcasm/irony-eldoc
-;; (use-package flycheck-irony ; https://github.com/Sarcasm/flycheck-irony
-;;   :init (add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
-;; (use-package company-irony
-;;   :init (eval-after-load 'company
-;;           '(add-to-list 'company-backends 'company-irony))
-;;   :config ())
-;; (use-package irony
-;;   :config
-;;   (add-hook 'c++-mode-hook 'irony-mode)
-;;   (add-hook 'irony-mode-hook 'irony-eldoc)
-;;   (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-;;   :bind (:map irony-mode-map
-;;               ("<remap> <completion-at-point>" . irony-completion-at-point-async)
-;;               ("<remap> <complete-symbol>"     . irony-completion-at-point-async)))
-
 (add-hook 'c++-mode-hook 'flycheck-mode)
 (add-hook 'c++-mode-hook #'my/flycheck-rtags-setup)
 (add-hook 'c++-mode-hook 'company-mode)
+
+
+;; React + JSX
+(use-package rjsx-mode)
   
 
 (use-package fill-column-indicator)
@@ -413,7 +401,9 @@
 
 (setq-default fill-column 80)
 
+;; Whitespace
 (setq whitespace-style '(face tabs lines-tail empty trailing))
+
 
 ;; Monospaced font with great Unicode support for mathy symbols
 ;; http://www.evertype.com/emono/
