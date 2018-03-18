@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# This sets my 29" LG Widescreen display for use with an HP-Spectre X360 15t where the
+# laptop screen is centered beneath the LG.
+# DP-2 is the LG display
+# eDP-1 is the HP's native display
+xrandr --fb 5120x4320 \
+       --output DP-2  --mode 2560x1080 --pos 0x0 --scale 2x2 \
+       --output eDP-1 --pos 0x2160
