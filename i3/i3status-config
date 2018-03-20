@@ -13,7 +13,7 @@ order += "cpu_usage"
 order += "disk /"
 order += "disk /home"
 order += "battery 0"  
-order += "wireless wlo1"  
+order += "wireless wlp2s0"  
 order += "ethernet eno1"
 order += "tztime local"
 
@@ -56,7 +56,7 @@ battery 0 {
 }
   
 
-wireless wlo1 {
+wireless wlp2s0 {
 	format_up = "W: (%quality at %essid) %ip "
 	format_down = "W"
 }
