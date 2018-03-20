@@ -286,6 +286,8 @@
   (setq which-key-idle-delay 0.5)
   (which-key-mode))
 
+(use-package doom-themes)
+
 ;; Local "packages"
 (let ((theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
   (add-to-list 'custom-theme-load-path theme-dir))
@@ -316,6 +318,8 @@
   :bind (:map ulam-mode-map
               ("C-c C-k" . ulam/make)
               ("C-c C-r" . ulam/run)))
+
+
 
 ;; Use-package stuff ends here.  Below is more standard Elisp config
 
@@ -407,8 +411,11 @@
 
 ;; Monospaced font with great Unicode support for mathy symbols
 ;; http://www.evertype.com/emono/
-(defconst everson-mono "Everson Mono-12:bold")
-(add-to-list 'default-frame-alist `(font . ,everson-mono))
+(defconst font-everson-mono "Everson Mono-12")
+;; Prettier font that scales down much better
+(defconst font-source-code-pro "Source Code Variable-11")
+
+(add-to-list 'default-frame-alist `(font . ,font-source-code-pro))
 ;; note for future me: backtick permits use of commas for evaluation inside a
 ;; quoted thing
 
