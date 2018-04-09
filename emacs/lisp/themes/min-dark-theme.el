@@ -46,7 +46,8 @@
        (type    "#e0e0e0")
        (var     "#b0b0b0")
        (warning "#ff0000")
-       (warning2 "#ff8800"))
+       (warning2 "#ff8800")
+       (hilight  "#80b0f0"))
    (custom-theme-set-faces
    'min-dark
         `(default ((,class (:background ,bg1 :foreground ,fg1))))
@@ -67,7 +68,7 @@
 	`(hl-line ((,class (:background  ,bg2))))
 	`(fringe ((,class (:background ,bg2 :foreground ,fg4))))
 	`(cursor ((,class (:background ,bg3))))
-        `(show-paren-match-face ((,class (:background ,warning))))
+        `(show-paren-match-face ((,class (:background ,hilight))))
         `(isearch ((,class (:bold t :foreground ,warning :background ,bg3))))
         `(mode-line ((,class (:box (:line-width 1 :color nil) :bold t :foreground ,fg4 :background ,bg2))))
         `(mode-line-inactive ((,class (:box (:line-width 1 :color nil :style pressed-button) :foreground ,var :background ,bg1 :weight normal))))
