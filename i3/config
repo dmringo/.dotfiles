@@ -199,18 +199,16 @@ mode "$mode_system" {
 
 
 # Pulse Audio controls
-set     $volToggl exec --no-startup-id pactl set-sink-mute   0 toggle
-set     $volRaise exec --no-startup-id pactl set-sink-volume 0 +5%
-set     $volLower exec --no-startup-id pactl set-sink-volume 0 -5%
+set     $volCtl exec --no-startup-id amixer -D pulse sset Master
 
 # Should only use these when the kdb doesn't have native XF86 keys, right?
 # bindsym $mod+F6 $volToggl
 # bindsym $mod+F7 $volLower
 # bindsym $mod+F8 $volRaise  
 
-bindsym XF86AudioMute        $volToggl
-bindsym XF86AudioLowerVolume $volLower
-bindsym XF86AudioRaiseVolume $volRaise
+bindsym XF86AudioMute        $volCtl toggle
+bindsym XF86AudioLowerVolume $volCtl 5%-
+bindsym XF86AudioRaiseVolume $volCtl 5%+
 
 # Media player controls
 set $mediaPrev exec --no-startup-id playerctl previous  
