@@ -1,0 +1,19 @@
+# This is a template file (I think!) for a systemd service
+# that will lock the screen with i3lock on suspend.
+# Copy to /etc/systemd/system (or maybe /etc/systemd/user ?)
+# and sudo systemctl enable i3lock@<username>.service
+# where <username> is your login        
+
+[Unit]
+Description=Lock screen before suspend
+Before=sleep.target
+
+[Service]
+User=%I
+Type=forking
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/i3lock -c 262340
+ExecStartPost=/bin/sleep 1
+
+[Install]
+WantedBy=suspend.target
