@@ -1,9 +1,11 @@
 #!/bin/sh
 
-darkpurple=262340
+
 
 lock() {
-    i3lock -c $darkpurple -e -f
+    darkpurple=262340
+    #    i3lock -c $darkpurple -e -f
+    i3lock -i ${HOME}/Pictures/wp/current -e -f -d
 }
 
 case "$1" in
