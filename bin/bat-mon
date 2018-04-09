@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if ! command -v acpi > /dev/null
+then
+    echo "acpi not installed, exiting"
+fi
+
+status=$(acpi -b)
+level=$(printf '%s' "$status" | cut -d ',' -f 2 | tr -d ' %')
+if [ $level -lt 10 ]
+then
+    notify-send -u critical "Battery Low!" "$status"
+fi
+
+
+
+
+
+
+# systemd service
+
