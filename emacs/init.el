@@ -413,9 +413,9 @@
 ;; http://www.evertype.com/emono/
 (defconst font-everson-mono "Everson Mono-12")
 ;; Prettier font that scales down much better
-(defconst font-source-code-pro "Source Code Variable-11")
+(defconst font-office-code-pro "Office Code Pro-11")
 
-(add-to-list 'default-frame-alist `(font . ,font-source-code-pro))
+(add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
 ;; note for future me: backtick permits use of commas for evaluation inside a
 ;; quoted thing
 
