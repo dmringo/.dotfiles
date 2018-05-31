@@ -171,6 +171,7 @@ exec_always --no-startup-id feh --bg-fill ~/Pictures/wp/current
 exec_always --no-startup-id setxkbmap -option ctrl:nocaps
 exec_always --no-startup-id xset r rate 280 150
 
+
 set $fs-pause exec --no-startup-id i3-fs-pause
 
 # Set shut down, restart and locking features
@@ -204,9 +205,9 @@ mode "$mode_system" {
 set     $volCtl exec --no-startup-id amixer -D pulse sset Master
 
 # Should only use these when the kdb doesn't have native XF86 keys, right?
-# bindsym $mod+F6 $volToggl
-# bindsym $mod+F7 $volLower
-# bindsym $mod+F8 $volRaise  
+bindsym $mod+F6 $volCtl toggle
+bindsym $mod+F7 $volCtl 5%-
+bindsym $mod+F8 $volCtl 5%+
 
 bindsym XF86AudioMute        $volCtl toggle
 bindsym XF86AudioLowerVolume $volCtl 5%-
@@ -218,9 +219,9 @@ set $mediaPlay exec --no-startup-id playerctl play-pause
 set $mediaNext exec --no-startup-id playerctl next
 
 # Should only use these when the kdb doesn't have native XF86 keys, right?
-# bindsym $mod+F9  $mediaPrev
-# bindsym $mod+F10 $mediaPlay
-# bindsym $mod+F11 $mediaNext
+bindsym $mod+F1 $mediaPrev
+bindsym $mod+F2 $mediaPlay
+bindsym $mod+F3 $mediaNext
 
 bindsym XF86AudioPrev $mediaPrev
 bindsym XF86AudioPlay $mediaPlay

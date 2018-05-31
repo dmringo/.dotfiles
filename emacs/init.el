@@ -128,26 +128,40 @@
 
 
 ;; C++ stuff
-;; (use-package cmake-mode)
 
-(use-package rtags
+;;   :config
+;;   (setq rtags-completions-enabled t)
+;;   (rtags-enable-standard-keybindings))
+
+;; (use-package company-rtags
+;;   :init (add-to-list 'company-backends 'company-rtags))
+
+
+;; (use-package flycheck-rtags
+;;   :config
+;;   (defun my/flycheck-rtags-setup ()
+;;     (flycheck-select-checker 'rtags)))
+
+;; (add-hook 'c++-mode-hook 'flycheck-mode)
+;; (add-hook 'c++-mode-hook #'my/flycheck-rtags-setup)
+
+(use-package lsp-mode)
+(use-package company-lsp)
+(use-package lsp-ui)
+(use-package cquery
+  :commands lsp-cquery-enable
   :config
-  (setq rtags-completions-enabled t)
-  (rtags-enable-standard-keybindings))
+  (setq cquery-executable "/usr/local/bin/cquery"))
 
-(use-package company-rtags
-  :init (add-to-list 'company-backends 'company-rtags))
+(defun my/maybe-enable-cquery ()
+  (interactive)
+  (when (locate-dominating-file default-directory "compile_commands.json")
+    (condition-case nil
+      (lsp-cquery-enable)
+    (user-error nil))))
 
-
-(use-package flycheck-rtags
-  :config
-  (defun my/flycheck-rtags-setup ()
-    (flycheck-select-checker 'rtags)))
-
-(add-hook 'c++-mode-hook 'flycheck-mode)
-(add-hook 'c++-mode-hook #'my/flycheck-rtags-setup)
 (add-hook 'c++-mode-hook 'company-mode)
-
+(add-hook 'c-mode-common-hook #'my/maybe-enable-cquery)
 
 ;; React + JSX
 (use-package rjsx-mode)
@@ -277,9 +291,17 @@
     :bind (:map projectile-mode-map
                 ("C-c p s r" . projectile-ripgrep))))
 
+(use-package docker)
+(use-package dockerfile-mode)
+(use-package docker-tramp)
 
 (use-package elm-mode)
 (use-package treemacs)
+
+(use-package helm-dash
+  :config
+  (setq helm-dash-docsets-path (expand-file-name "~/.local/share/docsets")
+        helm-dash-browser-func 'eww))
 
 (use-package which-key
   :config
