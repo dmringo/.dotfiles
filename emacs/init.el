@@ -231,48 +231,30 @@
 (use-package yasnippet)
 (use-package haskell-snippets)
 
-(use-package helm
-  :diminish helm-mode
+(use-package ivy
+  :bind
+  (("C-c C-r" . ivy-resume))
+  ;; TODO: customize ivy-initial-inputs-alist?
   :config
-  (progn
-    (require 'helm-config)
-    (setq helm-candidate-number-limit 100)
-    ;; From https://gist.github.com/antifuchs/9238468
-    (setq helm-idle-delay 0.0 ; update fast sources immediately (doesn't).
-          helm-input-idle-delay 0.01  ; this actually updates things
-                                        ; reeeelatively quickly.
-          helm-yas-display-key-on-candidate t
-          helm-quick-update t
-          helm-M-x-requires-pattern nil
-          helm-ff-skip-boring-files t)
-    (helm-mode))
-  :bind (("C-c h"     . helm-mini)
-         ("C-h a"     . helm-apropos)
-         ("C-x b"     . helm-buffers-list)
-         ("C-x C-f"   . helm-find-files)
-         ("M-y"       . helm-show-kill-ring)
-         ("M-x"       . helm-M-x)
-         :map helm-map
-         ("<tab>"     . helm-execute-persistent-action)
-         ("C-i"       . helm-execute-persistent-action)
-         ("C-z"       . helm-select-action)))
+  (ivy-mode 1)
+  (setq ivy-height 20))
 
-(eval-after-load 'tramp '(setenv "SHELL" "/bin/bash"))
 
-(use-package helm-ag)
-
-(use-package helm-tramp)
-(use-package helm-ghc)
-(use-package helm-unicode)
-(use-package helm-descbinds
-  :defer t
-  :bind (("C-h b" . helm-descbinds)
-         ("C-h w" . helm-descbinds)))
-(use-package helm-dash
+(use-package counsel
+  :bind
+  (("M-x" . counsel-M-x)
+   ("C-h f" . counsel-describe-function)
+   ("C-h v" . counsel-describe-variable))
   :config
-  (setq helm-dash-docsets-path (expand-file-name "~/.local/share/docsets")
-        helm-dash-browser-func 'eww))
+  (counsel-mode 1))
 
+(use-package swiper
+  :bind
+  (("C-s" . swiper)
+   ("C-r" . swiper) ;; questionable - should be temporary while I acclimate
+   ))
+
+(use-package counsel-projectile)
 
 ;; Python stuff
 ;; (use-package elpy :config (elpy-enable))
@@ -290,7 +272,9 @@
 
 
 (use-package projectile
-  :config (projectile-mode)
+  :config 
+  (projectile-mode)
+  (setq projectile-completion-system 'ivy)
   (use-package projectile-ripgrep
     :bind (:map projectile-mode-map
                 ("C-c p s r" . projectile-ripgrep))))
