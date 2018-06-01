@@ -268,6 +268,10 @@
   :defer t
   :bind (("C-h b" . helm-descbinds)
          ("C-h w" . helm-descbinds)))
+(use-package helm-dash
+  :config
+  (setq helm-dash-docsets-path (expand-file-name "~/.local/share/docsets")
+        helm-dash-browser-func 'eww))
 
 
 ;; Python stuff
@@ -298,10 +302,7 @@
 (use-package elm-mode)
 (use-package treemacs)
 
-(use-package helm-dash
-  :config
-  (setq helm-dash-docsets-path (expand-file-name "~/.local/share/docsets")
-        helm-dash-browser-func 'eww))
+
 
 (use-package which-key
   :config
