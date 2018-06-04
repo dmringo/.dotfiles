@@ -232,15 +232,18 @@
 (use-package haskell-snippets)
 
 (use-package ivy
+  :diminish ivy-mode
   :bind
   (("C-c C-r" . ivy-resume))
   ;; TODO: customize ivy-initial-inputs-alist?
   :config
   (ivy-mode 1)
-  (setq ivy-height 20))
+  (setq ivy-height 20
+        ivy-on-del-error-function 'nil))
 
 
 (use-package counsel
+  :diminish counsel-mode
   :bind
   (("M-x" . counsel-M-x)
    ("C-h f" . counsel-describe-function)
