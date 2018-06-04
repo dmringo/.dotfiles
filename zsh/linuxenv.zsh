@@ -25,11 +25,11 @@ then
   # from linuxbrew profile examples, usually found at
   # /usr/share/doc/linuxbrew-wrapper/examples/profile
   ## for elf executables
-  export PATH="${HOME}/.linuxbrew/bin:${PATH}"
+  export PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
   #
   ## for manpages
-  export MANPATH="${HOME}/.linuxbrew/share/man:${MANPATH}"
+  export MANPATH="/home/linuxbrew/.linuxbrew/share/man:${MANPATH}"
   #
   ## for info pages
-  export INFOPATH="${HOME}/.linuxbrew/share/info:${INFOPATH}"
+  export INFOPATH="/home/linuxbrew/.linuxbrew/share/info:${INFOPATH}"
 fi
