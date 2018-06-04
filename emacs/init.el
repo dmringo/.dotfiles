@@ -290,6 +290,8 @@
 (use-package treemacs)
 
 
+(use-package zop-to-char
+  :bind (("M-z" . zop-to-char)))
 
 (use-package which-key
   :config
@@ -456,4 +458,4 @@
 (load custom-file)
 
 ;; let Custom declare this safe before loading it
-(load-theme 'greymatters-dark)
+(load-theme 'doom-spacegrey)
