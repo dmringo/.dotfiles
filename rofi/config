@@ -2,6 +2,3 @@ rofi.modi: window,windowcd,run,ssh,drun,combi,keys
 rofi.show-icons: True
 rofi.matching: fuzzy
 rofi.theme: ~/.config/rofi/Paper-mod.rasi
-rofi.display-window: win: 
-rofi.display-drun: app :
-rofi.display-run: prog: 
