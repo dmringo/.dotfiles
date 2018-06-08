@@ -151,10 +151,11 @@
 (use-package cquery
   :commands lsp-cquery-enable
   :config
-  (setq cquery-executable "/usr/local/bin/cquery"))
+  (setq cquery-executable (expand-file-name "cquery" "~/.local/bin/")))
 
 (defun my/maybe-enable-cquery ()
   (interactive)
+  (message "maybe enabling cquery")
   (when (locate-dominating-file default-directory "compile_commands.json")
     (condition-case nil
       (lsp-cquery-enable)
@@ -239,7 +240,8 @@
   :config
   (ivy-mode 1)
   (setq ivy-height 20
-        ivy-on-del-error-function 'nil))
+        ivy-on-del-error-function 'nil
+        ivy-use-selectable-prompt t))
 
 
 (use-package counsel
@@ -353,6 +355,9 @@
 
 ;; Don't prompt when reverting PDFs
 (setq revert-without-query '(".*\\.pdf"))
+
+;; Don't ask about following links to source-controlled files -- just do it
+(setq vc-follow-symlinks t)
 
 ;; Personal global keybindings
 (mapcar

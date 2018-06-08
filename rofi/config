@@ -1,4 +1,5 @@
 rofi.modi: window,windowcd,run,ssh,drun,combi,keys
 rofi.show-icons: True
-rofi.matching: fuzzy
+rofi.matching: normal
 rofi.theme: ~/.config/rofi/Paper-mod.rasi
+rofi.disable-history: False
