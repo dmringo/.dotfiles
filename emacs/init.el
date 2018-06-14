@@ -37,7 +37,9 @@
   :config (auto-compile-on-load-mode))
 
 (use-package org
-  :ensure org-plus-contrib)
+  :ensure org-plus-contrib
+  :bind (:map org-mode-map
+         ("<C-tab>" . nil)))
 
 (defun my/org-babel-load-langs ()
   (org-babel-do-load-languages
