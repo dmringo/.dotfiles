@@ -23,7 +23,7 @@ hide_edge_borders vertical
 floating_modifier $mod
 
 # start preferred term
-bindsym $mod+Return exec "xfce4-terminal"
+bindsym $mod+Return exec "gnome-terminal"
 
 # kill focused window
 bindsym $mod+q kill
