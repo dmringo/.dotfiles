@@ -111,6 +111,7 @@
 
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
+  :diminish
   :config (add-hook 'prog-mode-hook 'whitespace-cleanup-mode))
 
 (use-package rainbow-delimiters)
@@ -221,19 +222,26 @@
   (keyfreq-autosave-mode 1)
   (setq keyfreq-file (expand-file-name ".emacs.keyfreq" "~/.emacs.d/")))
 
-(use-package yasnippet)
+(use-package yasnippet
+  :diminish yas-minor-mode)
+(use-package yasnippet-snippets)
 (use-package haskell-snippets)
 
 (use-package ivy
   :diminish ivy-mode
   :bind
-  (("C-c C-r" . ivy-resume))
-  ;; TODO: customize ivy-initial-inputs-alist?
+  (("C-c C-r" . ivy-resume)
+   :map ivy-minibuffer-map
+   ("C-r" . ivy-previous-line-or-history))
   :config
   (ivy-mode 1)
   (setq ivy-height 20
         ivy-on-del-error-function 'nil
-        ivy-use-selectable-prompt t))
+        ivy-use-selectable-prompt t
+        ivy-initial-inputs-alist 'nil))
+
+(use-package ivy-hydra)
+(use-package ivy-yasnippet)
 
 
 (use-package counsel
