@@ -128,23 +128,6 @@
 
 
 ;; C++ stuff
-
-;;   :config
-;;   (setq rtags-completions-enabled t)
-;;   (rtags-enable-standard-keybindings))
-
-;; (use-package company-rtags
-;;   :init (add-to-list 'company-backends 'company-rtags))
-
-
-;; (use-package flycheck-rtags
-;;   :config
-;;   (defun my/flycheck-rtags-setup ()
-;;     (flycheck-select-checker 'rtags)))
-
-;; (add-hook 'c++-mode-hook 'flycheck-mode)
-;; (add-hook 'c++-mode-hook #'my/flycheck-rtags-setup)
-
 (use-package lsp-mode)
 (use-package company-lsp)
 (use-package lsp-ui)
@@ -155,14 +138,21 @@
 
 (defun my/maybe-enable-cquery ()
   (interactive)
-  (message "maybe enabling cquery")
   (when (locate-dominating-file default-directory "compile_commands.json")
     (condition-case nil
-      (lsp-cquery-enable)
-    (user-error nil))))
+        (progn
+          (message "enabling cquery")
+          (lsp-cquery-enable))
+      (user-error nil))))
 
 (add-hook 'c++-mode-hook 'company-mode)
 (add-hook 'c-mode-common-hook #'my/maybe-enable-cquery)
+
+(use-package cmake-mode)
+
+(use-package comment-dwim-2
+  :config (setq comment-dwim-2--inline-comment-behavior 'reindent-comment))
+
 
 ;; React + JSX
 (use-package rjsx-mode)
