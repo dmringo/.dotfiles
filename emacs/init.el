@@ -30,8 +30,8 @@
 ;; suggested by jwiegly
 (eval-when-compile
   (require 'use-package))
-(require 'diminish)                ;; if you use :diminish
-(require 'bind-key)                ;; if you use any :bind variant
+(require 'diminish)                ;; if you use :diminish (I do)
+(require 'bind-key)                ;; if you use any :bind variant (I do)
 
 (use-package auto-compile
   :config (auto-compile-on-load-mode))
