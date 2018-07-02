@@ -39,7 +39,9 @@
 (use-package org
   :ensure org-plus-contrib
   :bind (:map org-mode-map
-         ("<C-tab>" . nil)))
+              ("<C-tab>" . nil)))
+
+(use-package ox-gfm)
 
 (defun my/org-babel-load-langs ()
   (org-babel-do-load-languages
@@ -57,12 +59,13 @@
 
 (use-package magit
   :bind (("C-M-g" . magit-status)
-         :map magit-status-mode-map
-         ;; I like this for window-switching
+         :map magit-diff-mode-map
          ("C-<tab>" . nil)
-         ;; cycling is normally C-<tab>, while <tab> just toggles
-         ;; I like the cycling behavior, and don't really need plain toggling
+         ("<tab>"   . magit-section-cycle)
+         :map magit-status-mode-map
+         ("C-<tab>" . nil)
          ("<tab>"   . magit-section-cycle)))
+
 (use-package gitignore-mode)
 (use-package intero)
 (use-package haskell-mode
@@ -242,6 +245,12 @@
 
 (use-package ivy-hydra)
 (use-package ivy-yasnippet)
+(use-package ivy-prescient
+  :diminish
+  :config
+  (ivy-prescient-mode 1)
+  (prescient-persist-mode 1))
+(use-package ivy-dired-history)
 
 
 (use-package counsel
@@ -289,8 +298,14 @@
 (use-package docker-tramp)
 
 (use-package elm-mode)
-(use-package treemacs)
+(use-package go-mode)
+(use-package treemacs
+  :config
+  (treemacs-git-mode 'extended)
+  (treemacs-follow-mode))
 
+; Get the INFO file for SICP
+(use-package sicp)
 
 (use-package zop-to-char
   :bind (("M-z" . zop-to-char)))
