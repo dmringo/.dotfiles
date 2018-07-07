@@ -4,10 +4,14 @@
 # receiving SIGUSR1, at which point it exits.  It can be called with -k to send
 # SIGUSR1 to all running instances.
 
+
 # Requires jq to be installed for JSON handling
 if ! command -v jq > /dev/null
 then
-    echo "jq not installed, exiting"
+    i3-msg 'fullscreen disable'
+    msg="jq not installed, exiting"
+    echo "$msg"
+    i3-nagbar -m "$msg" -t error
     return 1
 fi
     

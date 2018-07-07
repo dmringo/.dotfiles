@@ -29,8 +29,8 @@
 ;; suggested by jwiegly
 (eval-when-compile
   (require 'use-package))
-(require 'diminish)                ;; if you use :diminish
-(require 'bind-key)                ;; if you use any :bind variant
+(require 'diminish)                ;; if you use :diminish (I do)
+(require 'bind-key)                ;; if you use any :bind variant (I do)
 
 (use-package auto-compile
   :config (auto-compile-on-load-mode))
@@ -131,6 +131,7 @@
 
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
+  :diminish
   :config (add-hook 'prog-mode-hook 'whitespace-cleanup-mode))
 
 (use-package rainbow-delimiters)
@@ -150,26 +151,30 @@
 
 
 ;; C++ stuff
-;; (use-package cmake-mode)
-
-(use-package rtags
+(use-package lsp-mode)
+(use-package company-lsp)
+(use-package lsp-ui)
+(use-package cquery
+  :commands lsp-cquery-enable
   :config
-  (setq rtags-completions-enabled t)
-  (rtags-enable-standard-keybindings))
+  (setq cquery-executable (expand-file-name "cquery" "~/.local/bin/")))
 
-(use-package company-rtags
-  :init (add-to-list 'company-backends 'company-rtags))
+(defun my/maybe-enable-cquery ()
+  (interactive)
+  (when (locate-dominating-file default-directory "compile_commands.json")
+    (condition-case nil
+        (progn
+          (message "enabling cquery")
+          (lsp-cquery-enable))
+      (user-error nil))))
 
+(add-hook 'c++-mode-hook 'company-mode)
+(add-hook 'c-mode-common-hook #'my/maybe-enable-cquery)
 
-(use-package flycheck-rtags
-  :config
-  (defun my/flycheck-rtags-setup ()
-    (flycheck-select-checker 'rtags)))
+(use-package cmake-mode)
 
-;; (add-hook 'c++-mode-hook 'flycheck-mode)
-;; (add-hook 'c++-mode-hook #'my/flycheck-rtags-setup)
-;; (add-hook 'c++-mode-hook 'company-mode)
-
+(use-package comment-dwim-2
+  :config (setq comment-dwim-2--inline-comment-behavior 'reindent-comment))
 
 ;; React + JSX
 (use-package prettier-js
@@ -250,82 +255,71 @@
   (keyfreq-autosave-mode 1)
   (setq keyfreq-file (expand-file-name ".emacs.keyfreq" "~/.emacs.d/")))
 
-(use-package yasnippet)
+(use-package yasnippet
+  :diminish yas-minor-mode)
+(use-package yasnippet-snippets)
 (use-package haskell-snippets)
 
-(use-package helm
-  :diminish helm-mode
+(use-package ivy
+  :diminish ivy-mode
+  :bind
+  (("C-c C-r" . ivy-resume)
+   :map ivy-minibuffer-map
+   ("C-r" . ivy-previous-line-or-history))
   :config
-  (progn
-    (require 'helm-config)
-    (setq helm-candidate-number-limit 100)
-    ;; From https://gist.github.com/antifuchs/9238468
-    (setq helm-idle-delay 0.0 ; update fast sources immediately (doesn't).
-          helm-input-idle-delay 0.01  ; this actually updates things
-                                        ; reeeelatively quickly.
-          helm-yas-display-key-on-candidate t
-          helm-quick-update t
-          helm-M-x-requires-pattern nil
-          helm-ff-skip-boring-files t)
-    (helm-mode))
-  :bind (("C-c h"     . helm-mini)
-         ("C-h a"     . helm-apropos)
-         ("C-x b"     . helm-buffers-list)
-         ("C-x C-f"   . helm-find-files)
-         ("M-y"       . helm-show-kill-ring)
-         ("M-x"       . helm-M-x)
-         :map helm-map
-         ("<tab>"     . helm-execute-persistent-action)
-         ("C-i"       . helm-execute-persistent-action)
-         ("C-z"       . helm-select-action)))
+  (ivy-mode 1)
+  (setq ivy-height 20
+        ivy-on-del-error-function 'nil
+        ivy-use-selectable-prompt t
+        ivy-initial-inputs-alist 'nil))
 
-(eval-after-load 'tramp '(setenv "SHELL" "/bin/bash"))
+(use-package ivy-hydra)
+(use-package ivy-yasnippet)
 
-(use-package helm-ag)
 
-(use-package helm-tramp)
-(use-package helm-ghc)
-(use-package helm-unicode)
-(use-package helm-descbinds
-  :defer t
-  :bind (("C-h b" . helm-descbinds)
-         ("C-h w" . helm-descbinds)))
+(use-package counsel
+  :diminish counsel-mode
+  :bind
+  (("M-x" . counsel-M-x)
+   ("C-h f" . counsel-describe-function)
+   ("C-h v" . counsel-describe-variable))
+  :config
+  (counsel-mode 1))
 
+(use-package swiper
+  :bind
+  (("C-s" . swiper)
+   ("C-r" . swiper) ;; questionable - should be temporary while I acclimate
+   ))
+
+(use-package counsel-projectile)
 
 ;; Python stuff
-;; (use-package elpy :config (elpy-enable))
 (use-package py-autopep8)
 (use-package virtualenvwrapper
   :config
   (venv-initialize-interactive-shells)
   (venv-initialize-eshell))
 
-;; (use-package conda
-;;   :config
-;;   (conda-env-initialize-interactive-shells)
-;;   (conda-env-initialize-eshell))
-
-;; (use-package anaconda-mode
-;;   :config
-;;   (add-hook 'python-mode-hook 'anaconda-mode)
-;;   (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
-
-
 (use-package projectile
-  :config (projectile-mode)
-  (require 'virtualenvwrapper)
-  (setq projectile-switch-project-action 'venv-projectile-auto-workon
-        projectile-completion-system 'helm)
+  :config 
+  (projectile-mode)
+  (setq projectile-completion-system 'ivy)
   (use-package projectile-ripgrep
     :bind (:map projectile-mode-map
                 ("C-c p s r" . projectile-ripgrep))))
 
-(use-package helm-projectile)
+(use-package docker)
+(use-package dockerfile-mode)
+(use-package docker-tramp)
 
 (use-package elm-mode)
 
 (use-package treemacs
   :config (setq treemacs-show-hidden-files nil))
+
+(use-package zop-to-char
+  :bind (("M-z" . zop-to-char)))
 
 (use-package which-key
   :config
@@ -335,7 +329,6 @@
 
 ;; Nice set of non-offensive themes
 (use-package doom-themes)
-
 
 
 ;; Local "packages"
@@ -395,6 +388,8 @@
 ;; Do not ping known domains when finding file at point
 (setq ffap-machine-p-known "reject")
 
+;; Don't ask about following links to source-controlled files -- just do it
+(setq vc-follow-symlinks t)
 
 ;; Personal global keybindings
 (mapcar
@@ -473,9 +468,9 @@
 ;; http://www.evertype.com/emono/
 (defconst font-everson-mono "Everson Mono-12")
 ;; Prettier font that scales down much better
-(defconst font-source-code-pro "Source Code Variable-11")
+(defconst font-office-code-pro "Office Code Pro-9")
 
-(add-to-list 'default-frame-alist `(font . ,font-source-code-pro))
+(add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
 ;; note for future me: backtick permits use of commas for evaluation inside a
 ;; quoted thing
 
@@ -511,6 +506,6 @@
 (load custom-file)
 
 
-;;(load-theme 'min-light)
+;; let Custom declare this safe before loading it
+(load-theme 'doom-spacegrey)
 
-(put 'upcase-region 'disabled nil)

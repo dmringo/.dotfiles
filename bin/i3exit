@@ -4,8 +4,7 @@
 
 lock() {
     darkpurple=262340
-    #    i3lock -c $darkpurple -e -f
-    i3lock -i ${HOME}/Pictures/wp/current -e -f -d
+    i3lock -c $darkpurple -e -f
 }
 
 case "$1" in

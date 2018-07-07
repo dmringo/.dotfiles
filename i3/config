@@ -2,7 +2,7 @@ set $mod Mod4
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-leftp
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
-font pango:DejaVu Sans Mono 8
+font pango:Office Code Pro 8
 
 # COLORS  
 # class                 border  backgr. text    indicator child_border
@@ -11,37 +11,46 @@ client.focused_inactive #333333 #5f676a #ffffff #484e50   #5f676a
 client.unfocused        #333333 #222222 #888888 #292d2e   #222222
 client.urgent           #2f343a #900000 #ffffff #900000   #900000
 client.placeholder      #000000 #0c0c0c #ffffff #000000   #0c0c0c
-
 client.background       #ffffff
+
   
 # Minimal borders
 # TODO: change this to default_border with a more recent i3
 new_window pixel 1
 hide_edge_borders vertical
  
-
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod
 
-# start st terminal (prefer over the i3-sensible-terminal choices)
-bindsym $mod+Return exec "xfce4-terminal"
+# start preferred term
+bindsym $mod+Return exec "gnome-terminal"
 
 # kill focused window
 bindsym $mod+q kill
 
 # start dmenu (a program launcher)
 # bindsym $mod+space exec dmenu_run -i -l 01 -p '>'
-bindsym $mod+space exec i3-dmenu-desktop -dmenu='dmenu -i -l 10 -p ">"'
+# bindsym $mod+space exec i3-dmenu-desktop -dmenu='dmenu -i -l 10 -p ">"'
+bindsym $mod+space exec rofi -show combi -combi-modi "drun#run#window" \
+  -display-combi    "comb> "  \
+  -display-drun     "drun> "  \
+  -display-window   "win> "   \
+  -display-run      "run> "   \
+  -display-keys     "keys> "  \
+  -display-windowcd "wincd> " \
+  -display-ssh      "ssh> "   \
+  
+
 # There also is the (new) i3-dmenu-desktop which only displays applications
 # shipping a .desktop file. It is a wrapper around dmenu, so you need that
 # installed.
 # bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
 
 # change focus
-bindsym $mod+j focus left
-bindsym $mod+k focus down
-bindsym $mod+l focus up
-bindsym $mod+semicolon focus right
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
 
 # alternatively, you can use the cursor keys:
 bindsym $mod+Left focus left
@@ -50,10 +59,10 @@ bindsym $mod+Up focus up
 bindsym $mod+Right focus right
 
 # move focused window
-bindsym $mod+Shift+j move left
-bindsym $mod+Shift+k move down
-bindsym $mod+Shift+l move up
-bindsym $mod+Shift+semicolon move right
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
 
 # alternatively, you can use the cursor keys:
 bindsym $mod+Shift+Left move left
@@ -63,10 +72,10 @@ bindsym $mod+Shift+Right move right
 
 
 # move workspace to different output  
-bindsym $mod+Control+j move workspace to output left
-bindsym $mod+Control+k move workspace to output down
-bindsym $mod+Control+l move workspace to output up
-bindsym $mod+Control+semicolon move workspace to output right
+bindsym $mod+Control+h move workspace to output left
+bindsym $mod+Control+j move workspace to output down
+bindsym $mod+Control+k move workspace to output up
+bindsym $mod+Control+l move workspace to output right
 
 bindsym $mod+Control+Left move workspace to output left
 bindsym $mod+Control+Down move workspace to output down
@@ -75,13 +84,14 @@ bindsym $mod+Control+Right move workspace to output right
   
 
 # split in horizontal orientation
-bindsym $mod+h split h
+bindsym $mod+z split h
 
 # split in vertical orientation
 bindsym $mod+v split v
 
 # enter fullscreen mode for the focused container
 bindsym $mod+f fullscreen toggle
+bindsym $mod+Control+f fullscreen toggle global
 
 # change container layout (stacked, tabbed, toggle split)
 bindsym $mod+s layout stacking
@@ -89,7 +99,7 @@ bindsym $mod+w layout tabbed
 bindsym $mod+e layout toggle split
 
 # toggle tiling / floating
-#bindsym $mod+Shift+space floating toggle
+bindsym $mod+Shift+f floating toggle
 
 # change focus between tiling / floating windows
 bindsym $mod+Shift+space focus mode_toggle
@@ -139,10 +149,10 @@ mode "resize" {
         # Pressing right will grow the window’s width.
         # Pressing up will shrink the window’s height.
         # Pressing down will grow the window’s height.
-        bindsym j         resize shrink width  10 px or 1 ppt
-        bindsym k         resize grow   height 10 px or 1 ppt
-        bindsym l         resize shrink height 10 px or 1 ppt
-        bindsym semicolon resize grow   width  10 px or 1 ppt
+        bindsym h resize shrink width  10 px or 1 ppt
+        bindsym j resize grow   height 10 px or 1 ppt
+        bindsym k resize shrink height 10 px or 1 ppt
+        bindsym l resize grow   width  10 px or 1 ppt
 
         # same bindings, but for the arrow keys
         bindsym Left resize shrink width 10 px or 10 ppt
@@ -168,12 +178,13 @@ bar {
 }
 
 
+
 set $fs-pause exec --no-startup-id i3-fs-pause
 
 # Set shut down, restart and locking features
 bindsym $mod+Escape $fs-pause, mode "$mode_system"
 # set $mode_system (l)ock, (e)xit, switch_(u)ser, (s)uspend, (h)ibernate, (r)eboot, (Shift+s)hutdown
-set $mode_system (l)ock, (e)xit, switch_(u)ser, (s)uspend, (r)eboot, (Shift+s)hutdown
+set $mode_system (l)ock, (e)xit, switch_(u)ser, (s)uspend, (r)eboot, (Shift+s)hutdown, do (n)othing
 mode "$mode_system" {
   bindsym l exec       --no-startup-id i3exit lock,        $fs-pause -k, mode "default"
   bindsym e exec       --no-startup-id i3exit logout,      $fs-pause -k, mode "default"
@@ -189,6 +200,7 @@ mode "$mode_system" {
   bindsym Return      $fs-pause -k, mode "default"
   bindsym Escape      $fs-pause -k, mode "default"
   bindsym $mod+Escape $fs-pause -k, mode "default"
+  bindsym n           $fs-pause -k, mode "default"
 }
 
 # Brightness uses custom script at:
@@ -201,9 +213,9 @@ mode "$mode_system" {
 set     $volCtl exec --no-startup-id amixer -D pulse sset Master
 
 # Should only use these when the kdb doesn't have native XF86 keys, right?
-# bindsym $mod+F6 $volToggl
-# bindsym $mod+F7 $volLower
-# bindsym $mod+F8 $volRaise  
+bindsym $mod+F6 $volCtl toggle
+bindsym $mod+F7 $volCtl 5%-
+bindsym $mod+F8 $volCtl 5%+
 
 bindsym XF86AudioMute        $volCtl toggle
 bindsym XF86AudioLowerVolume $volCtl 5%-
@@ -215,9 +227,9 @@ set $mediaPlay exec --no-startup-id playerctl play-pause
 set $mediaNext exec --no-startup-id playerctl next
 
 # Should only use these when the kdb doesn't have native XF86 keys, right?
-# bindsym $mod+F9  $mediaPrev
-# bindsym $mod+F10 $mediaPlay
-# bindsym $mod+F11 $mediaNext
+bindsym $mod+F1 $mediaPrev
+bindsym $mod+F2 $mediaPlay
+bindsym $mod+F3 $mediaNext
 
 bindsym XF86AudioPrev $mediaPrev
 bindsym XF86AudioPlay $mediaPlay
