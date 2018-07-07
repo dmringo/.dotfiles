@@ -13,7 +13,6 @@
 
 (setq package-archives
       '(("gnu"          . "https://elpa.gnu.org/packages/")
-        ;; ("marmalade"    . "https://marmalade-repo.org/packages/")
         ("melpa-stable" . "https://stable.melpa.org/packages/")
         ("melpa"        . "https://melpa.org/packages/")
         ("org"          . "https://orgmode.org/elpa/")))
@@ -37,12 +36,24 @@
   :config (auto-compile-on-load-mode))
 
 (use-package org
-  :ensure org-plus-contrib)
+  :ensure org-plus-contrib
+  :bind (( :map org-mode-map
+           ("<C-tab>" . other-window)))
+  :config
+  ;; ditaa path as installed by apt
+  (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar"
+        ;; latexmk is a little more consistent than pdflatex
+        org-latex-pdf-process (list "latexmk -f -pdf %f")))
+
+(use-package ox-twbs)
+
+(use-package htmlize)
 
 (defun my/org-babel-load-langs ()
   (org-babel-do-load-languages
               'org-babel-load-languages
               '((python . t)
+                (ditaa . t)
                 (emacs-lisp  . t))))
 
 (add-hook 'after-init-hook 'my/org-babel-load-langs)
@@ -54,13 +65,24 @@
   :config (global-undo-tree-mode))
 
 (use-package magit
-  :bind (("C-M-g" . magit-status)
+  :bind (("M-G" . magit-status)
          :map magit-status-mode-map
          ;; I like this for window-switching
          ("C-<tab>" . nil)
          ;; cycling is normally C-<tab>, while <tab> just toggles
          ;; I like the cycling behavior, and don't really need plain toggling
-         ("<tab>"   . magit-section-cycle)))
+         ("<tab>"   . magit-section-cycle)
+         :map magit-process-mode-map
+         ("C-<tab>" . nil)
+         ("<tab>"   . magit-section-cycle)
+         :map magit-revision-mode-map
+         ("C-<tab>" . nil)
+         ("<tab>"   . magit-section-cycle)
+         :map magit-diff-mode-map
+         ("C-<tab>" . nil)
+         ("<tab>"   . magit-section-cycle)
+         ))
+
 (use-package gitignore-mode)
 (use-package intero)
 (use-package haskell-mode
@@ -144,13 +166,27 @@
   (defun my/flycheck-rtags-setup ()
     (flycheck-select-checker 'rtags)))
 
-(add-hook 'c++-mode-hook 'flycheck-mode)
-(add-hook 'c++-mode-hook #'my/flycheck-rtags-setup)
-(add-hook 'c++-mode-hook 'company-mode)
+;; (add-hook 'c++-mode-hook 'flycheck-mode)
+;; (add-hook 'c++-mode-hook #'my/flycheck-rtags-setup)
+;; (add-hook 'c++-mode-hook 'company-mode)
 
 
 ;; React + JSX
-(use-package rjsx-mode)
+(use-package prettier-js
+  :config
+  ;; (setq prettier-js-args
+  ;;       '("--trailing-comma" "all"))
+  )
+(use-package js2-mode
+  :config
+  (setq js2-basic-offset 2)
+  (add-hook 'js2-mode-hook 'prettier-js-mode)
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode)))
+(use-package rjsx-mode
+  :diminish
+  :init
+  (add-to-list 'auto-mode-alist '("[Cc]omponents\\/.*\\.js\\'" . rjsx-mode)))
+(use-package json-mode :diminish)
   
 
 (use-package fill-column-indicator)
@@ -259,34 +295,48 @@
 ;; Python stuff
 ;; (use-package elpy :config (elpy-enable))
 (use-package py-autopep8)
-
-(use-package conda
+(use-package virtualenvwrapper
   :config
-  (conda-env-initialize-interactive-shells)
-  (conda-env-initialize-eshell))
+  (venv-initialize-interactive-shells)
+  (venv-initialize-eshell))
 
-(use-package anaconda-mode
-  :config
-  (add-hook 'python-mode-hook 'anaconda-mode)
-  (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
+;; (use-package conda
+;;   :config
+;;   (conda-env-initialize-interactive-shells)
+;;   (conda-env-initialize-eshell))
+
+;; (use-package anaconda-mode
+;;   :config
+;;   (add-hook 'python-mode-hook 'anaconda-mode)
+;;   (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
 
 
 (use-package projectile
   :config (projectile-mode)
+  (require 'virtualenvwrapper)
+  (setq projectile-switch-project-action 'venv-projectile-auto-workon
+        projectile-completion-system 'helm)
   (use-package projectile-ripgrep
     :bind (:map projectile-mode-map
                 ("C-c p s r" . projectile-ripgrep))))
 
+(use-package helm-projectile)
 
 (use-package elm-mode)
-(use-package treemacs)
+
+(use-package treemacs
+  :config (setq treemacs-show-hidden-files nil))
 
 (use-package which-key
   :config
   (setq which-key-idle-delay 0.5)
   (which-key-mode))
 
+
+;; Nice set of non-offensive themes
 (use-package doom-themes)
+
+
 
 ;; Local "packages"
 (let ((theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
@@ -342,6 +392,10 @@
 ;; Don't prompt when reverting PDFs
 (setq revert-without-query '(".*\\.pdf"))
 
+;; Do not ping known domains when finding file at point
+(setq ffap-machine-p-known "reject")
+
+
 ;; Personal global keybindings
 (mapcar
  (lambda (pr) (global-set-key (kbd (car pr)) (cdr pr)))        
@@ -367,6 +421,9 @@
 
    ;; Get into eshell quicker
    ("C-S-t"           . eshell)
+
+   ("C-M-}"           . enlarge-window-horizontally)
+   ("C-M-{"           . shrink-window-horizontally)
    ))
 
 ;; Be Lazy, prefer Y or N to Yes or No
@@ -376,6 +433,9 @@
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
+
+;; Don't really like big fringes much either
+(set-fringe-mode '(0 . 0))
 
 ;; disable bell and screen flashing
 (defun my/do-nothing () nil)
@@ -425,9 +485,14 @@
 ;; Don't like the startup screen
 (setq inhibit-startup-screen t)
 
+;; Don't warn about downcase regigion (C-x C-l)
+(put 'downcase-region 'disabled nil)
+
+
 ;; Make C look the way I want it to
 (setq c-default-style "linux"
       c-basic-offset 2)
+
 
 ;; Backup policy
 (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
@@ -445,5 +510,7 @@
 (setq custom-file my-custom-file)
 (load custom-file)
 
-;; let Custom declare this safe before loading it
-(load-theme 'greymatters-dark)
+
+;;(load-theme 'min-light)
+
+(put 'upcase-region 'disabled nil)
