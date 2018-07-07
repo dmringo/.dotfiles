@@ -14,7 +14,7 @@ order += "disk /"
 order += "disk /home"
 order += "battery 0"  
 order += "wireless wlp2s0"  
-order += "ethernet eno1"
+order += "ethernet enp1s0"
 order += "tztime local"
 
 
@@ -61,13 +61,13 @@ wireless wlp2s0 {
 	format_down = "W"
 }
 
-ethernet eno1 {
+ethernet enp1s0 {
 	format_up =  "E: %ip (%speed)"
 	format_down = "E"
 }
 
 tztime local {
 #	format = " %h-%d %H:%M ☰ "
-	# termsyn font
+	# termsyn fotn
 	format = "%b%d %H:%M"
 }

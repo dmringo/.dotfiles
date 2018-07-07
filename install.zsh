@@ -83,9 +83,13 @@ _ln $DOT_HOME/emacs/init.el      $HOME/.emacs # convenient, but not necessary
 _ln $DOT_HOME/ssh/config         $HOME/.ssh/config
 
 # TODO: Need to generate these per system somehow.  Good case for switching to
-# xmonad
-_ln $DOT_HOME/i3/config          $HOME/.config/i3/config
-_ln $DOT_HOME/i3/i3status-config $HOME/.config/i3status/config
+# xmonad?
+_ln $DOT_HOME/i3       $HOME/.config/i3
+_ln $DOT_HOME/i3status $HOME/.config/i3status
+_ln $DOT_HOME/dunst    $HOME/.config/dunst
+_ln $DOT_HOME/rofi     $HOME/.config/rofi
+
+
 
 for f in $DOT_HOME/bin/*
 do

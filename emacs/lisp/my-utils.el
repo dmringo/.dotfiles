@@ -95,4 +95,18 @@ This assumes that there is a pair in the variable `pandoc-directives'
   (let ((spec (or timespec  "%b %e, %Y")))
     (insert (format-time-string spec))))
 
+;; Stolen from Emacs Prelude (https://github.com/bbatsov/emacs-prelude)
+;;
+;; TODO: If prefix arg is specified and in a recognized project, copy name
+;; relative to project root
+(defun my/clip-filename ()
+  "Copy the current buffer file name to the clipboard."
+  (interactive)
+  (let ((filename (if (equal major-mode 'dired-mode)
+                      default-directory
+                    (buffer-file-name))))
+    (when filename
+      (kill-new filename)
+      (message "Copied buffer file name '%s' to the clipboard." filename))))
+
 (provide 'my-utils)
