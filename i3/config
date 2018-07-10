@@ -27,7 +27,7 @@ bindsym $mod+Return exec "gnome-terminal"
 
 # kill focused window
 bindsym $mod+q kill
-
+  
 # start dmenu (a program launcher)
 # bindsym $mod+space exec dmenu_run -i -l 01 -p '>'
 # bindsym $mod+space exec i3-dmenu-desktop -dmenu='dmenu -i -l 10 -p ">"'

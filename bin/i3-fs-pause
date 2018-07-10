@@ -14,7 +14,8 @@ then
     i3-nagbar -m "$msg" -t error
     return 1
 fi
-    
+
+
 
 # Don't know if this will work on multihead.  Might have to make another
 # conditional to grab the output that is active if there can be focused things
@@ -30,15 +31,14 @@ isFS() {
            > /dev/null    
 }
 
-maybeToggle(){
+maybeToggle() {
     if ! isFS && [ $toggle ]; then i3-msg 'fullscreen enable'; fi
 }
 
 
-if [ "$1" = "-k" ]; then killall -USR1 i3-fs-pause; fi
+if [ "$1" = "-k" ]; then killall -USR1 i3-fs-pause; return; fi
 
 if isFS; then toggle=`i3-msg 'fullscreen disable' | jq '.[].success'`; fi
 
 trap maybeToggle USR1
-sleep infinity &
-wait
+tail -f /dev/null & wait
