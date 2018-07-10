@@ -46,10 +46,9 @@ cmd_exists() { command -v $1 2>&1 > /dev/null }
 # Make sure to use double quotes to prevent shell expansion
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
 
+zplug "mafredri/zsh-async", from:github
 
-# my own fancy prompt and theme
-zplug "$MY_ZSH_HOME", from:local, as:theme, use:"dmr.zsh-theme"
-
+zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
 
 # l with fancy colors and git info
 zplug "supercrabtree/k", hook-load:'alias k="k -h"'
