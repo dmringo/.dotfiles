@@ -13,7 +13,6 @@
 
 (setq package-archives
       '(("gnu"          . "https://elpa.gnu.org/packages/")
-        ;; ("marmalade"    . "https://marmalade-repo.org/packages/")
         ("melpa-stable" . "https://stable.melpa.org/packages/")
         ("melpa"        . "https://melpa.org/packages/")
         ("org"          . "https://orgmode.org/elpa/")))
@@ -38,15 +37,25 @@
 
 (use-package org
   :ensure org-plus-contrib
-  :bind (:map org-mode-map
-              ("<C-tab>" . nil)))
+  :bind (( :map org-mode-map
+           ("<C-tab>" . other-window)))
+  :config
+  ;; ditaa path as installed by apt
+  (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar"
+        ;; latexmk is a little more consistent than pdflatex
+        org-latex-pdf-process (list "latexmk -f -pdf %f")))
 
+(use-package ox-twbs)
 (use-package ox-gfm)
+
+(use-package htmlize)
+
 
 (defun my/org-babel-load-langs ()
   (org-babel-do-load-languages
               'org-babel-load-languages
               '((python . t)
+                (ditaa . t)
                 (emacs-lisp  . t))))
 
 (add-hook 'after-init-hook 'my/org-babel-load-langs)
@@ -58,13 +67,20 @@
   :config (global-undo-tree-mode))
 
 (use-package magit
-  :bind (("C-M-g" . magit-status)
-         :map magit-diff-mode-map
-         ("C-<tab>" . nil)
-         ("<tab>"   . magit-section-cycle)
+  :bind (("M-G" . magit-status)
          :map magit-status-mode-map
-         ("C-<tab>" . nil)
+         ("C-<tab>" . other-window)
+         ("<tab>"   . magit-section-cycle)
+         :map magit-process-mode-map
+         ("C-<tab>" . other-window)
+         ("<tab>"   . magit-section-cycle)
+         :map magit-revision-mode-map
+         ("C-<tab>" . other-window)
+         ("<tab>"   . magit-section-cycle)
+         :map magit-diff-mode-map
+         ("C-<tab>" . other-window)
          ("<tab>"   . magit-section-cycle)))
+
 
 (use-package gitignore-mode)
 (use-package intero)
@@ -163,9 +179,22 @@
 (use-package comment-dwim-2
   :config (setq comment-dwim-2--inline-comment-behavior 'reindent-comment))
 
-
 ;; React + JSX
-(use-package rjsx-mode)
+(use-package prettier-js
+  :config
+  ;; (setq prettier-js-args
+  ;;       '("--trailing-comma" "all"))
+  )
+(use-package js2-mode
+  :config
+  (setq js2-basic-offset 2)
+  (add-hook 'js2-mode-hook 'prettier-js-mode)
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode)))
+(use-package rjsx-mode
+  :diminish
+  :init
+  (add-to-list 'auto-mode-alist '("[Cc]omponents\\/.*\\.js\\'" . rjsx-mode)))
+(use-package json-mode :diminish)
   
 
 (use-package fill-column-indicator)
@@ -275,19 +304,11 @@
 (use-package counsel-projectile)
 
 ;; Python stuff
-;; (use-package elpy :config (elpy-enable))
 (use-package py-autopep8)
-
-(use-package conda
+(use-package virtualenvwrapper
   :config
-  (conda-env-initialize-interactive-shells)
-  (conda-env-initialize-eshell))
-
-(use-package anaconda-mode
-  :config
-  (add-hook 'python-mode-hook 'anaconda-mode)
-  (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
-
+  (venv-initialize-interactive-shells)
+  (venv-initialize-eshell))
 
 (use-package projectile
   :config 
@@ -306,10 +327,12 @@
 (use-package treemacs
   :config
   (treemacs-git-mode 'extended)
-  (treemacs-follow-mode))
+  (treemacs-follow-mode)
+  (setq treemacs-show-hidden-files nil))
 
-; Get the INFO file for SICP
+
 (use-package sicp)
+
 
 (use-package zop-to-char
   :bind (("M-z" . zop-to-char)))
@@ -319,7 +342,10 @@
   (setq which-key-idle-delay 0.5)
   (which-key-mode))
 
+
+;; Nice set of non-offensive themes
 (use-package doom-themes)
+
 
 ;; Local "packages"
 (let ((theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
@@ -375,6 +401,9 @@
 ;; Don't prompt when reverting PDFs
 (setq revert-without-query '(".*\\.pdf"))
 
+;; Do not ping known domains when finding file at point
+(setq ffap-machine-p-known "reject")
+
 ;; Don't ask about following links to source-controlled files -- just do it
 (setq vc-follow-symlinks t)
 
@@ -403,6 +432,9 @@
 
    ;; Get into eshell quicker
    ("C-S-t"           . eshell)
+
+   ("C-M-}"           . enlarge-window-horizontally)
+   ("C-M-{"           . shrink-window-horizontally)
    ))
 
 ;; Be Lazy, prefer Y or N to Yes or No
@@ -412,6 +444,9 @@
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
+
+;; Don't really like big fringes much either
+(set-fringe-mode '(0 . 0))
 
 ;; disable bell and screen flashing
 (defun my/do-nothing () nil)
@@ -461,9 +496,14 @@
 ;; Don't like the startup screen
 (setq inhibit-startup-screen t)
 
+;; Don't warn about downcase regigion (C-x C-l)
+(put 'downcase-region 'disabled nil)
+
+
 ;; Make C look the way I want it to
 (setq c-default-style "linux"
       c-basic-offset 2)
+
 
 ;; default to modern fortran mode
 (add-to-list 'auto-mode-alist '("\\.F\\'" . f90-mode))
@@ -485,5 +525,7 @@
 (setq custom-file my-custom-file)
 (load custom-file)
 
+
 ;; let Custom declare this safe before loading it
 (load-theme 'doom-spacegrey)
+
