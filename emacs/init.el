@@ -135,7 +135,11 @@
 
 ;; C++ stuff
 (use-package lsp-mode)
-(use-package company-lsp)
+(use-package company-lsp
+  ;; snippets don't seem to work too well.  At least, I can't figure out
+  ;; how to expand them properly
+  :config (setq company-lsp-enable-snippet nil))
+
 (use-package lsp-ui)
 (use-package cquery
   :commands lsp-cquery-enable
@@ -460,6 +464,10 @@
 ;; Make C look the way I want it to
 (setq c-default-style "linux"
       c-basic-offset 2)
+
+;; default to modern fortran mode
+(add-to-list 'auto-mode-alist '("\\.F\\'" . f90-mode))
+
 
 ;; Backup policy
 (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
