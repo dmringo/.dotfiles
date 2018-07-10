@@ -20,6 +20,7 @@
  '(jdee-db-active-breakpoint-face-colors (cons "#0d0d0d" "#41728e"))
  '(jdee-db-requested-breakpoint-face-colors (cons "#0d0d0d" "#b5bd68"))
  '(jdee-db-spec-breakpoint-face-colors (cons "#0d0d0d" "#5a5b5a"))
+ '(org-agenda-files (quote ("~/todo.org")))
  '(package-selected-packages
    (quote
     (ox-gfm ivy-dired-history ivy-prescient go-mode sicp comment-dwim-2 ivy-yasnippet yasnippet-snippets ivy-hydra all-the-icons-ivy zop-to-char counsel-projectile counsel ivy dockerfile-mode docker evil-magit evil zeal-at-point company-lsp helm-xref cquery lsp-ui lsp-mode helm-system-packages minimal-theme rjsx-mode doom-themes eziam-theme org-plus-contrib elm-mode origami eimp ein anaconda-mode conda nov py-autopep8 elpy atomic-chrome counsel-etags helm-projectile projectile-ripgrep projectile flycheck-rtags company-quickhelp flycheck-irony company-irony irony-eldoc irony rtags cmake-ide cmake-mode company-c-headers helm-gtags treemacs which-key keyfreq pandoc-mode mmm-mode dokuwiki-mode alect-themes basic-theme my-utils edit-indirect math-symbol-lists helm-idris idris-mode whitespace-cleanup-mode racket-mode haskell-snippets yasnippet pandoc exec-path-from-shell beacon f company-ghc rainbow-mode kurecolor fill-column-indicator nav-flash pdf-tools centered-window-mode gitignore-mode undo-tree rainbow-delimiters smartparens use-package)))
