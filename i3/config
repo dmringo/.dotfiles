@@ -177,9 +177,6 @@ bar {
         tray_output primary
 }
 
-exec_always --no-startup-id feh --bg-fill ~/Pictures/wp/current
-exec_always --no-startup-id setxkbmap -option ctrl:nocaps
-exec_always --no-startup-id xset r rate 280 150
 
 
 set $fs-pause exec --no-startup-id i3-fs-pause
@@ -251,7 +248,7 @@ bindsym $mod+F12 exec setbacklight +1
 
 
 
-  
+exec_always --no-startup-id feh --bg-fill ~/Pictures/wp/current  
 
 # set a better keyboard repeat delay and rate - 250ms delay before repeat, 100
 # repetitions per second. Note: the delay is pretty accurate, I think, but the
@@ -261,4 +258,4 @@ exec --no-startup-id xset r rate 250 100
 
 # Make the capslock key an extra control key
 # TODO: Should this be a configuration parameter in some file?
-exec --no-startup-id setxkbmap -option ctrl:nocaps
+exec_always --no-startup-id setxkbmap -option ctrl:nocaps
