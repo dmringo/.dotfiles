@@ -29,6 +29,7 @@ export PERL_MM_OPT="INSTALL_BASE=/home/david/perl5"
 
 export EDITOR="emacs"
 export ESHELL="/usr/bin/zsh"
+export CDPATH="${HOME}:${HOME}/proj"
 
 alias l='ls -lh --color="auto" --group-directories-first'
 alias la='ls -lhar --color="auto" --group-directories-first'
