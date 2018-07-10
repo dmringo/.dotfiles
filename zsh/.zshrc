@@ -1,6 +1,7 @@
 # Checking for dumb terminals - makes Tramp work when editing remote files
 [[ $TERM == "dumb" ]] && unsetopt zle && PS1='$ ' && return;
 
+
 # The following lines were added by compinstall
 zstyle ':completion:*' completer _expand _complete _ignored _match _approximate _prefix
 zstyle ':completion:*' completions 1
@@ -40,6 +41,8 @@ fi
 # Essential
 source $ZPLUG_HOME/init.zsh
 
+cmd_exists() { command -v $1 2>&1 > /dev/null }
+
 # Make sure to use double quotes to prevent shell expansion
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
 
@@ -49,33 +52,37 @@ zplug "$MY_ZSH_HOME", from:local, as:theme, use:"dmr.zsh-theme"
 
 
 # l with fancy colors and git info
-zplug "supercrabtree/k"
+zplug "supercrabtree/k", hook-load:'alias k="k -h"'
 
 # tell me if there's a faster way to run some command
 zplug "djui/alias-tips"
 
 # oh-my-zsh git plugin is nice
-zplug "plugins/git", from:oh-my-zsh
+zplug "plugins/git", from:oh-my-zsh, if:'cmd_exists git'
 
 # Haskell stack
-zplug "plugins/stack", from:oh-my-zsh
+zplug "plugins/stack", from:oh-my-zsh, if:'cmd_exists stack'
 
 # pandoc completion
-zplug "srijanshetty/zsh-pandoc-completion"
+zplug "srijanshetty/zsh-pandoc-completion", if:'cmd_exists pandoc'
 
 # GTK settings manager
-type gsettings 2>&1 > /dev/null && zplug "jmatsuzawa/zsh-comp-gsettings"
+zplug "jmatsuzawa/zsh-comp-gsettings", if:'cmd_exists gsettings'
 
 # Keybase.io
-type keybase 2>&1 > /dev/null && zplug "rbirnie/oh-my-zsh-keybase"
+zplug "rbirnie/oh-my-zsh-keybase", if:'cmd_exists keybase'
 
 # Homebrew
-type brew 2>&1 > /dev/null && zplug "vasyharan/zsh-brew-services"
+zplug "vasyharan/zsh-brew-services", if:'cmd_exists brew'
 
 # ZSH scripting hints
 zplug "joepvd/zsh-hints"
 
-zplug "BurntSushi/ripgrep", as:command, use:'complete/_rg'
+# Grep, but faster and .*ignore-aware
+zplug "BurntSushi/ripgrep", as:command, use:'complete/_rg', if:'cmd_exists rg'
+
+# ninja build system
+zplug "ninja-build/ninja", as:command, use:"misc/zsh-completion", if:'cmd_exists ninja'
 
 # Install packages that have not been installed yet
 if ! zplug check --verbose; then
