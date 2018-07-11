@@ -16,7 +16,7 @@ client.background       #ffffff
   
 # Minimal borders
 # TODO: change this to default_border with a more recent i3
-new_window pixel 1
+new_window pixel 2
 hide_edge_borders vertical
  
 # Use Mouse+$mod to drag floating windows to their wanted position
@@ -254,7 +254,7 @@ exec_always --no-startup-id feh --bg-fill ~/Pictures/wp/current
 # repetitions per second. Note: the delay is pretty accurate, I think, but the
 # number of repetitions is nowhere near 100.  It's just the value that produces
 # a good rate for me
-exec --no-startup-id xset r rate 250 100
+exec_always --no-startup-id xset r rate 250 100
 
 # Make the capslock key an extra control key
 # TODO: Should this be a configuration parameter in some file?
