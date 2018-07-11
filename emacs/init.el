@@ -37,8 +37,8 @@
 
 (use-package org
   :ensure org-plus-contrib
-  :bind (( :map org-mode-map
-           ("<C-tab>" . other-window)))
+  :bind ((:map org-mode-map
+          ("<C-tab>" . other-window)))
   :config
   ;; ditaa path as installed by apt
   (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar"
@@ -47,6 +47,7 @@
 
 (use-package ox-twbs)
 (use-package ox-gfm)
+(use-package ox-pandoc)
 
 (use-package htmlize)
 
@@ -148,6 +149,8 @@
   :config
   (pdf-tools-install))
 
+
+(use-package zeal-at-point)
 
 ;; C++ stuff
 (use-package lsp-mode)
