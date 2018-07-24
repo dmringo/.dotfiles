@@ -109,4 +109,19 @@ This assumes that there is a pair in the variable `pandoc-directives'
       (kill-new filename)
       (message "Copied buffer file name '%s' to the clipboard." filename))))
 
+
+;; Handler for 'tel:' links via Google Voice
+(require 'org)
+(defun my/org-gvoice-dial (number)
+  "Set up a call to NUMBER via the Google Voice website.
+This still requires some interaction, signing in to Google if
+necessary and selecting a number to call from."
+  (let ((url
+         (format "https://voice.google.com/u/0/calls?a=nc,%s"
+                 number)))
+    (message "Calling %s via %s" number url)
+    (browse-url url)))
+
+(org-add-link-type "tel" 'my/org-gvoice-dial)
+
 (provide 'my-utils)
