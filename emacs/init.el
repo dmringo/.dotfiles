@@ -147,8 +147,11 @@
   :config
   (pdf-tools-install))
 
+(use-package google-this
+  :bind (("C-c g" . google-this-mode-submap)))
 
-(use-package zeal-at-point)
+(use-package zeal-at-point
+  :bind (("C-c z" . zeal-at-point)))
 
 ;; C++ stuff
 (use-package lsp-mode)
