@@ -314,6 +314,21 @@
   (venv-initialize-interactive-shells)
   (venv-initialize-eshell))
 
+
+(use-package ripgrep
+  :config
+  (define-advice ripgrep-regexp 
+      (:after (_ _ &optional _) switch-to-win)
+    "Switch to the ripgrep result buffer after running the search
+All arguments are ignored by this advice, but seem to be
+necessary for the advice system"
+    (let ((buf-name
+           (compilation-buffer-name "ripgrep-search"
+                                    'ripgrep-search-mode
+                                    nil)))
+      (pop-to-buffer buf-name))))
+
+
 (use-package projectile
   :config 
   (projectile-mode)
