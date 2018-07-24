@@ -19,10 +19,10 @@
 
 (package-refresh-contents)
 (mapc (lambda (pkg)
-	(unless (package-installed-p pkg)
-	  (package-install pkg)))
+	      (unless (package-installed-p pkg)
+	        (package-install pkg)))
       '(use-package diminish bind-key))
-	   
+
 (setq use-package-verbose       t
       use-package-always-ensure t)
 
@@ -35,10 +35,16 @@
 (use-package auto-compile
   :config (auto-compile-on-load-mode))
 
+;; Do this early, in case other packages want something in my $PATH at
+;; load/install time
+(use-package exec-path-from-shell
+  :config
+  (exec-path-from-shell-initialize))
+
 (use-package org
   :ensure org-plus-contrib
   :bind ((:map org-mode-map
-          ("<C-tab>" . other-window)))
+               ("<C-tab>" . other-window)))
   :config
   ;; ditaa path as installed by apt
   (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar"
@@ -54,10 +60,10 @@
 
 (defun my/org-babel-load-langs ()
   (org-babel-do-load-languages
-              'org-babel-load-languages
-              '((python . t)
-                (ditaa . t)
-                (emacs-lisp  . t))))
+   'org-babel-load-languages
+   '((python . t)
+     (ditaa . t)
+     (emacs-lisp  . t))))
 
 (add-hook 'after-init-hook 'my/org-babel-load-langs)
 
@@ -92,24 +98,16 @@
   :config
   (defun my/company-next () (interactive) (company-complete-common-or-cycle 1))
   (defun my/company-prev () (interactive) (company-complete-common-or-cycle -1))
-  :bind (("M-<return>" . company-complete)
-         :map company-active-map 
-         ("C-c h" . company-quickhelp-manual-begin)
-         ("C-n" . my/company-next)
-         ("C-p" . my/company-prev)))
+  :bind (:map company-active-map
+              ("M-C-i" . company-complete)
+              ("C-c h" . company-quickhelp-manual-begin)
+              ("C-n" . my/company-next)
+              ("C-p" . my/company-prev)))
 
 (use-package company-c-headers
   :init
   (add-to-list 'company-backends 'company-c-headers))
 
-;; Note: Company-ghc seems to cause emacs to hang when writing in comments.
-;; Not sure why though...
-;; (use-package company-ghc
-;;   :config
-;;   (add-to-list 'company-backends 'company-ghc))
-(use-package exec-path-from-shell
-  :config
-  (exec-path-from-shell-initialize))
 
 (use-package smart-mode-line)
 (use-package smartparens
@@ -198,7 +196,7 @@
   :init
   (add-to-list 'auto-mode-alist '("[Cc]omponents\\/.*\\.js\\'" . rjsx-mode)))
 (use-package json-mode :diminish)
-  
+
 
 (use-package fill-column-indicator)
 (use-package rainbow-mode)
@@ -354,6 +352,7 @@
 (let ((theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
   (add-to-list 'custom-theme-load-path theme-dir))
 
+
 (use-package my-utils
   :demand
   :ensure f
@@ -424,7 +423,9 @@
    ("M-D"             . backward-kill-word)
    
    ;; Slightly quicker Kill this buffer
-   ("C-x C-k"         . kill-this-buffer)
+   ("C-x k"         . kill-this-buffer)
+
+
 
    ;; I'm always aligning things
    ("C-M-;"           . align-regexp)
@@ -462,7 +463,7 @@
 ;; prefer vertical splits
 (setq-default split-height-threshold 80
               split-width-threshold 160)
-  
+
 ;; Make paste over selection *replace* the selection
 (delete-selection-mode)
 
@@ -487,11 +488,20 @@
 ;; http://www.evertype.com/emono/
 (defconst font-everson-mono "Everson Mono-12")
 ;; Prettier font that scales down much better
-(defconst font-office-code-pro "Office Code Pro-9")
+(defconst font-office-code-pro "Office Code Pro-10")
 
 (add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
 ;; note for future me: backtick permits use of commas for evaluation inside a
 ;; quoted thing
+;; Since I will probably forget this eventually:
+;;  `M-x set-frame-font` is good (with completion) for switching between
+;;  typefaces but not so much for choosing a different size unless you know the
+;;  exact font spec string.
+;;  (e.g. "-NATH-Office Code Pro-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1")
+;;  The best way to change the full font is to use `set-face-attribute' as far as
+;;  I can tell.  e.g. (set-face-attribute 'default nil :font "Office Code Pro-10"
+
+
 
 ;; make Proced auto-update
 (setq proced-auto-update-flag t)
