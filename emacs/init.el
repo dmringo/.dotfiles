@@ -421,35 +421,49 @@ necessary for the advice system"
 
 ;; Personal global keybindings
 (mapcar
- (lambda (pr) (global-set-key (kbd (car pr)) (cdr pr)))        
+ (lambda (pr) (bind-key (car pr) (cdr pr)))
  '(
    ;; Simpler buffer and window nav
-   ("C-<tab>"         . other-window)
-   ("<C-iso-lefttab>" . (lambda () (interactive) (other-window -1)))
-   ("M-["             . previous-buffer)
-   ("M-]"             . next-buffer)
+   ("C-<tab>"                 . other-window)
+   ("<C-iso-lefttab>"         . (lambda () (interactive) (other-window -1)))
+   ("M-["                     . previous-buffer)
+   ("M-]"                     . next-buffer)
 
    ;; More convenient than M-DEL (DEL == backspace)
-   ("M-D"             . backward-kill-word)
+   ("M-D"                     . backward-kill-word)
    
    ;; Slightly quicker Kill this buffer
-   ("C-x k"         . kill-this-buffer)
-
-
+   ("C-x k"                   . kill-this-buffer)
 
    ;; I'm always aligning things
-   ("C-M-;"           . align-regexp)
+   ("C-M-;"                   . align-regexp)
 
-   ;; Usually like fullscreen.  Don't know how to start an emacsclient-created
+   ;; Usually like fullscreen .  Don't know how to start an emacsclient-created
    ;; frame in fullscreen
-   ("s-<return>"      . toggle-frame-fullscreen)
+   ("s-<return>"              . toggle-frame-fullscreen)
 
    ;; Get into eshell quicker
-   ("C-S-t"           . eshell)
+   ("C-S-t"                   . eshell)
+   ;; Get into ansi-term quicker
+   ("M-T"                     . my/ansi-term-zsh)
 
-   ("C-M-}"           . enlarge-window-horizontally)
-   ("C-M-{"           . shrink-window-horizontally)
-   ))
+   ("C-M-}"                   . enlarge-window-horizontally)
+   ("C-M-{"                   . shrink-window-horizontally)))
+
+;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:
+;; eval this:
+;; (mapcar #'kbd '("C-T" "C-t" "C-S-t" "M-T" "M-t" "M-S-t"))
+;; to get this:
+;; ("" "" [33554452] [134217812] [134217844] [167772276])
+;;
+;; This makes it seem like {C,M}-t and {C,M}-T are identical as far as keyboard
+;; input is concerned, so you'd think you'd want to use {C,M}-S-t to bind
+;; {Ctrl,Meta}+Shift+t to something.  But checking those inputs with
+;; `describe-key' reveals that, when I press Ctrl+Shift+t, Emacs interprets it
+;; as C-S-t while Meta+Shift+t is interpreted as M-T, at least as far as keymaps
+;; are concerned.  It's not really clear what's happening here, but it's the
+;; reason for the inconsistent notation above.
+
 
 ;; Be Lazy, prefer Y or N to Yes or No
 (fset 'yes-or-no-p 'y-or-n-p)

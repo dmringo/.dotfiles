@@ -95,6 +95,11 @@ This assumes that there is a pair in the variable `pandoc-directives'
   (let ((spec (or timespec  "%b %e, %Y")))
     (insert (format-time-string spec))))
 
+
+(defun my/ansi-term-zsh ()
+  (interactive)
+  (ansi-term "zsh"))
+
 ;; Stolen from Emacs Prelude (https://github.com/bbatsov/emacs-prelude)
 ;;
 ;; TODO: If prefix arg is specified and in a recognized project, copy name
