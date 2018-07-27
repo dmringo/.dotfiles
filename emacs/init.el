@@ -74,19 +74,19 @@
   :config (global-undo-tree-mode))
 
 (use-package magit
-  :bind (("M-G" . magit-status)
-         :map magit-status-mode-map
-         ("C-<tab>" . other-window)
-         ("<tab>"   . magit-section-cycle)
-         :map magit-process-mode-map
-         ("C-<tab>" . other-window)
-         ("<tab>"   . magit-section-cycle)
-         :map magit-revision-mode-map
-         ("C-<tab>" . other-window)
-         ("<tab>"   . magit-section-cycle)
-         :map magit-diff-mode-map
-         ("C-<tab>" . other-window)
-         ("<tab>"   . magit-section-cycle)))
+  :bind (("M-G" . magit-status))
+  :config
+  (progn
+    (require 'bind-key)
+    (mapcar (lambda (map)
+              (unbind-key "C-<tab>" map)
+              (bind-key "<tab>" #'magit-section-cycle map))
+            (list
+             magit-status-mode-map
+             magit-process-mode-map
+             magit-revision-mode-map
+             magit-diff-mode-map
+             magit-log-mode-map))))
 
 
 (use-package gitignore-mode)
