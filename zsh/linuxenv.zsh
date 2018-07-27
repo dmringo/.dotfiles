@@ -4,19 +4,19 @@
 alias o='xdg-open'
 
 clip(){
-    case $1 in
-        -o|o )
-            mode='-o'
-            ;;
-        -i|i )
-            mode='-i'
+    emulate -L zsh -o glob
+    case ${1} in
+        o|out ) ;&
+        i|in )  ;&
+        f|filter )
+            mode=${1}
             ;;
         *    )
             printf "Unrecognized option: %s\n" $1
             return 1
             ;;
     esac
-    xclip -selection clipboard $mode ${@:2}
+    xclip -${mode} -selection clipboard ${@:2}
 }
 
 
