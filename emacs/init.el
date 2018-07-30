@@ -321,13 +321,12 @@ necessary for the advice system"
 
 
 (use-package projectile
-  :config 
-  (projectile-mode)
-  (setq projectile-completion-system 'ivy
-        projectile-enable-caching t) ;; Good even with alien 
-  (use-package projectile-ripgrep
-    :bind (:map projectile-mode-map
-                ("C-c p s r" . projectile-ripgrep))))
+  :config
+  (progn
+    (projectile-mode)
+    (setq projectile-completion-system 'ivy
+          projectile-enable-caching t))) ;; Good even with alien
+(use-package projectile-ripgrep)
 
 (use-package docker)
 (use-package dockerfile-mode)
