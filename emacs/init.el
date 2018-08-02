@@ -1,15 +1,16 @@
-;; Added by Package.el.  This must come before configurations of
-;; installed packages.  Don't delete this line.  If you don't want it,
-;; just comment it out by adding a semicolon to the start of the line.
-;; You may delete these explanatory comments.
+;; -*- lexical-binding: t -*-
 
 (setq gc-cons-threshold (* 100 1024 1024))
+
 (package-initialize)
 
 ;; Good to have some secrets
-(let ((s-file (expand-file-name "secrets.el" "~/.emacs.d")))
+(let ((s-file (expand-file-name "secrets.el" user-emacs-directory)))
   (when (file-exists-p s-file)
     (load s-file)))
+
+(defconst my/lisp-dir
+  (expand-file-name "lisp" user-emacs-directory))
 
 (setq package-archives
       '(("gnu"          . "https://elpa.gnu.org/packages/")
@@ -29,8 +30,8 @@
 ;; suggested by jwiegly
 (eval-when-compile
   (require 'use-package))
-(require 'diminish)                ;; if you use :diminish (I do)
-(require 'bind-key)                ;; if you use any :bind variant (I do)
+(require 'diminish) ;; if you use :diminish (I do)
+(require 'bind-key) ;; if you use any :bind variant (I do)
 
 (use-package auto-compile
   :config (auto-compile-on-load-mode))
@@ -54,7 +55,6 @@
 (use-package ox-twbs)
 (use-package ox-gfm)
 (use-package ox-pandoc)
-
 (use-package htmlize)
 
 
@@ -102,16 +102,15 @@
 
 (use-package smart-mode-line)
 (use-package smartparens
-  :config
-  (add-hook 'prog-mode-hook 'smartparens-mode)
-  (sp-with-modes 'markdown-mode
-    (sp-local-pair "```" "```")
-    (sp-local-pair "*" "*")
-    (sp-local-pair "_" "_")
-    (sp-local-pair "$" "$")  ; for pandoc LaTeX math extension
-    (sp-local-pair "⟦" "⟧")) ; fancy brackets for semantic functions
-  (sp-with-modes 'c++-mode
-    (sp-local-pair "/*" "*/"))
+  :config (progn
+	    (add-hook 'prog-mode-hook 'smartparens-mode)
+	    (sp-with-modes 'markdown-mode
+			   (sp-local-pair "```" "```")
+			   (sp-local-pair "*" "*")
+			   (sp-local-pair "_" "_")
+			   (sp-local-pair "$" "$"))
+	    (sp-with-modes 'c++-mode
+			   (sp-local-pair "/*" "*/")))
   :bind (:map smartparens-mode-map
               ("C-c u w" . sp-unwrap-sexp)
               ("C-M-f"   . sp-forward-sexp)
@@ -132,7 +131,7 @@
   (setq beacon-blink-when-point-moves-horizontally nil
         beacon-blink-when-point-moves-vertically nil
         beacon-blink-when-window-scrolls 0
-        beacon-color "navajo white"))
+        beacon-color 1))
 
 (use-package pdf-tools
   :config
@@ -147,8 +146,8 @@
 ;; C++ stuff
 (use-package lsp-mode)
 (use-package company-lsp
-  ;; snippets don't seem to work too well.  At least, I can't figure out
-  ;; how to expand them properly
+  ;; snippets don't seem to work too well.  At least, I can't figure out how to
+  ;; expand them properly
   :config (setq company-lsp-enable-snippet nil))
 
 (use-package lsp-ui)
@@ -174,12 +173,6 @@
 (use-package comment-dwim-2
   :config (setq comment-dwim-2--inline-comment-behavior 'reindent-comment))
 
-;; React + JSX
-(use-package prettier-js
-  :config
-  ;; (setq prettier-js-args
-  ;;       '("--trailing-comma" "all"))
-  )
 (use-package js2-mode
   :config
   (setq js2-basic-offset 2)
@@ -190,7 +183,6 @@
   :init
   (add-to-list 'auto-mode-alist '("[Cc]omponents\\/.*\\.js\\'" . rjsx-mode)))
 (use-package json-mode :diminish)
-
 
 (use-package fill-column-indicator)
 (use-package rainbow-mode)
@@ -232,13 +224,6 @@
               (quail-defrule (cadr x) (car (cddr x)))))
         (append math-symbol-list-basic math-symbol-list-extended)))
 
-(use-package dokuwiki-mode
-  :config
-  (add-to-list 'auto-mode-alist '("\\.dokuwiki\\'" . dokuwiki-mode)))
-
-(use-package writeroom-mode
-  :config
-  (setq writeroom-width 100))
 (use-package markdown-mode
   :config
   (add-hook 'markdown-mode-hook 'pandoc-mode)
@@ -251,7 +236,7 @@
   :config
   (keyfreq-mode 1)
   (keyfreq-autosave-mode 1)
-  (setq keyfreq-file (expand-file-name ".emacs.keyfreq" "~/.emacs.d/")))
+  (setq keyfreq-file (expand-file-name ".emacs.keyfreq" user-emacs-directory)))
 
 (use-package yasnippet
   :diminish yas-minor-mode)
@@ -341,6 +326,11 @@ necessary for the advice system"
   (setq treemacs-show-hidden-files nil))
 
 
+(use-package system-packages
+  :config
+  (setq system-packages-package-manager 'apt
+        system-packages-use-sudo t))
+
 (use-package sicp)
 
 
@@ -365,19 +355,19 @@ necessary for the advice system"
 (use-package my-utils
   :demand
   :ensure f
-  :load-path "lisp/"
+  :load-path my/lisp-dir
   :bind ("M-Q" . my/unfill-paragraph)
-  :config
-  (require 'pandoc-mode)
-  (push '("lines" . my/pandoc-include-lines) pandoc-directives)
-  (push '("tag" . my/pandoc-include-tag) pandoc-directives))
+  :config (progn 
+            (require 'pandoc-mode)
+            (push '("lines" . my/pandoc-include-lines) pandoc-directives)
+            (push '("tag" . my/pandoc-include-tag) pandoc-directives)))
 
 
 ;; for Ackley's Living Computation course. Java-derived major-mode
 (use-package ulam-mode
   :ensure f
   :demand
-  :load-path "lisp/"
+  :load-path my/lisp-dir
   :config
   (defun ulam/make () (interactive) (compile "make -k"))
   (defun ulam/run (&optional args)
@@ -393,13 +383,6 @@ necessary for the advice system"
 
 ;; Use-package stuff ends here.  Below is more standard Elisp config
 
-;; The normal exec-path fix doesn't work so well when emacs is started as a
-;; server.  This might fix that? Note: doesn't seem to ...
-(defun client-fix-path (_)
-  (require 'exec-path-from-shell)
-  (when (memq window-system '(mac ns x))
-    (exec-path-from-shell-initialize)))
-(add-hook 'after-make-frame-functions #'client-fix-path)
 
 ;; Always move to help window after opening (easier to close)
 (setq help-window-select t)
