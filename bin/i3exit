@@ -1,7 +1,5 @@
 #!/bin/sh
 
-
-
 lock() {
     darkpurple=262340
     i3lock -c $darkpurple -e -f
@@ -27,7 +25,7 @@ case "$1" in
         systemctl poweroff
         ;;
     *)
-        echo "Usage: $0 {lock|logout|suspend|hibernate|reboot|shutdown} $makeFS!"
+        echo "Usage: $0 {lock|logout|suspend|hibernate|reboot|shutdown}"
         exit 2
 esac
 
