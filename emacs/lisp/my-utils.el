@@ -129,4 +129,17 @@ necessary and selecting a number to call from."
 
 (org-add-link-type "tel" 'my/org-gvoice-dial)
 
+
+(defun my/fill-line (char)
+  "Fill in a line with a repeated character.
+The end of the fill is determined by (`or' `fill-column'
+`comment-fill-column').  If both are falsey or the `point' is
+past the end, no action is taken."
+  (interactive "cCharacter to fill:")
+  (when-let* ((end (or fill-column comment-fill-column))
+              (_ (integerp end))
+              (n (- end (current-column)))
+              (_ (< 0 n)))
+    (insert (make-string n char))))
+
 (provide 'my-utils)
