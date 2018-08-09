@@ -1,5 +1,3 @@
-export GOPATH="$HOME/go"
-
 # at some point, this should maybe be set by an m4 macro during install export
 MY_ZSH_HOME="$HOME/.dotfiles/zsh"
 
