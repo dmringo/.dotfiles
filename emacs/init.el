@@ -245,43 +245,43 @@
 (use-package yasnippet-snippets)
 (use-package haskell-snippets)
 
+
 (use-package ivy
   :diminish ivy-mode
-  :bind
-  (("C-c C-r" . ivy-resume)
-   :map ivy-minibuffer-map
-   ("C-r" . ivy-previous-line-or-history))
-  :config
-  (ivy-mode 1)
-  (setq ivy-height 20
-        ivy-on-del-error-function 'nil
-        ivy-use-selectable-prompt t
-        ivy-initial-inputs-alist 'nil))
+  :bind  (("C-c C-r" . ivy-resume)
+          :map ivy-minibuffer-map
+          ("C-r" . ivy-previous-line-or-history))
+  :config (progn
+            (ivy-mode 1)
+            (setq ivy-height 20
+                  ivy-on-del-error-function 'nil
+                  ivy-use-selectable-prompt t
+                  ivy-initial-inputs-alist 'nil
+                  ivy-use-virtual-buffers t)))
 
 (use-package ivy-hydra)
+(use-package swiper)
+(use-package counsel
+  :diminish counsel-mode
+  :bind (("M-x" . counsel-M-x)
+         ("C-h f" . counsel-describe-function)
+         ("C-h v" . counsel-describe-variable)
+         ("C-s" . counsel-grep-or-swiper))
+  :config (progn
+            ;; Suggested by Oleh
+            (setq counsel-grep-command
+                  "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
+            (counsel-mode 1)))
+
+(use-package helpful)
 (use-package ivy-yasnippet)
 (use-package ivy-prescient
   :diminish
   :config
-  (ivy-prescient-mode 1)
-  (prescient-persist-mode 1))
+  (progn
+    (ivy-prescient-mode 1)
+    (prescient-persist-mode 1)))
 (use-package ivy-dired-history)
-
-
-(use-package counsel
-  :diminish counsel-mode
-  :bind
-  (("M-x" . counsel-M-x)
-   ("C-h f" . counsel-describe-function)
-   ("C-h v" . counsel-describe-variable))
-  :config
-  (counsel-mode 1))
-
-(use-package swiper
-  :bind
-  (("C-s" . swiper)
-   ("C-r" . swiper) ;; questionable - should be temporary while I acclimate
-   ))
 
 (use-package counsel-projectile)
 
