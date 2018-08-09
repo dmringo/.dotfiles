@@ -7,9 +7,12 @@ clip(){
     emulate -L zsh -o glob
     case ${1} in
         o|out ) ;&
-        i|in )  ;&
+        i|in ) ;&
         f|filter )
             mode=${1}
+            ;;
+        "" )
+            mode=i
             ;;
         *    )
             printf "Unrecognized option: %s\n" $1
