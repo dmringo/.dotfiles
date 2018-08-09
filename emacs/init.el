@@ -134,7 +134,9 @@
         beacon-color 1))
 
 (use-package pdf-tools
-  :config
+  :bind (:map pdf-view-mode-map
+              ("C-s" . isearch-forward))
+  :config 
   (pdf-tools-install))
 
 (use-package google-this
