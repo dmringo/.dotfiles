@@ -483,13 +483,15 @@ necessary for the advice system"
 
 ;; Basic indentation rules
 (setq-default indent-tabs-mode nil
-              tab-width 2
-              indent-line-function 'insert-tab)
+              tab-width 2)
 
 (setq-default fill-column 80)
 
 ;; Whitespace
 (setq whitespace-style '(face tabs lines-tail empty trailing))
+
+;; Make `man' open pages in the other window and switch to that buffer
+(setq Man-notify-method 'aggressive)
 
 
 ;; Monospaced font with great Unicode support for mathy symbols
