@@ -312,7 +312,14 @@ necessary for the advice system"
   (progn
     (projectile-mode)
     (setq projectile-completion-system 'ivy
-          projectile-enable-caching t))) ;; Good even with alien
+          projectile-enable-caching t)) ;; Good even with alien
+  :bind (:map projectile-mode-map
+              ("C-c p" . projectile-command-map)))
+
+
+(use-package counsel-projectile
+   :init (setq projectile-keymap-prefix (where-is-internal 'projectile-command-map nil t)))
+
 (use-package projectile-ripgrep)
 
 (use-package docker)
