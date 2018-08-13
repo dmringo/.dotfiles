@@ -283,7 +283,7 @@
     (prescient-persist-mode 1)))
 (use-package ivy-dired-history)
 
-(use-package counsel-projectile)
+
 
 ;; Python stuff
 (use-package py-autopep8)
@@ -296,14 +296,23 @@
 (use-package ripgrep
   :config
   (define-advice ripgrep-regexp 
-      (:after (_ _ &optional _) switch-to-win)
-    "Switch to the ripgrep result buffer after running the search
-All arguments are ignored by this advice, but seem to be
-necessary for the advice system"
-    (let ((buf-name
-           (compilation-buffer-name "ripgrep-search"
-                                    'ripgrep-search-mode
-                                    nil)))
+      (:around (rg-orig regx dir &optional args) my/advice)
+    "Advice for `ripgrep-regexp'.
+This does two things: 
+
+ - Switches to the ripgrep result buffer after running the search
+
+ - Adds the ability to call `ripgrep-regexp' with arbitrary extra
+   arguments (prompted in the minibuffer) when called with a
+   prefix argument.
+"
+    (let ((buf-name (compilation-buffer-name "ripgrep-search"
+                                             'ripgrep-search-mode
+                                             nil))
+          (smart-arg (if (consp current-prefix-arg)
+                         (read-from-minibuffer "Extra rg args: ")
+                       "")))
+      (funcall rg-orig regx dir (nconc args (list smart-arg)))
       (pop-to-buffer buf-name))))
 
 
