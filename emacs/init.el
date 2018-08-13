@@ -432,7 +432,9 @@ necessary for the advice system"
    ("M-T"                     . my/ansi-term-zsh)
 
    ("C-M-}"                   . enlarge-window-horizontally)
-   ("C-M-{"                   . shrink-window-horizontally)))
+   ("C-M-{"                   . shrink-window-horizontally)
+   ("C-h M"                   . man)
+   ))
 
 ;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:
 ;; eval this:
