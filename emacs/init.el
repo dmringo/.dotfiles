@@ -122,6 +122,10 @@
   :diminish
   :config (add-hook 'prog-mode-hook 'whitespace-cleanup-mode))
 
+;; Good for Makefiles where actual tabs are important but alignment really ought
+;; to be accomplished with spaces.
+(use-package smart-tabs-mode)
+
 (use-package rainbow-delimiters)
 
 ;; Show me where the cursor is, when it changes
