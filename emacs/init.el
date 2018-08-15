@@ -335,6 +335,10 @@ This does two things:
 
 (use-package projectile-ripgrep)
 
+(use-package editorconfig
+  :diminish
+  :config (editorconfig-mode 1))
+
 (use-package docker)
 (use-package dockerfile-mode)
 (use-package docker-tramp)
