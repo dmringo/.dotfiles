@@ -330,8 +330,8 @@ This does two things:
               ("C-c p" . projectile-command-map)))
 
 
-(use-package counsel-projectile
-   :init (setq projectile-keymap-prefix (where-is-internal 'projectile-command-map nil t)))
+(use-package counsel-projectile)
+
 
 (use-package projectile-ripgrep)
 
