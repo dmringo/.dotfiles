@@ -357,6 +357,9 @@ This does two things:
   (setq system-packages-package-manager 'apt
         system-packages-use-sudo t))
 
+(use-package ssh-config-mode)
+
+;; SICP as a texinfo document
 (use-package sicp)
 
 
@@ -426,6 +429,9 @@ This does two things:
 
 ;; Don't ask about following links to source-controlled files -- just do it
 (setq vc-follow-symlinks t)
+
+;; Tramp should use SSH by default (it's usually faster than SCP)
+(setq tramp-default-method "ssh")
 
 ;; Personal global keybindings
 (mapcar

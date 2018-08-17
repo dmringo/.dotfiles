@@ -7,3 +7,10 @@ Host darwin
   HostName darwin-fe.lanl.gov
   User dringo
   IdentityFile ~/.ssh/id_rsa
+
+# Setup for sharing connections, see:
+# https://puppet.com/blog/speed-up-ssh-by-reusing-connections
+Host *
+  ControlMaster auto
+  ControlPath ~/.ssh/sockets/%r@%h-%p
+  ControlPersist 600
