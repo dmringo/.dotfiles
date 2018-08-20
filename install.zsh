@@ -78,9 +78,11 @@ _log "using $DOT_HOME as base location of '.dotfiles' repo"
 
 _ln $DOT_HOME/zsh/.zshrc         $HOME/.zshrc
 _ln $DOT_HOME/zsh/.zshenv        $HOME/.zshenv
+_ln $DOT_HOME/zsh/.zprofile      $HOME/.zprofile
 _ln $DOT_HOME/emacs              $HOME/.emacs.d
 _ln $DOT_HOME/emacs/init.el      $HOME/.emacs # convenient, but not necessary
 _ln $DOT_HOME/ssh/config         $HOME/.ssh/config
+_ln $DOT_HOME/.profile           $HOME/.profile
 
 # TODO: Need to generate these per system somehow.  Good case for switching to
 # xmonad?
