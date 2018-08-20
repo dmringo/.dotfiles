@@ -162,6 +162,8 @@
   :config
   (setq cquery-executable (expand-file-name "cquery" "~/.local/bin/")))
 
+(use-package ccls)
+
 (defun my/maybe-enable-cquery ()
   (interactive)
   (when (locate-dominating-file default-directory "compile_commands.json")
@@ -172,7 +174,9 @@
       (user-error nil))))
 
 (add-hook 'c++-mode-hook 'company-mode)
-(add-hook 'c-mode-common-hook #'my/maybe-enable-cquery)
+
+(use-package google-c-style
+  :config (c-add-style "Google" google-c-style))
 
 (use-package cmake-mode)
 
@@ -558,7 +562,8 @@ This does two things:
 
 ;; Make C look the way I want it to
 (setq c-default-style "linux"
-      c-basic-offset 2)
+      c-basic-offset 2
+      sh-basic-offset 2)
 
 
 ;; default to modern fortran mode
