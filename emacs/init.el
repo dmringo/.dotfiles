@@ -316,8 +316,9 @@ This does two things:
           (smart-arg (if (consp current-prefix-arg)
                          (read-from-minibuffer "Extra rg args: ")
                        "")))
-      (funcall rg-orig regx dir (nconc args (list smart-arg)))
-      (pop-to-buffer buf-name))))
+      (funcall rg-orig regx dir (nconc args (list smart-arg "-M 120")))
+      (pop-to-buffer buf-name)))
+  :bind ("C-c s r" . ripgrep-regexp))
 
 
 (use-package projectile
