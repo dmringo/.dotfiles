@@ -247,14 +247,13 @@ bindsym $mod+F11 exec setbacklight -1
 bindsym $mod+F12 exec setbacklight +1
 
 
-
 exec_always --no-startup-id feh --bg-fill ~/Pictures/wp/current  
 
-# set a better keyboard repeat delay and rate - 250ms delay before repeat, 100
+# set a better keyboard repeat delay and rate - 200ms delay before repeat, 100
 # repetitions per second. Note: the delay is pretty accurate, I think, but the
 # number of repetitions is nowhere near 100.  It's just the value that produces
 # a good rate for me
-exec_always --no-startup-id xset r rate 250 100
+exec_always --no-startup-id xset r rate 200 100
 
 # Make the capslock key an extra control key
 # TODO: Should this be a configuration parameter in some file?
