@@ -95,8 +95,8 @@ fi
 
 zplug load
 
+
 setopt extendedglob
 
-# Aliases to make it more convenient to get in and out of a conda environment
-alias conda-activate='source ~/.anaconda3/bin/activate'
-alias conda-deactivate='source ~/.anaconda3/bin/deactivate'
+# if we have direnv, get its hook setup
+cmd_exists direnv && eval "$(direnv hook zsh)"
