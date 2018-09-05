@@ -292,6 +292,7 @@
     (prescient-persist-mode 1)))
 (use-package ivy-dired-history)
 
+(use-package direnv)
 
 
 ;; Python stuff
