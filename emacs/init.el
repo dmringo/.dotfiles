@@ -164,16 +164,17 @@
 
 (use-package ccls)
 
-(defun my/maybe-enable-cquery ()
+(defun my/maybe-enable-c++-lsp-server ()
   (interactive)
   (when (locate-dominating-file default-directory "compile_commands.json")
     (condition-case nil
         (progn
-          (message "enabling cquery")
-          (lsp-cquery-enable))
+          (message "enabling c++ lsp server")
+          (lsp-ccls-enable))
       (user-error nil))))
 
 (add-hook 'c++-mode-hook 'company-mode)
+(add-hook 'c++-mode-hook #'my/maybe-enable-c++-lsp-server)
 
 (use-package google-c-style
   :config (c-add-style "Google" google-c-style))
