@@ -47,14 +47,18 @@
   :bind ((:map org-mode-map
                ("<C-tab>" . other-window)))
   :config
-  ;; ditaa path as installed by apt
-  (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar"
-        ;; latexmk is a little more consistent than pdflatex
-        org-latex-pdf-process (list "latexmk -f -pdf %f")))
+  (progn
+    ;; ditaa path as installed by apt
+    (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar"
+          ;; latexmk is a little more consistent than pdflatex
+          org-latex-pdf-process (list "latexmk -f -pdf %f"))
+    ;; make #+NAME easy-template
+    (add-to-list 'org-structure-template-alist '("n" "#+NAME: ?"))))
 
 (use-package ox-twbs)
 (use-package ox-gfm)
 (use-package ox-pandoc)
+(use-package ob-async)
 (use-package htmlize)
 
 
@@ -63,7 +67,8 @@
    'org-babel-load-languages
    '((python . t)
      (ditaa . t)
-     (emacs-lisp  . t))))
+     (emacs-lisp  . t)
+     (shell . t))))
 
 (add-hook 'after-init-hook 'my/org-babel-load-langs)
 
@@ -392,7 +397,8 @@ This does two things:
   :demand
   :ensure f
   :load-path my/lisp-dir
-  :bind ("M-Q" . my/unfill-paragraph)
+  :bind (("M-Q" . my/unfill-paragraph)
+         ("C-c s p" . #'my/relativize-path-at-point))
   :config (progn 
             (require 'pandoc-mode)
             (push '("lines" . my/pandoc-include-lines) pandoc-directives)

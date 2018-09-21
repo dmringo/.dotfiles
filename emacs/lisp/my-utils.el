@@ -39,13 +39,13 @@ This assumes that there is a pair in the variable `pandoc-directives'
        (re-dash-or-plus "\\([+-]\\)")
        (re-filename "\\(.+\\)")
        (regex
-         (concat "^" ; want to match the whole spec string
-                 re-filename
-                 ":" ; colon separator
-                 re-digits ; Always need a start line
-                 "\\(" re-dash-or-plus re-digits "\\)?" ; end spec is optional
-                 "$" ; again, must match the whole string
-                 ))
+        (concat "^" ; want to match the whole spec string
+                re-filename
+                ":" ; colon separator
+                re-digits ; Always need a start line
+                "\\(" re-dash-or-plus re-digits "\\)?" ; end spec is optional
+                "$" ; again, must match the whole string
+                ))
        (match (string-match regex spec))
        (filename (match-string 1 spec))
        (start (funcall safe-read (match-string 2 spec)))
@@ -141,5 +141,33 @@ past the end, no action is taken."
               (n (- end (current-column)))
               (_ (< 0 n)))
     (insert (make-string n char))))
+
+
+(defun my/relativize-path-at-point ()
+  "Read a path at the point and convert it to a relative path"
+  (interactive)
+  (let* ((bounds (bounds-of-thing-at-point 'filename))
+         (beg (car bounds))
+         (end (cdr bounds))
+         (path (buffer-substring-no-properties beg end)))
+    (when (file-name-absolute-p path)
+      (delete-region beg end)
+      (insert (file-relative-name path)))))
+
+(defun my/frame-font-resize (delta)
+  "Resize the current frame's font size by DELTA points.
+DELTA is taken as the numeric prefix arg or from the prompt if no
+prefix arg is given. This changes the attributes (removing some)
+on the underlying font object, but seems to preserve the import
+ones."
+  (interactive "NResize font by how much? ")
+  (let* ((font-keys '(:family :weight :slant :width :size))
+         (attr-pairs (mapcar (lambda (k)
+                               (let ((attr (font-get (face-attribute 'default :font) k)))
+                                 (when (eq k :size)
+                                   (setq attr (+ attr delta)))
+                                 (list k attr))) font-keys))
+         (font (apply #'font-spec (apply #'append attr-pairs))))
+    (set-face-attribute 'default nil :font font)))
 
 (provide 'my-utils)
