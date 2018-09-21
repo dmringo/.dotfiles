@@ -477,6 +477,8 @@ This does two things:
    ("C-M-}"                   . enlarge-window-horizontally)
    ("C-M-{"                   . shrink-window-horizontally)
    ("C-h M"                   . man)
+   ([remap eval-expression]   . pp-eval-expression)
+   ([remap eval-last-sexp]    . pp-eval-last-sexp)
    ))
 
 ;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:

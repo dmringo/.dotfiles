@@ -162,11 +162,12 @@ on the underlying font object, but seems to preserve the import
 ones."
   (interactive "NResize font by how much? ")
   (let* ((font-keys '(:family :weight :slant :width :size))
-         (attr-pairs (mapcar (lambda (k)
-                               (let ((attr (font-get (face-attribute 'default :font) k)))
-                                 (when (eq k :size)
-                                   (setq attr (+ attr delta)))
-                                 (list k attr))) font-keys))
+         (attr-pairs
+          (mapcar (lambda (k)
+                    (let ((attr (font-get (face-attribute 'default :font) k)))
+                      (when (eq k :size) ; adjust only the size
+                        (setq attr (+ attr delta)))
+                      (list k attr))) font-keys))
          (font (apply #'font-spec (apply #'append attr-pairs))))
     (set-face-attribute 'default nil :font font)))
 
