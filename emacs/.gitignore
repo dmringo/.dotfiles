@@ -13,3 +13,6 @@
 !snippets/**
 !pandoc-mode
 !pandoc-mode/**
+
+# keep secrets versioned, but git-crypt them
+!secrets.el
