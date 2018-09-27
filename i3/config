@@ -203,6 +203,8 @@ mode "$mode_system" {
   bindsym n           $fs-pause -k, mode "default"
 }
 
+bindsym $mod+Control+q exec --no-startup-id i3exit lock, $fs-pause -k
+
 # Brightness uses custom script at:
 # https://github.com/dmringo/.dotfiles/blob/master/bin/setbacklight  
 # bindsym XF86MonBrightnessUp exec setbacklight +5
