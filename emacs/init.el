@@ -1,6 +1,7 @@
 ;; -*- lexical-binding: t -*-
 
 (setq gc-cons-threshold (* 100 1024 1024))
+(setq my/hostname (shell-command-to-string "printf %s $(hostname -s)"))
 
 (package-initialize)
 
@@ -545,7 +546,13 @@ This does two things:
 ;; http://www.evertype.com/emono/
 (defconst font-everson-mono "Everson Mono-12")
 ;; Prettier font that scales down much better
-(defconst font-office-code-pro "Office Code Pro-10")
+(defconst font-office-code-pro (cond
+                                ;; TODO: pick font size based on DPI or
+                                ;; something?  This is also a function of how
+                                ;; far from my monitor I am... Can emacs measure
+                                ;; real-world distance?
+                                ((equal my/hostname "zarniwoop") "Office Code Pro-16")
+                                (t "Office Code Pro-10")))
 
 (add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
 ;; note for future me: backtick permits use of commas for evaluation inside a
