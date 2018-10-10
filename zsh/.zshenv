@@ -5,11 +5,13 @@ cmd_exists() {
   command -v "$1" 2>&1 > /dev/null
 }
 
+# For debugging my shite scripts
 _logz() {
   local logfile="$HOME/zsh-log.txt"
   printf "%s:\n" "$(date)" >> "$logfile"
   printf "$1\n" ${@[2,-1]} | sed 's/^/  /' >> "$HOME/zsh-log.txt"
 }
+
 
 [[ -f $MY_ZSH_HOME/secrets.zsh ]] && . $MY_ZSH_HOME/secrets.zsh
 [[ -f ~/.profile ]] && emulate sh -c 'source ~/.profile'

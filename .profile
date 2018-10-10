@@ -44,6 +44,12 @@ add2path "$HOME/.local/bin"
 add2path "$GOPATH/bin"  # GO managed bins
 add2path "$HOME/.cabal/bin" # Cabal-managed bins
 
+# I almost always use Conda for managing python-y stuff, but only the minimal
+# distribution.  The full distribution comes with a bunch of packages that I
+# prefer to maintain via other channels (e.g. pandoc)
+[ -d "$HOME/miniconda3/bin" ] && add2path "$HOME/miniconda3/bin"
+
+
 sys_type="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
 case "$sys_type" in
@@ -121,14 +127,13 @@ esac
 
 
 # It's possible that some of these components were already in the PATH, so
-# remove the duplicates (awk script in the bin/ directory of the dotfiles)
-PATH="$(printf '%s' "$PATH" | dedup_path.awk)"
+# remove the duplicates (script in the bin/ directory of the dotfiles)
+PATH="$(printf '%s' "$PATH" | dedup_path)"
 
-export PATH
+export PATH GOPATH
 
-# Don't need to keep these around
+# Don't need to keep this around
 unset add2path
-
 
 
 # Saint IGNUcius be praised
