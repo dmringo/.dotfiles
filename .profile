@@ -51,3 +51,5 @@ ESHELL="/usr/bin/zsh"
 
 # makes CDing to common directories easier
 CDPATH="$HOME:$HOME/proj"
+
+export PATH GOPATH EDITOR ESHELL CDPATH
