@@ -30,6 +30,11 @@ bindkey -e
 # End of lines configured by zsh-newuser-install
 
 
+# Tell gpg about the TTY.  I think this only makes sense in an interactive
+# session.  I also think this is necessary when GPG assumes no TTY, as is the
+# case when $HOME/.gnupg/gpg.conf has 'no-tty' specified.
+export GPG_TTY="$(tty)"
+
 # Check if zplug is installed
 export ZPLUG_HOME="$MY_ZSH_HOME/.zplug"
 
@@ -92,7 +97,6 @@ if ! zplug check --verbose; then
 fi
 
 zplug load
-
 
 setopt extendedglob
 
