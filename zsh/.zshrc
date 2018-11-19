@@ -1,7 +1,6 @@
 # Checking for dumb terminals - makes Tramp work when editing remote files
 [[ $TERM == "dumb" ]] && unsetopt zle && PS1='$ ' && return;
 
-
 # The following lines were added by compinstall
 zstyle ':completion:*' completer _expand _complete _ignored _match _approximate _prefix
 zstyle ':completion:*' completions 1
@@ -30,6 +29,7 @@ unsetopt beep
 bindkey -e
 # End of lines configured by zsh-newuser-install
 
+
 # Check if zplug is installed
 export ZPLUG_HOME="$MY_ZSH_HOME/.zplug"
 
@@ -40,8 +40,6 @@ fi
 
 # Essential
 source $ZPLUG_HOME/init.zsh
-
-cmd_exists() { command -v $1 2>&1 > /dev/null }
 
 # Make sure to use double quotes to prevent shell expansion
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
