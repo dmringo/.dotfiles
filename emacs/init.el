@@ -54,7 +54,9 @@
           ;; latexmk is a little more consistent than pdflatex
           org-latex-pdf-process (list "latexmk -f -pdf %f"))
     ;; make #+NAME easy-template
-    (add-to-list 'org-structure-template-alist '("n" "#+NAME: ?"))))
+    (add-to-list 'org-structure-template-alist '("n" "#+NAME: ?"))
+    (add-to-list 'org-structure-template-alist
+                 '("ct" "#+BEGIN: clocktable ?\n#+END:"))))
 
 (use-package ox-twbs)
 (use-package ox-gfm)
@@ -108,6 +110,7 @@
 
 (use-package smart-mode-line)
 (use-package smartparens
+  :init (setq sp-base-key-bindings 'sp)
   :config (progn
 	    (add-hook 'prog-mode-hook 'smartparens-mode)
 	    (sp-with-modes 'markdown-mode
@@ -116,12 +119,7 @@
 			   (sp-local-pair "_" "_")
 			   (sp-local-pair "$" "$"))
 	    (sp-with-modes 'c++-mode
-			   (sp-local-pair "/*" "*/")))
-  :bind (:map smartparens-mode-map
-              ("C-c u w" . sp-unwrap-sexp)
-              ("C-M-f"   . sp-forward-sexp)
-              ("C-M-b"   . sp-backward-sexp)
-              ("C-M-k"   . sp-kill-sexp)))
+			  (sp-local-pair "/*" "*/"))))
 
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
@@ -168,8 +166,6 @@
   :config
   (setq cquery-executable (expand-file-name "cquery" "~/.local/bin/")))
 
-(use-package ccls)
-
 (defun my/maybe-enable-c++-lsp-server ()
   (interactive)
   (when (locate-dominating-file default-directory "compile_commands.json")
@@ -178,6 +174,8 @@
           (message "enabling c++ lsp server")
           (lsp-ccls-enable))
       (user-error nil))))
+
+(use-package clang-format)
 
 (add-hook 'c++-mode-hook 'company-mode)
 (add-hook 'c++-mode-hook #'my/maybe-enable-c++-lsp-server)
@@ -300,6 +298,8 @@
 
 (use-package direnv)
 
+;; Racket
+(use-package racket-mode)
 
 ;; Python stuff
 (use-package py-autopep8)
@@ -358,6 +358,10 @@ This does two things:
 
 (use-package elm-mode)
 (use-package go-mode)
+(use-package lsp-go
+  :init
+  (add-hook 'go-mode-hook #'lsp-go-enable))
+
 (use-package treemacs
   :config
   (treemacs-git-mode 'extended)

@@ -130,8 +130,6 @@ esac
 # remove the duplicates (script in the bin/ directory of the dotfiles)
 PATH="$(printf '%s' "$PATH" | dedup_path)"
 
-export PATH GOPATH
-
 # Don't need to keep this around
 unset add2path
 
@@ -144,3 +142,5 @@ ESHELL="/usr/bin/zsh"
 
 # makes CDing to common directories easier
 CDPATH="$HOME:$HOME/proj"
+
+export PATH GOPATH EDITOR ESHELL CDPATH
