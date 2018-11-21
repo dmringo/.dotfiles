@@ -38,7 +38,8 @@ export GPG_TTY="$(tty)"
 # Check if zplug is installed
 export ZPLUG_HOME="$MY_ZSH_HOME/.zplug"
 
-if [[ ! -d $ZPLUG_HOME ]]; then
+if [[ ! -d $ZPLUG_HOME ]]
+then
   git clone https://github.com/zplug/zplug $ZPLUG_HOME
   source $ZPLUG_HOME/init.zsh && zplug --self-manage
 fi
@@ -87,13 +88,15 @@ zplug "BurntSushi/ripgrep", as:command, use:'complete/_rg', if:'cmd_exists rg'
 zplug "ninja-build/ninja", as:command, use:"misc/zsh-completion", if:'cmd_exists ninja'
 
 # Install packages that have not been installed yet
-if ! zplug check --verbose; then
-    printf "Install? [y/N]: "
-    if read -q; then
-        echo; zplug install
-    else
-        echo
-    fi
+if ! zplug check --verbose
+then
+  printf "Install? [y/N]: "
+  if read -q
+  then
+    echo; zplug install
+  else
+    echo
+  fi
 fi
 
 zplug load
