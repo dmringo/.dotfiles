@@ -166,6 +166,9 @@
   :config
   (setq cquery-executable (expand-file-name "cquery" "~/.local/bin/")))
 
+(use-package ccls
+  :commands lsp-ccls-enable)
+
 (defun my/maybe-enable-c++-lsp-server ()
   (interactive)
   (when (locate-dominating-file default-directory "compile_commands.json")
@@ -557,6 +560,27 @@ This does two things:
                                 ;; real-world distance?
                                 ((equal my/hostname "zarniwoop") "Office Code Pro-16")
                                 (t "Office Code Pro-10")))
+
+
+;; from https://emacs.stackexchange.com/a/3157
+(require 'hideshow)
+(require 'sgml-mode)
+(require 'nxml-mode)
+
+(add-to-list 'hs-special-modes-alist
+             '(nxml-mode
+               "<!--\\|<[^/>]*[^/]>"
+               "-->\\|</[^/>]*[^/]>"
+
+               "<!--"
+               sgml-skip-tag-forward
+               nil))
+
+(add-hook 'nxml-mode-hook 'hs-minor-mode)
+;; optional key bindings, easier than hs defaults
+(define-key nxml-mode-map (kbd "C-c h") 'hs-toggle-hiding)
+
+
 
 (add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
 ;; note for future me: backtick permits use of commas for evaluation inside a
