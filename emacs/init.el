@@ -179,7 +179,11 @@
           (lsp-ccls-enable))
       (user-error nil))))
 
-(use-package clang-format)
+(use-package clang-format
+  :bind (:map c-mode-base-map
+              ("C-M-\\" . clang-format-region)
+              ("C-i" . clang-format))
+  :config (fset 'c-indent-region 'clang-format-region))
 
 (add-hook 'c++-mode-hook 'company-mode)
 (add-hook 'c++-mode-hook #'my/maybe-enable-c++-lsp-server)
