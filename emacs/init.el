@@ -83,6 +83,7 @@
 
 (use-package magit
   :bind (("M-G" . magit-status)
+         ("C-x v B" . magit-blame-addition)
          :map magit-mode-map
          ("C-<tab>" . nil)
          ("<tab>" . magit-section-cycle)))
