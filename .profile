@@ -60,8 +60,12 @@ case "$sys_type" in
       # Homebrew paths for GNU coreutils stuff
       gnubin="$BREW_PFX/opt/coreutils/libexec/gnubin"
       gnuman="$BREW_PFX/opt/coreutils/libexec/gnuman"
-      if [ -d "$gnubin" ]; then add2path "$gnubin"; fi
-      if [ -d "$gnubin" ]; then MANPATH="$gnuman:$MANPATH"; fi
+      if [ -d "$gnubin" ] && [ -d "$gnuman" ]
+      then
+        add2path "$gnubin"
+        MANPATH="$gnuman:$MANPATH"
+      fi
+
     fi
 
     clip() {
@@ -119,8 +123,13 @@ esac
 # It's possible that some of these components were already in the PATH, so
 # remove the duplicates (script in the bin/ directory of the dotfiles)
 PATH="$(printf '%s' "$PATH" | dedup_path)"
-MANPATH="$(printf '%s' "$MANPATH" | dedup_path)"
-INFOPATH="$(printf '%s' "$INFOPATH" | dedup_path)"
+INFOPATH="$(printf '%s' "$INFOPATH" | dedup_path):"
+
+# The terminating colon is important here! Basically, it has the effect of
+# appending the system man path(s) at the end of this list.  See manpath(1) for
+# details or https://askubuntu.com/q/197461
+MANPATH="$(printf '%s' "$MANPATH" | dedup_path):"
+
 
 # Don't need to keep this around
 unset add2path
