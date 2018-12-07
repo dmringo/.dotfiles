@@ -1,20 +1,92 @@
-# if running bash (should be rare)
-if [ -n "$BASH_VERSION" ]; then
-  # Bash does *not* read ~/.bashrc by default as a login shell, but I'd like it
-  # to, so include .bashrc if it exists.  It's also worth noting that if bash is
-  # non-interactive, ~/.bash_profile and ~/.bash_login take priority (in that
-  # order) over ~/.profile.  See
-  # http://www.solipsys.co.uk/new/BashInitialisationFiles.html
-  if [ -f "$HOME/.bashrc" ]; then
-    source "$HOME/.bashrc"
-  fi
-fi
+# OK idiot, this is for future you when you finally clean this mess up.
+#
+# You need to distinguish between environments necessary (or useful) for
+# interactive and non-interactive use (e.g. PATH is useful to any process that
+# calls exec(3), so it's important in both, but shell completion is really only
+# useful interactively).
+#
+# Try to isolate the bits that you want portable between shells and have
+# distinct scripts for the shell-specific stuff.  *Use*
+# .bash{rc,_login,_profile} and .z{shrc,shenv,profile,login} and source the
+# common stuff from there when appropriate.  Understand which of these files is
+# read automatically and when.
+#
+# To that end, the following is useful:
+#
+#  - `sh`, when it's *really* an `sh` equivalent will read the file named by
+#    the environment variable ENV.  Note that `zsh` does *not* do this when
+#    invoked as `emulate sh`, but it *does* if `sh` is a symlink to `zsh`.  The
+#    same is true of Bash (w.r.t. symlinks).  $HOME/.profile is only sourced on
+#    startup.
+#
+#    > This variable can be used to set aliases and other items local to the
+#    > invocation of a shell. The file referred to by ENV differs from
+#    > $HOME/.profile in that .profile is typically executed at session start-up,
+#    > whereas the ENV file is executed at the beginning of each shell
+#    > invocation. The ENV value is interpreted in a manner similar to a dot
+#    > script, in that the commands are executed in the current environment and
+#    > the file needs to be readable, but not executable. However, unlike dot
+#    > scripts, no PATH searching is performed. This is used as a guard against
+#    > Trojan Horse security breaches.
+#
+#    See http://pubs.opengroup.org/onlinepubs/9699919799/xrat/V4_xcu_chap02.html
+#
+#  - Bash has some funny rules for which files are read and when.
+#
+#    See http://www.solipsys.co.uk/new/2BashInitialisationFiles.html
+#
+#  - Zsh has a (subjectively) saner set of rules
+#
+#    See http://zsh.sourceforge.net/Intro/intro_3.html
+#
+#
+# Also worth perusing: https://docstore.mik.ua/orelly/unix/upt/index.htm
+
+ENV="$HOME/.config/sh/ENV"
+
 
 # Add a component to the PATH.  This really just exists so I can more
 # conveniently document PATH additions item-wise.
 add2path() {
   if [ -d "$1" ]; then PATH="$1:$PATH"; fi
 }
+
+
+# Is homebrew being used?
+if command -v brew 2>&1 > /dev/null
+then
+  have_brew() { return 0; }
+
+  BREW_PFX=$(brew config | grep HOMEBREW_PREFIX | cut -d' ' -f2)
+  add2path "$BREW_PFX/bin"
+  MANPATH="$BREW_PFX/share/man:$MANPATH"
+  INFOPATH="$BREW_PFX/share/info:$INFOPATH"
+else
+  have_brew() { return 1; }
+fi
+
+# if running bash (should be rare)
+if [ -n "$BASH_VERSION" ]
+then
+  # Bash does *not* read ~/.bashrc by default as a login shell, but I'd like it
+  # to, so include .bashrc if it exists.  It's also worth noting that if bash is
+  # non-interactive, ~/.bash_profile and ~/.bash_login take priority (in that
+  # order) over ~/.profile.  See
+  # http://www.solipsys.co.uk/new/2BashInitialisationFiles.html
+  if [ -f "$HOME/.bashrc" ]
+  then
+    . "$HOME/.bashrc"
+  fi
+
+  if have_brew
+  then
+    for comp in "$BREW_PFX"/etc/bash_completion.d/*
+    do
+      . "$comp"
+    done
+  fi
+fi
+
 
 # Try to keep $HOME cleanish, keep Go-managed stuff out of sight
 GOPATH="$HOME/.local/go"
@@ -43,19 +115,13 @@ add2path "$GOPATH/bin"  # GO managed bins
 add2path "$HOME/.cabal/bin" # Cabal-managed bins
 
 
-if command -v brew 2>&1 > /dev/null
-then
-  BREW_PFX=$(brew config | grep HOMEBREW_PREFIX | cut -d' ' -f2)
-  add2path "$BREW_PFX/bin"
-  MANPATH="$BREW_PFX/share/man:$MANPATH"
-  INFOPATH="$BREW_PFX/share/info:$INFOPATH"
-fi
+
 
 sys_type="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
 case "$sys_type" in
   darwin* )
-    if [ -n "$BREW_PFX" ]
+    if have_brew
     then
       # Homebrew paths for GNU coreutils stuff
       gnubin="$BREW_PFX/opt/coreutils/libexec/gnubin"
@@ -113,7 +179,7 @@ case "$sys_type" in
     ;;
 esac
 
-
+[ -n "$BREW_PFX" ]
 # I almost always use Conda for managing python-y stuff, but only the minimal
 # distribution.  The full distribution comes with a bunch of packages that I
 # prefer to maintain via other channels (e.g. pandoc)
@@ -144,3 +210,5 @@ ESHELL="/usr/bin/zsh"
 CDPATH="$HOME:$HOME/proj"
 
 export PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH
+
+source /home/linuxbrew/.linuxbrew/etc/brew.env # Added by brew configure-shell
