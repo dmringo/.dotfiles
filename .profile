@@ -93,6 +93,7 @@ case "$sys_type" in
       case "$1" in
         f|filter|i|in|o|out )
           mode="$1"
+          shift
           ;;
         "" )
           mode=i

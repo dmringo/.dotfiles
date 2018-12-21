@@ -357,7 +357,11 @@ This does two things:
 (use-package docker-tramp)
 
 (use-package elm-mode)
+
 (use-package go-mode)
+(use-package go-eldoc)
+(use-package company-go)
+
 (use-package treemacs
   :config
   (treemacs-git-mode 'extended)
