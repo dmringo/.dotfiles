@@ -1,6 +1,13 @@
 # Checking for dumb terminals - makes Tramp work when editing remote files
 [[ $TERM == "dumb" ]] && unsetopt zle && PS1='$ ' && return;
 
+
+# pretty sure fpath has to be modified before compinit is called
+if have_brew
+then
+  fpath=("$(brew --prefix)/share/zsh/site-functions" $fpath)
+fi
+
 # The following lines were added by compinstall
 zstyle ':completion:*' completer _expand _complete _ignored _match _approximate _prefix
 zstyle ':completion:*' completions 1
@@ -50,18 +57,21 @@ source $ZPLUG_HOME/init.zsh
 # Make sure to use double quotes to prevent shell expansion
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
 
+# required for `pure` prompt
 zplug "mafredri/zsh-async", from:github
-
 zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
 
 # l with fancy colors and git info
-zplug "supercrabtree/k", hook-load:'alias k="k -h"'
+zplug "supercrabtree/k", hook-load:"alias k='k -h'"
 
 # tell me if there's a faster way to run some command
 zplug "djui/alias-tips"
 
 # oh-my-zsh git plugin is nice
 zplug "plugins/git", from:oh-my-zsh, if:'cmd_exists git'
+
+# alias in the style of the omz git aliases
+alias gsur='git submodule update --recursive'
 
 # Haskell stack
 zplug "plugins/stack", from:oh-my-zsh, if:'cmd_exists stack'
