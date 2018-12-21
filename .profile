@@ -13,12 +13,10 @@ fi
 # Add a component to the PATH.  This really just exists so I can more
 # conveniently document PATH additions item-wise.
 add2path() {
-  PATH="$1:$PATH"
+  if [ -d "$1" ]; then PATH="$1:$PATH"; fi
 }
 
-
-# Try to keep $HOME clean, keep Go-managed stuff out of sight
-# TODO: Will this hurt if I start writing my own Go programs?
+# Try to keep $HOME cleanish, keep Go-managed stuff out of sight
 GOPATH="$HOME/.local/go"
 
 # PATH components. -------------------------------------------------------------
@@ -44,24 +42,30 @@ add2path "$HOME/.local/bin"
 add2path "$GOPATH/bin"  # GO managed bins
 add2path "$HOME/.cabal/bin" # Cabal-managed bins
 
-# I almost always use Conda for managing python-y stuff, but only the minimal
-# distribution.  The full distribution comes with a bunch of packages that I
-# prefer to maintain via other channels (e.g. pandoc)
-[ -d "$HOME/miniconda3/bin" ] && add2path "$HOME/miniconda3/bin"
 
+if command -v brew 2>&1 > /dev/null
+then
+  BREW_PFX=$(brew config | grep HOMEBREW_PREFIX | cut -d' ' -f2)
+  add2path "$BREW_PFX/bin"
+  MANPATH="$BREW_PFX/share/man:$MANPATH"
+  INFOPATH="$BREW_PFX/share/info:$INFOPATH"
+fi
 
 sys_type="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
 case "$sys_type" in
   darwin* )
-    # Homebrew paths for GNU coreutils stuff
-    gnubin="/usr/local/opt/coreutils/libexec/gnubin"
-    gnuman="/usr/local/opt/coreutils/libexec/gnuman"
-    if [ -d "$gnubin" ]; then
-      add2path "$gnubin"
-    fi
-    if [ -d "$gnubin" ]; then
-      MANPATH="$gnuman:$MANPATH"
+    if [ -n "$BREW_PFX" ]
+    then
+      # Homebrew paths for GNU coreutils stuff
+      gnubin="$BREW_PFX/opt/coreutils/libexec/gnubin"
+      gnuman="$BREW_PFX/opt/coreutils/libexec/gnuman"
+      if [ -d "$gnubin" ] && [ -d "$gnuman" ]
+      then
+        add2path "$gnubin"
+        MANPATH="$gnuman:$MANPATH"
+      fi
+
     fi
 
     clip() {
@@ -105,37 +109,31 @@ case "$sys_type" in
       esac
       xclip -"$mode" -selection clipboard "$@"
     }
-
-
-    if command -v brew 2>&1 > /dev/null
-    then
-      # from linuxbrew profile examples, usually found at
-      # /usr/share/doc/linuxbrew-wrapper/examples/profile
-      ## for elf executables
-      export PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
-      #
-      ## for manpages
-      export MANPATH="/home/linuxbrew/.linuxbrew/share/man:${MANPATH}"
-      #
-      ## for info pages
-      export INFOPATH="/home/linuxbrew/.linuxbrew/share/info:${INFOPATH}"
-    fi
-
     ;;
   * )
     ;;
 esac
 
 
+# I almost always use Conda for managing python-y stuff, but only the minimal
+# distribution.  The full distribution comes with a bunch of packages that I
+# prefer to maintain via other channels (e.g. pandoc)
+[ -d "$HOME/miniconda3/bin" ] && add2path "$HOME/miniconda3/bin"
+
+
 # It's possible that some of these components were already in the PATH, so
 # remove the duplicates (script in the bin/ directory of the dotfiles)
 PATH="$(printf '%s' "$PATH" | dedup_path)"
+INFOPATH="$(printf '%s' "$INFOPATH" | dedup_path):"
 
-export PATH GOPATH
+# The terminating colon is important here! Basically, it has the effect of
+# appending the system man path(s) at the end of this list.  See manpath(1) for
+# details or https://askubuntu.com/q/197461
+MANPATH="$(printf '%s' "$MANPATH" | dedup_path):"
+
 
 # Don't need to keep this around
 unset add2path
-
 
 # Saint IGNUcius be praised
 EDITOR="emacs"
@@ -145,3 +143,5 @@ ESHELL="/usr/bin/zsh"
 
 # makes CDing to common directories easier
 CDPATH="$HOME:$HOME/proj"
+
+export PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH

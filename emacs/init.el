@@ -54,7 +54,9 @@
           ;; latexmk is a little more consistent than pdflatex
           org-latex-pdf-process (list "latexmk -f -pdf %f"))
     ;; make #+NAME easy-template
-    (add-to-list 'org-structure-template-alist '("n" "#+NAME: ?"))))
+    (add-to-list 'org-structure-template-alist '("n" "#+NAME: ?"))
+    (add-to-list 'org-structure-template-alist
+                 '("ct" "#+BEGIN: clocktable ?\n#+END:"))))
 
 (use-package ox-twbs)
 (use-package ox-gfm)
@@ -81,6 +83,7 @@
 
 (use-package magit
   :bind (("M-G" . magit-status)
+         ("C-x v B" . magit-blame-addition)
          :map magit-mode-map
          ("C-<tab>" . nil)
          ("<tab>" . magit-section-cycle)))
@@ -108,6 +111,7 @@
 
 (use-package smart-mode-line)
 (use-package smartparens
+  :init (setq sp-base-key-bindings 'sp)
   :config (progn
 	    (add-hook 'prog-mode-hook 'smartparens-mode)
 	    (sp-with-modes 'markdown-mode
@@ -116,12 +120,7 @@
 			   (sp-local-pair "_" "_")
 			   (sp-local-pair "$" "$"))
 	    (sp-with-modes 'c++-mode
-			   (sp-local-pair "/*" "*/")))
-  :bind (:map smartparens-mode-map
-              ("C-c u w" . sp-unwrap-sexp)
-              ("C-M-f"   . sp-forward-sexp)
-              ("C-M-b"   . sp-backward-sexp)
-              ("C-M-k"   . sp-kill-sexp)))
+			  (sp-local-pair "/*" "*/"))))
 
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
@@ -168,7 +167,8 @@
   :config
   (setq cquery-executable (expand-file-name "cquery" "~/.local/bin/")))
 
-(use-package ccls)
+(use-package ccls
+  :commands lsp-ccls-enable)
 
 (defun my/maybe-enable-c++-lsp-server ()
   (interactive)
@@ -178,6 +178,12 @@
           (message "enabling c++ lsp server")
           (lsp-ccls-enable))
       (user-error nil))))
+
+(use-package clang-format
+  :bind (:map c-mode-base-map
+              ("C-M-\\" . clang-format-region)
+              ("C-i" . clang-format))
+  :config (fset 'c-indent-region 'clang-format-region))
 
 (add-hook 'c++-mode-hook 'company-mode)
 (add-hook 'c++-mode-hook #'my/maybe-enable-c++-lsp-server)
@@ -300,6 +306,8 @@
 
 (use-package direnv)
 
+;; Racket
+(use-package racket-mode)
 
 ;; Python stuff
 (use-package py-autopep8)
@@ -361,6 +369,9 @@ This does two things:
 (use-package go-mode)
 (use-package go-eldoc)
 (use-package company-go)
+(use-package lsp-go
+  :init
+  (add-hook 'go-mode-hook #'lsp-go-enable))
 
 (use-package treemacs
   :config
@@ -557,6 +568,27 @@ This does two things:
                                 ;; real-world distance?
                                 ((equal my/hostname "zarniwoop") "Office Code Pro-16")
                                 (t "Office Code Pro-10")))
+
+
+;; from https://emacs.stackexchange.com/a/3157
+(require 'hideshow)
+(require 'sgml-mode)
+(require 'nxml-mode)
+
+(add-to-list 'hs-special-modes-alist
+             '(nxml-mode
+               "<!--\\|<[^/>]*[^/]>"
+               "-->\\|</[^/>]*[^/]>"
+
+               "<!--"
+               sgml-skip-tag-forward
+               nil))
+
+(add-hook 'nxml-mode-hook 'hs-minor-mode)
+;; optional key bindings, easier than hs defaults
+(define-key nxml-mode-map (kbd "C-c h") 'hs-toggle-hiding)
+
+
 
 (add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
 ;; note for future me: backtick permits use of commas for evaluation inside a

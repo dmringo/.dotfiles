@@ -95,6 +95,11 @@ This assumes that there is a pair in the variable `pandoc-directives'
   (let ((spec (or timespec  "%b %e, %Y")))
     (insert (format-time-string spec))))
 
+(defun my/blame-me (&optional timespec)
+  (interactive)
+  (let* ((time (format-time-string (or timespec  "%b %e, %Y")))
+         (str (format "[%s - %s]" (user-login-name) time)))
+    (insert str)))
 
 (defun my/ansi-term-zsh ()
   (interactive)

@@ -10,9 +10,11 @@
 
 # fail hard, plz
 set -e
+
+# uncomment for trace
 # set -x
 
-# Unless DOT_HOME is set, use absolute path of this script
+# Unless DOT_HOME is set, use dirname of this script
 DOT_HOME=${DOT_HOME:-${0:A:h}}
 
 # keep track of the return status of linking operations
