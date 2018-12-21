@@ -129,7 +129,11 @@
 
 ;; Good for Makefiles where actual tabs are important but alignment really ought
 ;; to be accomplished with spaces.
-(use-package smart-tabs-mode)
+(use-package smart-tabs-mode
+  :init
+  (add-hook 'makefile-mode-hook 'smart-tabs-mode-enable)
+  :config
+  (smart-tabs-mode/no-tabs-mode-advice open-rectangle))
 
 (use-package rainbow-delimiters)
 
@@ -167,16 +171,16 @@
   :config
   (setq cquery-executable (expand-file-name "cquery" "~/.local/bin/")))
 
-(use-package ccls
-  :commands lsp-ccls-enable)
+(use-package ccls)
 
 (defun my/maybe-enable-c++-lsp-server ()
   (interactive)
   (when (locate-dominating-file default-directory "compile_commands.json")
+    (require 'lsp)
     (condition-case nil
         (progn
           (message "enabling c++ lsp server")
-          (lsp-ccls-enable))
+          (lsp))
       (user-error nil))))
 
 (use-package clang-format
@@ -267,6 +271,12 @@
 (use-package haskell-snippets)
 
 
+(use-package tablist
+  :config
+  (add-hook 'tabulated-list-mode-hook 'tablist-minor-mode)
+  :bind (:map tablist-minor-mode-map
+              ("U" . nil)))
+
 (use-package ivy
   :diminish ivy-mode
   :bind  (("C-c C-r" . ivy-resume)
@@ -346,15 +356,17 @@ This does two things:
   (progn
     (projectile-mode)
     (setq projectile-completion-system 'ivy
-          projectile-enable-caching t)) ;; Good even with alien
+          projectile-enable-caching t ;; Good even with alien listing
+          projectile-mode-line-prefix " ℙ")) 
   :bind (:map projectile-mode-map
               ("C-c p" . projectile-command-map)))
 
 
 (use-package counsel-projectile)
 
-
 (use-package projectile-ripgrep)
+
+(use-package easy-kill-extras)
 
 (use-package editorconfig
   :diminish
@@ -434,10 +446,16 @@ This does two things:
               ("C-c C-k" . ulam/make)
               ("C-c C-r" . ulam/run)))
 
-
-
 ;; Use-package stuff ends here.  Below is more standard Elisp config
 
+;; LLVM usually puts stuff in a system site-lisp directory, and its directory
+;; should get added to the load path.  If it's there, require it, so .ll files
+;; open in llvm-mode
+(when (member-if (lambda (path) (string-suffix-p "llvm" path)) load-path)
+  (require 'llvm-mode))
+
+;; When narrowing to a [de]fun[ction], include preceding comments
+(setq narrow-to-defun-include-comments t)
 
 ;; Always move to help window after opening (easier to close)
 (setq help-window-select t)
@@ -458,6 +476,22 @@ This does two things:
 
 ;; Tramp should use SSH by default (it's usually faster than SCP)
 (setq tramp-default-method "ssh")
+
+;; Don't use a new frame for ediffing, split horizontally by default
+(setq ediff-window-setup-function 'ediff-setup-windows-plain
+      ediff-split-window-function 'split-window-horizontally)
+
+;; Save/restore windows around ediff sessions
+;; stolen from https://emacs.stackexchange.com/a/17089/19865
+(defvar my/ediff-last-windows nil)
+(defun my/store-pre-ediff-winconfig ()
+  (setq my/ediff-last-windows (current-window-configuration)))
+(defun my/restore-pre-ediff-winconfig ()
+  (set-window-configuration my/ediff-last-windows))
+(add-hook 'ediff-before-setup-hook #'my/store-pre-ediff-winconfig)
+(add-hook 'ediff-quit-hook #'my/restore-pre-ediff-winconfig)
+
+
 
 ;; Personal global keybindings
 (mapcar
