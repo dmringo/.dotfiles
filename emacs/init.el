@@ -112,15 +112,18 @@
 (use-package smart-mode-line)
 (use-package smartparens
   :init (setq sp-base-key-bindings 'sp)
-  :config (progn
-	    (add-hook 'prog-mode-hook 'smartparens-mode)
-	    (sp-with-modes 'markdown-mode
-			   (sp-local-pair "```" "```")
-			   (sp-local-pair "*" "*")
-			   (sp-local-pair "_" "_")
-			   (sp-local-pair "$" "$"))
-	    (sp-with-modes 'c++-mode
-			  (sp-local-pair "/*" "*/"))))
+  :config
+  (progn
+	  (add-hook 'prog-mode-hook 'smartparens-mode)
+    ;; don't do anything with single-quote for elisp
+    (sp-local-pair 'emacs-lisp-mode "'" nil :actions nil)
+	  (sp-with-modes 'markdown-mode
+			(sp-local-pair "```" "```")
+			(sp-local-pair "*" "*")
+			(sp-local-pair "_" "_")
+			(sp-local-pair "$" "$"))
+	  (sp-with-modes 'c++-mode
+			(sp-local-pair "/*" "*/"))))
 
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
