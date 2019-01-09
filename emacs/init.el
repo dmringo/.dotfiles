@@ -509,39 +509,37 @@
 
 
 ;; Personal global keybindings
-(mapcar
- (lambda (pr) (bind-key (car pr) (cdr pr)))
- '(
-   ;; Simpler buffer and window nav
-   ("C-<tab>"                 . other-window)
-   ("<C-iso-lefttab>"         . (lambda () (interactive) (other-window -1)))
-   ("M-["                     . previous-buffer)
-   ("M-]"                     . next-buffer)
+(bindkeys
+ :map global-map
+ ;; Simpler buffer and window nav
+ ("C-<tab>"                 . other-window)
+ ("<C-iso-lefttab>"         . (lambda () (interactive) (other-window -1)))
+ ("M-["                     . previous-buffer)
+ ("M-]"                     . next-buffer)
 
-   ;; More convenient than M-DEL (DEL == backspace)
-   ("M-D"                     . backward-kill-word)
-   
-   ;; Slightly quicker Kill this buffer
-   ("C-x k"                   . kill-this-buffer)
+ ;; More convenient than M-DEL (DEL == backspace)
+ ("M-D"                     . backward-kill-word)
+ 
+ ;; Slightly quicker Kill this buffer
+ ("C-x k"                   . kill-this-buffer)
 
-   ;; I'm always aligning things
-   ("C-M-;"                   . align-regexp)
+ ;; I'm always aligning things
+ ("C-M-;"                   . align-regexp)
 
-   ;; Usually like fullscreen .  Don't know how to start an emacsclient-created
-   ;; frame in fullscreen
-   ("s-<return>"              . toggle-frame-fullscreen)
+ ;; Usually like fullscreen .  Don't know how to start an emacsclient-created
+ ;; frame in fullscreen
+ ("s-<return>"              . toggle-frame-fullscreen)
 
-   ;; Get into eshell quicker
-   ("C-S-t"                   . eshell)
-   ;; Get into ansi-term quicker
-   ("M-T"                     . my/ansi-term-zsh)
+ ;; Get into eshell quicker
+ ("C-S-t"                   . eshell)
+ ;; Get into ansi-term quicker
+ ("M-T"                     . my/ansi-term-zsh)
 
-   ("C-M-}"                   . enlarge-window-horizontally)
-   ("C-M-{"                   . shrink-window-horizontally)
-   ("C-h M"                   . man)
-   ([remap eval-expression]   . pp-eval-expression)
-   ([remap eval-last-sexp]    . pp-eval-last-sexp)
-   ))
+ ("C-M-}"                   . enlarge-window-horizontally)
+ ("C-M-{"                   . shrink-window-horizontally)
+ ("C-h M"                   . man)
+ ([remap eval-expression]   . pp-eval-expression)
+ ([remap eval-last-sexp]    . pp-eval-last-sexp))
 
 ;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:
 ;; eval this:
@@ -549,13 +547,24 @@
 ;; to get this:
 ;; ("" "" [33554452] [134217812] [134217844] [167772276])
 ;;
-;; This makes it seem like {C,M}-t and {C,M}-T are identical as far as keyboard
-;; input is concerned, so you'd think you'd want to use {C,M}-S-t to bind
-;; {Ctrl,Meta}+Shift+t to something.  But checking those inputs with
-;; `describe-key' reveals that, when I press Ctrl+Shift+t, Emacs interprets it
-;; as C-S-t while Meta+Shift+t is interpreted as M-T, at least as far as keymaps
-;; are concerned.  It's not really clear what's happening here, but it's the
-;; reason for the inconsistent notation above.
+;; It's strange that C-{T,t} seem to be recognized the same by `kbd', but
+;; M-{T,t} do not. Checking those inputs with `describe-key' reveals that, when
+;; I press Ctrl+Shift+t, Emacs interprets it as C-S-t while Meta+Shift+t is
+;; interpreted as M-T, at least as far as keymaps are concerned.  It's not
+;; really clear what's happening here, but it's the reason for the inconsistent
+;; notation above.
+
+;; add some some bindings for compilation mode
+(defun my/compilation-goto-error-no-select ()
+  "Goto error but don't leave the compilation buffer"
+  (interactive)
+  (compile-goto-error)
+  (pop-to-buffer next-error-last-buffer))
+
+(bind-keys :map compilation-button-map
+           ("Q" . kill-this-buffer)
+           ("<S-return>" . my/compilation-goto-error-no-select))
+
 
 
 ;; Be Lazy, prefer Y or N to Yes or No
