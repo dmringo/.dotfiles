@@ -330,29 +330,41 @@
   (venv-initialize-eshell))
 
 
-(use-package ripgrep
-  :config
-  (define-advice ripgrep-regexp 
-      (:around (rg-orig regx dir &optional args) my/advice)
-    "Advice for `ripgrep-regexp'.
-This does two things: 
+;; (use-package ripgrep
+;;   :config
+;;   (define-advice ripgrep-regexp 
+;;       (:around (rg-orig regx dir &optional args) my/advice)
+;;     "Advice for `ripgrep-regexp'.
+;; This does two things: 
 
- - Switches to the ripgrep result buffer after running the search
+;;  - Switches to the ripgrep result buffer after running the search
 
- - Adds the ability to call `ripgrep-regexp' with arbitrary extra
-   arguments (prompted in the minibuffer) when called with a
-   prefix argument.
-"
-    (let ((buf-name (compilation-buffer-name "ripgrep-search"
-                                             'ripgrep-search-mode
-                                             nil))
-          (smart-arg (if (consp current-prefix-arg)
-                         (read-from-minibuffer "Extra rg args: ")
-                       "")))
-      (funcall rg-orig regx dir (nconc args (list smart-arg "-M 120")))
-      (pop-to-buffer buf-name)))
-  :bind ("C-c s r" . ripgrep-regexp))
+;;  - Adds the ability to call `ripgrep-regexp' with arbitrary extra
+;;    arguments (prompted in the minibuffer) when called with a
+;;    prefix argument.
+;; "
+;;     (let ((buf-name (compilation-buffer-name "ripgrep-search"
+;;                                              'ripgrep-search-mode
+;;                                              nil))
+;;           (smart-arg (if (consp current-prefix-arg)
+;;                          (read-from-minibuffer "Extra rg args: ")
+;;                        "")))
+;;       (funcall rg-orig regx dir (nconc args (list smart-arg "-M 120")))
+;;       (pop-to-buffer buf-name)))
+;;   :bind ("C-c s r" . ripgrep-regexp))
 
+
+(use-package rg
+  :bind (:map rg-mode-map
+              ;; unbind nav conventions that I like
+              ;; TODO: consider rebinding the history commands
+              ("C-f") ("C-b") ("C-n") ("C-p")
+              ;; moves cursor only
+              ("n" . rg-next-file)
+              ("p" . rg-prev-file)
+              ;; moves cursor and navigates to point in relevant file
+              ("M-n" . next-error-no-select)
+              ("M-p" . previous-error-no-select)))
 
 (use-package projectile
   :config
@@ -367,7 +379,7 @@ This does two things:
 
 (use-package counsel-projectile)
 
-(use-package projectile-ripgrep)
+;; (use-package projectile-ripgrep)
 
 (use-package easy-kill-extras)
 
