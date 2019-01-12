@@ -28,7 +28,7 @@ bindsym $mod+Return exec "gnome-terminal"
 # kill focused window
 bindsym $mod+q kill
   
-# start dmenu (a program launcher)
+# start rofi (a program launcher)
 # bindsym $mod+space exec dmenu_run -i -l 01 -p '>'
 # bindsym $mod+space exec i3-dmenu-desktop -dmenu='dmenu -i -l 10 -p ">"'
 bindsym $mod+space exec rofi -show combi -combi-modi "drun#run#window" \
@@ -177,7 +177,42 @@ bar {
         tray_output primary
 }
 
+# Pulse Audio controls
+set     $volCtl exec --no-startup-id amixer -D pulse sset Master
 
+# Should only use these when the kdb doesn't have native XF86 keys, right?
+bindsym $mod+F6 $volCtl toggle
+bindsym $mod+F7 $volCtl 5%-
+bindsym $mod+F8 $volCtl 5%+
+
+bindsym XF86AudioMute        $volCtl toggle
+bindsym XF86AudioLowerVolume $volCtl 5%-
+bindsym XF86AudioRaiseVolume $volCtl 5%+
+
+# Media player controls
+set $mediaPrev exec --no-startup-id playerctl previous
+set $mediaPlay exec --no-startup-id playerctl play-pause
+set $mediaNext exec --no-startup-id playerctl next
+
+# Should only use these when the kdb doesn't have native XF86 keys, right?
+bindsym $mod+F1 $mediaPrev
+bindsym $mod+F2 $mediaPlay
+bindsym $mod+F3 $mediaNext
+
+bindsym XF86AudioPrev $mediaPrev
+bindsym XF86AudioPlay $mediaPlay
+bindsym XF86AudioNext $mediaNext
+
+  
+# Brightness uses custom script at:
+# https://github.com/dmringo/.dotfiles/blob/master/bin/setbacklight  
+# For some reason, on the XPS 9560, the normal XF86 brightness keys repeat
+# very slowly.  So those have a coarser step size, whereas these (basically
+# the same binding plus the 'Fn' modifier) repeat quickly
+bindsym XF86MonBrightnessDown exec setbacklight -10
+bindsym XF86MonBrightnessUp   exec setbacklight +10
+bindsym $mod+F11 exec setbacklight -1  
+bindsym $mod+F12 exec setbacklight +1
 
 set $fs-pause exec --no-startup-id i3-fs-pause
 
@@ -203,50 +238,8 @@ mode "$mode_system" {
   bindsym n           $fs-pause -k, mode "default"
 }
 
-bindsym $mod+Control+q exec --no-startup-id i3exit lock, $fs-pause -k
+bindsym $mod+Control+q $fs-pause, exec --no-startup-id i3exit lock, $fs-pause -k
 
-# Brightness uses custom script at:
-# https://github.com/dmringo/.dotfiles/blob/master/bin/setbacklight  
-# bindsym XF86MonBrightnessUp exec setbacklight +5
-# bindsym XF86MonBrightnessDown exec setbacklight -5 
-
-
-# Pulse Audio controls
-set     $volCtl exec --no-startup-id amixer -D pulse sset Master
-
-# Should only use these when the kdb doesn't have native XF86 keys, right?
-bindsym $mod+F6 $volCtl toggle
-bindsym $mod+F7 $volCtl 5%-
-bindsym $mod+F8 $volCtl 5%+
-
-bindsym XF86AudioMute        $volCtl toggle
-bindsym XF86AudioLowerVolume $volCtl 5%-
-bindsym XF86AudioRaiseVolume $volCtl 5%+
-
-# Media player controls
-set $mediaPrev exec --no-startup-id playerctl previous  
-set $mediaPlay exec --no-startup-id playerctl play-pause
-set $mediaNext exec --no-startup-id playerctl next
-
-# Should only use these when the kdb doesn't have native XF86 keys, right?
-bindsym $mod+F1 $mediaPrev
-bindsym $mod+F2 $mediaPlay
-bindsym $mod+F3 $mediaNext
-
-bindsym XF86AudioPrev $mediaPrev
-bindsym XF86AudioPlay $mediaPlay
-bindsym XF86AudioNext $mediaNext
-
-  
-# Brightness uses custom script at:
-# https://github.com/dmringo/.dotfiles/blob/master/bin/setbacklight  
-# For some reason, on the XPS 9560, the normal XF86 brightness keys repeat
-# very slowly.  So those have a coarser step size, whereas these (basically
-# the same binding plus the 'Fn' modifier) repeat quickly
-bindsym XF86MonBrightnessDown exec setbacklight -10
-bindsym XF86MonBrightnessUp   exec setbacklight +10
-bindsym $mod+F11 exec setbacklight -1  
-bindsym $mod+F12 exec setbacklight +1
 
 
 exec_always --no-startup-id feh --bg-fill ~/Pictures/wp/current  
