@@ -4,6 +4,14 @@
 # receiving SIGUSR1, at which point it exits.  It can be called with -k to send
 # SIGUSR1 to all running instances.
 
+set -u
+
+
+log() {
+  printf "%s-%s: %s\n" "$$" "$(date)" "$@" >> ~/fs-pause.log
+}
+
+log "i3-fs-pause invoked"
 
 # Requires jq to be installed for JSON handling
 if ! command -v jq > /dev/null
@@ -21,24 +29,63 @@ fi
 # conditional to grab the output that is active if there can be focused things
 # on each monitor.
 isFS() {
-    recursive='..'
-    onlyObjs='select(type=="object")'
-    onlyFocused='select(contains({focused:true}))'
-    isFullScreen='.fullscreen_mode == 1'
-    i3-msg -t get_tree | \
-        jq --exit-status \
-           "$recursive | $onlyObjs | $onlyFocused | $isFullScreen" \
-           > /dev/null    
+  log "in isFS()"
+  recursive='..'
+  onlyObjs='select(type=="object")'
+  onlyFocused='select(contains({focused:true}))'
+  isFullScreen='.fullscreen_mode == 1'
+  log "  vars defined"
+  i3-msg -t get_tree | \
+    jq --exit-status \
+       "$recursive | $onlyObjs | $onlyFocused | $isFullScreen" \
+       > /dev/null
+}
+
+# check if music is playing. if so, pause it
+isPlay() {
+  [ "$(playerctl status)" = "Playing" ]
 }
 
 maybeToggle() {
-    if ! isFS && [ $toggle ]; then i3-msg 'fullscreen enable'; fi
+  if ! isFS && [ "$restoreFS" = "true" ]
+  then i3-msg "fullscreen enable"
+  fi
+  if ! isPlay && [ "$restorePlay" = "1" ]
+  then
+    log "isPlay and should restore"
+    playerctl play
+  else
+    log "restorePlay=$restorePlay"
+  fi
 }
 
+log "fns defined"
 
-if [ "$1" = "-k" ]; then killall -USR1 i3-fs-pause; return; fi
+if [ "${1-}" = "-k" ]; then killall -USR1 i3-fs-pause; return; fi
 
-if isFS; then toggle=`i3-msg 'fullscreen disable' | jq '.[].success'`; fi
+log "no arg"
+
+if isFS
+then
+  log "isFS"
+  restoreFS="$(i3-msg 'fullscreen disable' | jq '.[].success')"
+else
+  log "not isFS"
+fi
+
+log "done FS check"
+
+if isPlay
+then
+  log "isPlay"
+  restorePlay=1
+  playerctl pause
+else
+  log "not isPlay"
+  restorePlay=0
+fi
+
+log "done isPlay check"
 
 trap maybeToggle USR1
 tail -f /dev/null & wait
