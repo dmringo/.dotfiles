@@ -13,11 +13,28 @@
 (defconst my/lisp-dir
   (expand-file-name "lisp" user-emacs-directory))
 
+
+(defvar my/package-archive-defs
+  '(("melpa-stable" 10 "https://stable.melpa.org/packages/")
+    ("org"          10 "https://orgmode.org/elpa/")
+    ("gnu"          5 "https://elpa.gnu.org/packages/")
+    ("melpa"        1 "https://melpa.org/packages/"))
+  "List holding package archive info.  Each member has the form
+(ARCHIVE-ID URL PRIORITY) for use in the variables
+`package-archives' and `package-archive-priorities'. Order within
+this list has no bearing on priority, but it's nice to keep it
+ordered on the priority.")
+
 (setq package-archives
-      '(("gnu"          . "https://elpa.gnu.org/packages/")
-        ("melpa-stable" . "https://stable.melpa.org/packages/")
-        ("melpa"        . "https://melpa.org/packages/")
-        ("org"          . "https://orgmode.org/elpa/")))
+      (mapcar
+       (lambda (spec) (cons (car spec) (caddr spec)))
+       my/package-archive-defs))
+
+(setq package-archive-priorities
+      (mapcar
+       (lambda (spec) (cons (car spec) (cadr spec)))
+       my/package-archive-defs))
+
 
 (package-refresh-contents)
 (mapc (lambda (pkg)
@@ -25,8 +42,20 @@
 	        (package-install pkg)))
       '(use-package diminish bind-key))
 
-(setq use-package-verbose       t
-      use-package-always-ensure t)
+(setq
+ ;; get more info from use-package - good for newbs like me
+ use-package-verbose       t
+
+ ;; Defer all pacakges by default. This means I have to be extra careful to
+ ;; :demand those packages that I want loaded all the time.  This makes sense
+ ;; for someone like me who tends to install too many packages for niche uses
+ ;; (e.g. ssh-config-mode)
+ use-package-always-defer  t
+
+ ;; This ensures that packages are pulled from package archives whenever they
+ ;; aren't already present somewhere in the load path.  This means that, for
+ ;; local packages, I need to specify `:ensure f`
+ use-package-always-ensure t)
 
 ;; suggested by jwiegly
 (eval-when-compile
@@ -61,8 +90,9 @@
 (use-package ox-twbs)
 (use-package ox-gfm)
 (use-package ox-pandoc)
+
+;; asynchronous execution of src blocks in org via babel
 (use-package ob-async)
-(use-package htmlize)
 
 
 (defun my/org-babel-load-langs ()
@@ -82,46 +112,52 @@
   :config (global-undo-tree-mode))
 
 (use-package magit
-  :bind (("M-G" . magit-status)
+  :bind (("M-G"     . magit-status)
          ("C-x v B" . magit-blame-addition)
          :map magit-mode-map
+         ;; reserved for window navigation
          ("C-<tab>" . nil)
-         ("<tab>" . magit-section-cycle)))
-
+         ("<tab>"   . magit-section-cycle)))
 
 (use-package gitignore-mode)
-(use-package intero)
-(use-package haskell-mode
-  :config (add-hook 'haskell-mode-hook 'intero-mode))
-(use-package company-quickhelp)
-(use-package company 
+
+(use-package haskell-mode)
+(use-package intero
+  :after haskell-mode
+  :hook haskell-mode)
+
+(use-package company
+  :demand
+  :hook c++-mode
   :config
   (defun my/company-next () (interactive) (company-complete-common-or-cycle 1))
   (defun my/company-prev () (interactive) (company-complete-common-or-cycle -1))
   :bind (:map company-active-map
               ("M-C-i" . company-complete)
               ("C-c h" . company-quickhelp-manual-begin)
-              ("C-n" . my/company-next)
-              ("C-p" . my/company-prev)))
-
-(use-package company-c-headers
-  :init
-  (add-to-list 'company-backends 'company-c-headers))
-
+              ("C-n"   . my/company-next)
+              ("C-p"   . my/company-prev)))
 
 (use-package smart-mode-line)
+
 (use-package smartparens
+  :demand
   :init (setq sp-base-key-bindings 'sp)
+  :hook ((prog-mode . smartparens-mode)
+         (prog-mode . show-smartparens-mode))
   :config
   (progn
-	  (add-hook 'prog-mode-hook 'smartparens-mode)
     ;; don't do anything with single-quote for elisp
-    (sp-local-pair 'emacs-lisp-mode "'" nil :actions nil)
+    (sp-with-modes 'emacs-lisp-mode
+      (sp-local-pair "'" nil :actions nil)
+      (sp-local-pair "`" "'" :when '(:add sp-in-comment-p)))
 	  (sp-with-modes 'markdown-mode
 			(sp-local-pair "```" "```")
 			(sp-local-pair "*" "*")
 			(sp-local-pair "_" "_")
 			(sp-local-pair "$" "$"))
+    (sp-local-pair '(c-mode c++-mode) "#ifdef" "#endif")
+    (sp-local-pair '(c-mode c++-mode) "#if" "#endif")
 	  (sp-with-modes 'c++-mode
 			(sp-local-pair "/*" "*/"))))
 
@@ -137,8 +173,6 @@
   (add-hook 'makefile-mode-hook 'smart-tabs-mode-enable)
   :config
   (smart-tabs-mode/no-tabs-mode-advice open-rectangle))
-
-(use-package rainbow-delimiters)
 
 ;; Show me where the cursor is, when it changes
 (use-package beacon
@@ -161,25 +195,23 @@
 (use-package zeal-at-point
   :bind (("C-c z" . zeal-at-point)))
 
-;; C++ stuff
+
 (use-package lsp-mode)
 (use-package company-lsp
   ;; snippets don't seem to work too well.  At least, I can't figure out how to
   ;; expand them properly
   :config (setq company-lsp-enable-snippet nil))
-
 (use-package lsp-ui)
-(use-package cquery
-  :commands lsp-cquery-enable
-  :config
-  (setq cquery-executable (expand-file-name "cquery" "~/.local/bin/")))
 
-(use-package ccls)
+;; C++ stuff
+(use-package ccls
+  ;; Definitely need lsp for ccls to work
+  :after lsp)
 
 (defun my/maybe-enable-c++-lsp-server ()
   (interactive)
   (when (locate-dominating-file default-directory "compile_commands.json")
-    (require 'lsp)
+    (require 'ccls)
     (condition-case nil
         (progn
           (message "enabling c++ lsp server")
@@ -208,57 +240,20 @@
   (setq js2-basic-offset 2)
   (add-hook 'js2-mode-hook 'prettier-js-mode)
   (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode)))
+
 (use-package rjsx-mode
   :diminish
   :init
   (add-to-list 'auto-mode-alist '("[Cc]omponents\\/.*\\.js\\'" . rjsx-mode)))
+
 (use-package json-mode :diminish)
 
-(use-package fill-column-indicator)
 (use-package rainbow-mode)
 
-(use-package math-symbol-lists
-  :config
-  (quail-define-package "math" "UTF-8" "Ω" t)
-  (quail-define-rules ; add whatever extra rules you want to define here...
-   ("->"      "→") ("<=>"     "↔") ("\\iff"   "↔") ("\\from"  "←")
-   ("\\to"    "→") ("\\lhd"   "⊲") ("\\rhd"   "⊳") ("\\unlhd" "⊴")
-   ("\\unrhd" "⊵") ("\\Land"  "⋀") ("\\Lor"   "⋁") ("\\ltE"   "Ɛ") 
-   ("\\lthkD" "Ɗ") ("\\lthkP" "Ƥ") ("\\lthkV" "Ʋ") ("\\lthkB" "Ɓ") 
-   ("\\lthkK" "Ƙ") ("\\hdots" "…") ("^("      "⁽") ("^)"      "⁾")
-   ("^+"      "⁺") ("^-"      "⁻") ("^0"      "⁰") ("^1"      "¹")
-   ("^2"      "²") ("^3"      "³") ("^4"      "⁴") ("^5"      "⁵")
-   ("^6"      "⁶") ("^7"      "⁷") ("^8"      "⁸") ("^9"      "⁹")
-   ("^="      "⁼") ("^A"      "ᴬ") ("^B"      "ᴮ") ("^D"      "ᴰ")
-   ("^E"      "ᴱ") ("^G"      "ᴳ") ("^H"      "ᴴ") ("^I"      "ᴵ")
-   ("^J"      "ᴶ") ("^K"      "ᴷ") ("^L"      "ᴸ") ("^M"      "ᴹ")
-   ("^N"      "ᴺ") ("^O"      "ᴼ") ("^P"      "ᴾ") ("^R"      "ᴿ")
-   ("^T"      "ᵀ") ("^U"      "ᵁ") ("^V"      "ⱽ") ("^W"      "ᵂ")
-   ("^a"      "ᵃ") ("^b"      "ᵇ") ("^c"      "ᶜ") ("^d"      "ᵈ")
-   ("^e"      "ᵉ") ("^f"      "ᶠ") ("^g"      "ᵍ") ("^h"      "ʰ")
-   ("^i"      "ⁱ") ("^j"      "ʲ") ("^k"      "ᵏ") ("^l"      "ˡ")
-   ("^m"      "ᵐ") ("^n"      "ⁿ") ("^o"      "ᵒ") ("^p"      "ᵖ")
-   ("^r"      "ʳ") ("^s"      "ˢ") ("^t"      "ᵗ") ("^u"      "ᵘ")
-   ("^v"      "ᵛ") ("^w"      "ʷ") ("^x"      "ˣ") ("^y"      "ʸ")
-   ("^z"      "ᶻ") ("_("      "₍") ("_)"      "₎") ("_+"      "₊")
-   ("_-"      "₋") ("_0"      "₀") ("_1"      "₁") ("_2"      "₂")
-   ("_3"      "₃") ("_4"      "₄") ("_5"      "₅") ("_6"      "₆")
-   ("_7"      "₇") ("_8"      "₈") ("_9"      "₉") ("_="      "₌")
-   ("_a"      "ₐ") ("_e"      "ₑ") ("_h"      "ₕ") ("_i"      "ᵢ")
-   ("_j"      "ⱼ") ("_k"      "ₖ") ("_l"      "ₗ") ("_m"      "ₘ")
-   ("_n"      "ₙ") ("_o"      "ₒ") ("_p"      "ₚ") ("_r"      "ᵣ")
-   ("_s"      "ₛ") ("_t"      "ₜ") ("_u"      "ᵤ") ("_v"      "ᵥ")
-   ("_x"      "ₓ") ("\\lz"    "◊"))
-  (mapc (lambda (x)
-          (if (cddr x)
-              (quail-defrule (cadr x) (car (cddr x)))))
-        (append math-symbol-list-basic math-symbol-list-extended)))
-
 (use-package markdown-mode
-  :config
-  (add-hook 'markdown-mode-hook 'pandoc-mode)
-  (add-hook 'markdown-mode-hook 'smartparens-mode))
-(use-package markdown-mode+)
+  :hook ((markdown-mode . pandoc-mode)
+         (markdown-mode . smart-parens-mode)))
+
 (use-package pandoc-mode :diminish)
 
 (use-package smooth-scrolling :init (smooth-scrolling-mode))
@@ -271,6 +266,7 @@
 (use-package yasnippet
   :diminish yas-minor-mode)
 (use-package yasnippet-snippets)
+
 (use-package haskell-snippets)
 
 
@@ -281,6 +277,7 @@
               ("U" . nil)))
 
 (use-package ivy
+  :demand
   :diminish ivy-mode
   :bind  (("C-c C-r" . ivy-resume)
           :map ivy-minibuffer-map
@@ -294,8 +291,10 @@
                   ivy-use-virtual-buffers t)))
 
 (use-package ivy-hydra)
-(use-package swiper)
+(use-package swiper
+  :demand)
 (use-package counsel
+  :demand
   :diminish counsel-mode
   :bind (("M-x" . counsel-M-x)
          ("C-h f" . counsel-describe-function)
@@ -307,16 +306,20 @@
                   "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
             (counsel-mode 1)))
 
-(use-package helpful)
+(use-package helpful
+  :bind ())
 (use-package ivy-yasnippet)
 (use-package ivy-prescient
   :diminish
+  :demand
   :config
   (progn
     (ivy-prescient-mode 1)
     (prescient-persist-mode 1)))
+
 (use-package ivy-dired-history)
 
+;; 
 (use-package direnv)
 
 ;; Racket
@@ -324,37 +327,10 @@
 
 ;; Python stuff
 (use-package py-autopep8)
-(use-package virtualenvwrapper
-  :config
-  (venv-initialize-interactive-shells)
-  (venv-initialize-eshell))
-
-
-;; (use-package ripgrep
-;;   :config
-;;   (define-advice ripgrep-regexp 
-;;       (:around (rg-orig regx dir &optional args) my/advice)
-;;     "Advice for `ripgrep-regexp'.
-;; This does two things: 
-
-;;  - Switches to the ripgrep result buffer after running the search
-
-;;  - Adds the ability to call `ripgrep-regexp' with arbitrary extra
-;;    arguments (prompted in the minibuffer) when called with a
-;;    prefix argument.
-;; "
-;;     (let ((buf-name (compilation-buffer-name "ripgrep-search"
-;;                                              'ripgrep-search-mode
-;;                                              nil))
-;;           (smart-arg (if (consp current-prefix-arg)
-;;                          (read-from-minibuffer "Extra rg args: ")
-;;                        "")))
-;;       (funcall rg-orig regx dir (nconc args (list smart-arg "-M 120")))
-;;       (pop-to-buffer buf-name)))
-;;   :bind ("C-c s r" . ripgrep-regexp))
 
 
 (use-package rg
+  :demand
   :bind (:map rg-mode-map
               ;; unbind nav conventions that I like
               ;; TODO: consider rebinding the history commands
@@ -364,9 +340,11 @@
               ("p" . rg-prev-file)
               ;; moves cursor and navigates to point in relevant file
               ("M-n" . next-error-no-select)
-              ("M-p" . previous-error-no-select)))
+              ("M-p" . previous-error-no-select))
+  :config (rg-enable-default-bindings))
 
 (use-package projectile
+  :demand
   :config
   (progn
     (projectile-mode)
@@ -378,8 +356,6 @@
 
 
 (use-package counsel-projectile)
-
-;; (use-package projectile-ripgrep)
 
 (use-package easy-kill-extras)
 
@@ -419,6 +395,7 @@
   :bind (("M-z" . zop-to-char)))
 
 (use-package which-key
+  :demand
   :config
   (setq which-key-idle-delay 0.5)
   (which-key-mode))
@@ -437,8 +414,7 @@
   :demand
   :ensure f
   :load-path my/lisp-dir
-  :bind (("M-Q" . my/unfill-paragraph)
-         ("C-c s p" . #'my/relativize-path-at-point))
+  :bind (("M-Q" . my/unfill-paragraph))
   :config (progn 
             (require 'pandoc-mode)
             (push '("lines" . my/pandoc-include-lines) pandoc-directives)
@@ -477,8 +453,9 @@
 
 ;; Prefer horizontal (i.e. [L] | [R]) splits, without making stupidly narrow
 ;; windows
-(setq split-height-threshold nil)
-(setq split-width-threshold 120)
+(setq split-height-threshold nil
+      split-width-threshold 120)
+
 
 ;; Don't prompt when reverting PDFs
 (setq revert-without-query '(".*\\.pdf"))
@@ -509,7 +486,7 @@
 
 
 ;; Personal global keybindings
-(bindkeys
+(bind-keys
  :map global-map
  ;; Simpler buffer and window nav
  ("C-<tab>"                 . other-window)
@@ -540,7 +517,6 @@
  ("C-h M"                   . man)
  ([remap eval-expression]   . pp-eval-expression)
  ([remap eval-last-sexp]    . pp-eval-last-sexp))
-
 ;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:
 ;; eval this:
 ;; (mapcar #'kbd '("C-T" "C-t" "C-S-t" "M-T" "M-t" "M-S-t"))
@@ -561,10 +537,10 @@
   (compile-goto-error)
   (pop-to-buffer next-error-last-buffer))
 
-(bind-keys :map compilation-button-map
-           ("Q" . kill-this-buffer)
-           ("<S-return>" . my/compilation-goto-error-no-select))
-
+(with-eval-after-load 'compile
+  (bind-keys :map compilation-button-map
+             ("Q" . kill-this-buffer)
+             ("<S-return>" . my/compilation-goto-error-no-select)))
 
 
 ;; Be Lazy, prefer Y or N to Yes or No
@@ -582,22 +558,11 @@
 (defun my/do-nothing () nil)
 (setq ring-bell-function 'my/do-nothing)
 
-;; Make the fringes smaller
-(setq default-left-fringe-width  5
-      default-right-fringe-width 5)
-
-;; prefer vertical splits
-(setq-default split-height-threshold 80
-              split-width-threshold 160)
-
 ;; Make paste over selection *replace* the selection
 (delete-selection-mode)
 
 ;; Column numbers are good though
 (column-number-mode)
-
-;; Good to know where the cursor is
-(global-hl-line-mode)
 
 ;; Basic indentation rules
 (setq-default indent-tabs-mode nil
@@ -612,17 +577,26 @@
 (setq Man-notify-method 'aggressive)
 
 
-;; Monospaced font with great Unicode support for mathy symbols
-;; http://www.evertype.com/emono/
-(defconst font-everson-mono "Everson Mono-12")
-;; Prettier font that scales down much better
-(defconst font-office-code-pro (cond
-                                ;; TODO: pick font size based on DPI or
-                                ;; something?  This is also a function of how
-                                ;; far from my monitor I am... Can emacs measure
-                                ;; real-world distance?
-                                ((equal my/hostname "zarniwoop") "Office Code Pro-16")
-                                (t "Office Code Pro-10")))
+
+(defconst font-office-code-pro
+  (cond
+   ;; TODO: pick font size based on DPI or
+   ;; something?  This is also a function of how
+   ;; far from my monitor I am... Can emacs measure
+   ;; real-world distance?
+   ((equal my/hostname "zarniwoop") "Office Code Pro-16")
+   (t "Office Code Pro-10")))
+(add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
+;; note for future me: backtick permits use of commas for evaluation inside a
+;; quoted thing
+;; Since I will probably forget this eventually:
+;;  `M-x set-frame-font` is good (with completion) for switching between
+;;  typefaces but not so much for choosing a different size unless you know the
+;;  exact font spec string.
+;;  (e.g. "-NATH-Office Code Pro-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1")
+;;  The best way to change the full font is to use `set-face-attribute' as far as
+;;  I can tell.  e.g. (set-face-attribute 'default nil :font "Office Code Pro-10"
+
 
 
 ;; from https://emacs.stackexchange.com/a/3157
@@ -645,16 +619,6 @@
 
 
 
-(add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
-;; note for future me: backtick permits use of commas for evaluation inside a
-;; quoted thing
-;; Since I will probably forget this eventually:
-;;  `M-x set-frame-font` is good (with completion) for switching between
-;;  typefaces but not so much for choosing a different size unless you know the
-;;  exact font spec string.
-;;  (e.g. "-NATH-Office Code Pro-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1")
-;;  The best way to change the full font is to use `set-face-attribute' as far as
-;;  I can tell.  e.g. (set-face-attribute 'default nil :font "Office Code Pro-10"
 
 
 
