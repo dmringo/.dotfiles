@@ -1,7 +1,6 @@
 # Checking for dumb terminals - makes Tramp work when editing remote files
 [[ $TERM == "dumb" ]] && unsetopt zle && PS1='$ ' && return;
 
-
 # pretty sure fpath has to be modified before compinit is called
 if have_brew
 then
@@ -26,6 +25,7 @@ zstyle :compinstall filename '/$HOME/.zshrc'
 
 autoload -Uz compinit
 compinit
+
 # End of lines added by compinstall
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
@@ -36,6 +36,8 @@ unsetopt beep
 bindkey -e
 # End of lines configured by zsh-newuser-install
 
+# let zsh use completions defined for bash
+autoload -U +X bashcompinit && bashcompinit
 
 # Tell gpg about the TTY.  I think this only makes sense in an interactive
 # session.  I also think this is necessary when GPG assumes no TTY, as is the
@@ -74,7 +76,10 @@ zplug "plugins/git", from:oh-my-zsh, if:'cmd_exists git'
 alias gsur='git submodule update --recursive'
 
 # Haskell stack
-zplug "plugins/stack", from:oh-my-zsh, if:'cmd_exists stack'
+if cmd_exists stack
+then
+  eval "$(stack --bash-completion-script)"
+fi
 
 # pandoc completion
 zplug "srijanshetty/zsh-pandoc-completion", if:'cmd_exists pandoc'
@@ -115,3 +120,4 @@ setopt extendedglob
 
 # if we have direnv, get its hook setup
 cmd_exists direnv && eval "$(direnv hook zsh)"
+
