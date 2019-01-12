@@ -128,7 +128,7 @@ ordered on the priority.")
 
 (use-package company
   :demand
-  :hook c++-mode
+  :hook (c++-mode . company-mode)
   :config
   (defun my/company-next () (interactive) (company-complete-common-or-cycle 1))
   (defun my/company-prev () (interactive) (company-complete-common-or-cycle -1))
@@ -163,8 +163,8 @@ ordered on the priority.")
 
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
-  :diminish
-  :config (add-hook 'prog-mode-hook 'whitespace-cleanup-mode))
+  :hook prog-mode
+  :diminish )
 
 ;; Good for Makefiles where actual tabs are important but alignment really ought
 ;; to be accomplished with spaces.
@@ -196,24 +196,31 @@ ordered on the priority.")
   :bind (("C-c z" . zeal-at-point)))
 
 
-(use-package lsp-mode)
+(use-package lsp-mode
+  :pin melpa)
+
 (use-package company-lsp
+  :after lsp-mode
+  :pin melpa
   ;; snippets don't seem to work too well.  At least, I can't figure out how to
   ;; expand them properly
   :config (setq company-lsp-enable-snippet nil))
-(use-package lsp-ui)
+
+(use-package lsp-ui
+  :after lsp-mode
+  :pin melpa)
 
 ;; C++ stuff
 (use-package ccls
   ;; Definitely need lsp for ccls to work
-  :after lsp)
+  :pin melpa)
 
 (defun my/maybe-enable-c++-lsp-server ()
   (interactive)
   (when (locate-dominating-file default-directory "compile_commands.json")
-    (require 'ccls)
     (condition-case nil
         (progn
+          (require 'ccls)
           (message "enabling c++ lsp server")
           (lsp))
       (user-error nil))))
@@ -222,18 +229,16 @@ ordered on the priority.")
   :bind (:map c-mode-base-map
               ("C-M-\\" . clang-format-region)
               ("C-i" . clang-format))
-  :config (fset 'c-indent-region 'clang-format-region))
+  :config
+  (fset 'c-indent-region 'clang-format-region)
+  (add-hook 'c++-mode-hook #'(lambda () (require 'clang-format))))
 
-(add-hook 'c++-mode-hook 'company-mode)
 (add-hook 'c++-mode-hook #'my/maybe-enable-c++-lsp-server)
 
 (use-package google-c-style
   :config (c-add-style "Google" google-c-style))
 
 (use-package cmake-mode)
-
-(use-package comment-dwim-2
-  :config (setq comment-dwim-2--inline-comment-behavior 'reindent-comment))
 
 (use-package js2-mode
   :config
@@ -370,6 +375,7 @@ ordered on the priority.")
 (use-package elm-mode)
 (use-package go-mode)
 (use-package lsp-go
+  :pin melpa
   :init
   (add-hook 'go-mode-hook #'lsp-go-enable))
 
