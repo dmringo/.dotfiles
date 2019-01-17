@@ -196,6 +196,7 @@
 (use-package comment-dwim-2
   :config (setq comment-dwim-2--inline-comment-behavior 'reindent-comment))
 
+(use-package prettier-js)
 (use-package js2-mode
   :config
   (setq js2-basic-offset 2)
