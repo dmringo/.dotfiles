@@ -50,9 +50,15 @@ source $ZPLUG_HOME/init.zsh
 # Make sure to use double quotes to prevent shell expansion
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
 
-zplug "mafredri/zsh-async", from:github
+zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
 
-zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
+# Using direnv to conditionally modify the spaceship sections would be nice
+# (rather than enabling all the extras, only load them when I know I'll need
+# them).  This would have a noticeable performance improvement -- the set I use
+# seems to be much faster than the default.  This isn't currently possible with
+# direnv though, so it may be worth looking into a custom CD hook.  For now, the
+# basic set of components is just fine
+SPACESHIP_PROMPT_ORDER=(dir user host git exec_time line_sep exit_code char)
 
 # l with fancy colors and git info
 zplug "supercrabtree/k", hook-load:'alias k="k -h"'
