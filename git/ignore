@@ -1,0 +1,7 @@
+# C/C++ langserver cache directories
+.ccls-cache
+.cquery-cache
+
+# C/C++ CMake build directories
+build/
+build-*
