@@ -181,6 +181,7 @@ ordered on the priority.")
   (setq beacon-blink-when-point-moves-horizontally nil
         beacon-blink-when-point-moves-vertically nil
         beacon-blink-when-window-scrolls 0
+        beacon-size 1000 ; make the whole line (up to 1000 chars) blink
         beacon-color 1))
 
 (use-package pdf-tools
@@ -226,12 +227,14 @@ ordered on the priority.")
       (user-error nil))))
 
 (use-package clang-format
+  :commands (clang-format clang-format-region)
   :bind (:map c-mode-base-map
               ("C-M-\\" . clang-format-region)
               ("C-i" . clang-format))
-  :config
-  (fset 'c-indent-region 'clang-format-region)
-  (add-hook 'c++-mode-hook #'(lambda () (require 'clang-format))))
+  :init
+  (with-eval-after-load 'cc-cmds
+    (fset 'c-indent-region 'clang-format-region)
+    (fset 'c-indent-line-or-region 'clang-format)))
 
 (add-hook 'c++-mode-hook #'my/maybe-enable-c++-lsp-server)
 
@@ -257,7 +260,7 @@ ordered on the priority.")
 
 (use-package markdown-mode
   :hook ((markdown-mode . pandoc-mode)
-         (markdown-mode . smart-parens-mode)))
+         (markdown-mode . smartparens-mode)))
 
 (use-package pandoc-mode :diminish)
 
