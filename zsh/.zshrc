@@ -78,7 +78,7 @@ alias gsur='git submodule update --recursive'
 # Haskell stack
 if cmd_exists stack
 then
-  eval "$(stack --bash-completion-script)"
+  eval "$(stack --bash-completion-script stack)"
 fi
 
 # pandoc completion
