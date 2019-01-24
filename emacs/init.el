@@ -376,7 +376,10 @@ ordered on the priority.")
 (use-package docker-tramp)
 
 (use-package elm-mode)
+
 (use-package go-mode)
+(use-package go-eldoc)
+(use-package company-go)
 (use-package lsp-go
   :pin melpa
   :init

@@ -241,6 +241,8 @@ mode "$mode_system" {
 bindsym $mod+Control+q $fs-pause, exec --no-startup-id i3exit lock, $fs-pause -k
 
 
+bindsym $mod+XF86MonBrightnessDown exec setbacklight -1  
+bindsym $mod+XF86MonBrightnessUp exec setbacklight +1
 
 exec_always --no-startup-id feh --bg-fill ~/Pictures/wp/current  
 
