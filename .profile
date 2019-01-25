@@ -211,5 +211,3 @@ ESHELL="/usr/bin/zsh"
 CDPATH="$HOME:$HOME/proj"
 
 export PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH
-
-source /home/linuxbrew/.linuxbrew/etc/brew.env # Added by brew configure-shell
