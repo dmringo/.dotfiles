@@ -102,9 +102,12 @@ zplug "vasyharan/zsh-brew-services", if:'cmd_exists brew'
 # ZSH scripting hints
 zplug "joepvd/zsh-hints"
 
-# Grep, but faster and .*ignore-aware
-zplug "BurntSushi/ripgrep", as:command, use:'complete/_rg', if:'cmd_exists rg'
-
+# Alias ripgrep to use a config file
+if cmd_exists rg && [ -f "$HOME/.config/ripgrep" ]
+then
+  alias rg="RIPGREP_CONFIG_PATH=$HOME/.config/ripgrep rg "
+fi
+  
 # ninja build system
 zplug "ninja-build/ninja", as:command, use:"misc/zsh-completion", if:'cmd_exists ninja'
 

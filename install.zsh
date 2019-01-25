@@ -98,7 +98,7 @@ ln_config i3status
 ln_config dunst
 ln_config rofi
 ln_config git
-
+ln_config ripgrep
 
 
 for f in $DOT_HOME/bin/*
