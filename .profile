@@ -195,7 +195,10 @@ INFOPATH="$(printf '%s' "$INFOPATH" | dedup_path):"
 # The terminating colon is important here! Basically, it has the effect of
 # appending the system man path(s) at the end of this list.  See manpath(1) for
 # details or https://askubuntu.com/q/197461
-MANPATH="$(printf '%s' "$MANPATH" | dedup_path):"
+if [ -n "$MANPATH" ]
+then
+  MANPATH="$(printf '%s' "$MANPATH" | dedup_path):"
+fi
 
 
 # Don't need to keep this around
@@ -210,4 +213,10 @@ ESHELL="/usr/bin/zsh"
 # makes CDing to common directories easier
 CDPATH="$HOME:$HOME/proj"
 
-export PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH
+for var in PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH
+do
+  if [ -n "$var" ]
+  then
+    export $var
+  fi
+done
