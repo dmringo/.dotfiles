@@ -108,16 +108,24 @@ ordered on the priority.")
 ;; Undo-tree is great - enable it globally and remove it from the modeline
 ;; (since it should always be active)
 (use-package undo-tree
+  :demand
   :diminish undo-tree-mode
   :config (global-undo-tree-mode))
 
 (use-package magit
-  :bind (("M-G"     . magit-status)
-         ("C-x v B" . magit-blame-addition)
-         :map magit-mode-map
-         ;; reserved for window navigation
-         ("C-<tab>" . nil)
-         ("<tab>"   . magit-section-cycle)))
+  :demand
+  :bind
+  (("M-G"     . magit-status)
+   ("C-x v B" . magit-blame-addition)
+   :map magit-mode-map
+   ;; reserved for my window navigation bindings
+   ("C-<tab>" . nil)
+   ("<tab>"   . magit-section-cycle))
+  :config
+  ;; This prevents Magit from trying to intelligently restore a window
+  ;; configuration - useful when you tend to do any amount of window changing
+  ;; while magit buffers are visible
+  (setq magit-bury-buffer-function 'magit-mode-quit-window))
 
 (use-package gitignore-mode)
 
@@ -139,6 +147,8 @@ ordered on the priority.")
               ("C-p"   . my/company-prev)))
 
 (use-package smart-mode-line)
+
+(use-package pass)
 
 (use-package smartparens
   :demand
@@ -198,6 +208,7 @@ ordered on the priority.")
 
 
 (use-package lsp-mode
+  :demand
   :pin melpa)
 
 (use-package company-lsp
@@ -213,8 +224,22 @@ ordered on the priority.")
 
 ;; C++ stuff
 (use-package ccls
+  :after lsp
   ;; Definitely need lsp for ccls to work
-  :pin melpa)
+  :pin melpa
+  :config
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection (lsp-tramp-connection (lambda () (cons ccls-executable ccls-args)))
+    :major-modes '(c-mode c++-mode cuda-mode objc-mode)
+    :server-id 'ccls-remote
+    :multi-root nil
+    :notification-handlers
+    (lsp-ht ("$ccls/publishSkippedRanges" #'ccls--publish-skipped-ranges)
+            ("$ccls/publishSemanticHighlight" #'ccls--publish-semantic-highlight))
+    :initialization-options (lambda () ccls-initialization-options)
+    :library-folders-fn nil
+    :remote? t)))
 
 (defun my/maybe-enable-c++-lsp-server ()
   (interactive)
@@ -264,7 +289,6 @@ ordered on the priority.")
 
 (use-package pandoc-mode :diminish)
 
-(use-package smooth-scrolling :init (smooth-scrolling-mode))
 (use-package keyfreq
   :config
   (keyfreq-mode 1)
@@ -276,7 +300,6 @@ ordered on the priority.")
 (use-package yasnippet-snippets)
 
 (use-package haskell-snippets)
-
 
 (use-package tablist
   :config
@@ -371,8 +394,10 @@ ordered on the priority.")
   :diminish
   :config (editorconfig-mode 1))
 
-(use-package docker)
+(use-package docker
+  :bind (("C-c d" . docker)))
 (use-package dockerfile-mode)
+(use-package docker-compose-mode)
 (use-package docker-tramp)
 
 (use-package elm-mode)
@@ -391,11 +416,14 @@ ordered on the priority.")
   (treemacs-follow-mode)
   (setq treemacs-show-hidden-files nil))
 
-
-(use-package system-packages
+(use-package ace-window
+  :init
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  (setq aw-background nil)
   :config
-  (setq system-packages-package-manager 'apt
-        system-packages-use-sudo t))
+  (set-face-attribute 'aw-leading-char-face nil :height 3.0)
+  :bind (("C-x o" . 'ace-window)))
+
 
 (use-package ssh-config-mode)
 
@@ -588,6 +616,13 @@ ordered on the priority.")
 ;; Make `man' open pages in the other window and switch to that buffer
 (setq Man-notify-method 'aggressive)
 
+;; make scrolling less jarring
+(setq
+ ;; This makes scrolls only move a given fraction of the window at a time
+ scroll-up-aggressively 0.1
+ scroll-down-aggressively 0.1
+ ;; This sets the margin at which scrolling will happen when the point enters it
+ scroll-margin 10)
 
 
 (defconst font-office-code-pro
@@ -631,18 +666,16 @@ ordered on the priority.")
 
 
 
-
-
-
 ;; make Proced auto-update
 (setq proced-auto-update-flag t)
 
 ;; Don't like the startup screen
 (setq inhibit-startup-screen t)
 
-;; Don't warn about downcase regigion (C-x C-l)
-(put 'downcase-region 'disabled nil)
-
+;; Normally disabled things that I don't want warnings about
+(put 'downcase-region 'disabled nil) ; C-x C-l
+(put 'upcase-region 'disabled nil); C-x C-u
+(put 'narrow-to-region 'disabled nil) ; C-x n n
 
 ;; Make C look the way I want it to
 (setq c-default-style "linux"
@@ -672,5 +705,7 @@ ordered on the priority.")
 
 
 ;; let Custom declare this safe before loading it
-(load-theme 'doom-spacegrey)
+(load-theme 'doom-vibrant)
+
+
 

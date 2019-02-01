@@ -163,8 +163,8 @@ past the end, no action is taken."
   "Resize the current frame's font size by DELTA points.
 DELTA is taken as the numeric prefix arg or from the prompt if no
 prefix arg is given. This changes the attributes (removing some)
-on the underlying font object, but seems to preserve the import
-ones."
+on the underlying font object, but seems to preserve the
+important ones."
   (interactive "NResize font by how much? ")
   (let* ((font-keys '(:family :weight :slant :width :size))
          (attr-pairs
