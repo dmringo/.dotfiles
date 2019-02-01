@@ -125,8 +125,6 @@ fi
 
 zplug load
 
-setopt extendedglob
-
 # if we have direnv, get its hook setup
 cmd_exists direnv && eval "$(direnv hook zsh)"
 

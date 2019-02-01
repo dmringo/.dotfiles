@@ -39,7 +39,6 @@
 #
 #    See http://zsh.sourceforge.net/Intro/intro_3.html
 #
-#
 # Also worth perusing: https://docstore.mik.ua/orelly/unix/upt/index.htm
 
 ENV="$HOME/.config/sh/ENV"
@@ -113,8 +112,6 @@ add2path "$HOME/.local/bin"
 # ~/.local/bin.
 add2path "$GOPATH/bin"  # GO managed bins
 add2path "$HOME/.cabal/bin" # Cabal-managed bins
-
-
 
 
 sys_type="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -212,6 +209,10 @@ ESHELL="/usr/bin/zsh"
 
 # makes CDing to common directories easier
 CDPATH="$HOME:$HOME/proj"
+
+
+# RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep"
+# DOCKER_CONFIG="$HOME/.config/docker/config"
 
 for var in PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH
 do
