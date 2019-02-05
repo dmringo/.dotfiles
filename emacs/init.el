@@ -479,6 +479,10 @@ ordered on the priority.")
 
 ;; Use-package stuff ends here.  Below is more standard Elisp config
 
+(require 'recentf)
+(setq recentf-max-menu-items 200)
+(recentf-mode 1)
+
 ;; LLVM usually puts stuff in a system site-lisp directory, and its directory
 ;; should get added to the load path.  If it's there, require it, so .ll files
 ;; open in llvm-mode
