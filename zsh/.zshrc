@@ -39,6 +39,13 @@ bindkey -e
 # let zsh use completions defined for bash
 autoload -U +X bashcompinit && bashcompinit
 
+# make <M-n> and <M-p> a little smarter
+autoload -U up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search 
+zle -N down-line-or-beginning-search
+bindkey "^[p" up-line-or-beginning-search 
+bindkey "^[n" down-line-or-beginning-search
+
 # Tell gpg about the TTY.  I think this only makes sense in an interactive
 # session.  I also think this is necessary when GPG assumes no TTY, as is the
 # case when $HOME/.gnupg/gpg.conf has 'no-tty' specified.
@@ -78,17 +85,33 @@ zplug "djui/alias-tips"
 # oh-my-zsh git plugin is nice
 zplug "plugins/git", from:oh-my-zsh, if:'cmd_exists git'
 
-# alias in the style of the omz git aliases
-alias gsur='git submodule update --recursive'
+if cmd_exists git
+then
+  # in the style of the omz git aliases
+  alias gsur='git submodule update --recursive'
+  alias gcfo='git config --list --show-origin'
+fi
+   
 
 # Haskell stack
 if cmd_exists stack
 then
+  # note that this requires the bashcompinit module loaded to work
   eval "$(stack --bash-completion-script stack)"
 fi
 
 # pandoc completion
 zplug "srijanshetty/zsh-pandoc-completion", if:'cmd_exists pandoc'
+
+
+
+# Doron Behar's pandoc completion (maybe to be merged into ZSH proper?)
+# Not sure why this doesn't work.
+# zplug "doronbehar/zsh", if:'cmd_exists pandoc', \
+#       from:gitlab, \
+#       at:pandoc-completion, \
+#       use:"Completion/Unix/Command/_pandoc"
+      
 
 # GTK settings manager
 zplug "jmatsuzawa/zsh-comp-gsettings", if:'cmd_exists gsettings'
@@ -127,4 +150,22 @@ zplug load
 
 # if we have direnv, get its hook setup
 cmd_exists direnv && eval "$(direnv hook zsh)"
+
+if cmd_exists docker
+then
+  alias dkr='docker'
+  alias dkx='docker exec -i -t'
+  alias dke='docker exec'
+  alias dkps='docker ps'
+  
+  if cmd_exists docker-compose
+  then
+    alias dkc='docker-compose'
+    alias dkcx='docker-compose exec'
+    alias dkcu='docker-compose up -d'
+    alias dkcU='docker-compose up'
+    alias dkcd='docker-compose down'
+  fi
+fi
+  
 
