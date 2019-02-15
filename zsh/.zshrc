@@ -74,6 +74,7 @@ zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
 # seems to be much faster than the default.  This isn't currently possible with
 # direnv though, so it may be worth looking into a custom CD hook.  For now, the
 # basic set of components is just fine
+SPACESHIP_DIR_TRUNC_PREFIX="…"
 SPACESHIP_PROMPT_ORDER=(dir user host git exec_time line_sep exit_code char)
 
 # l with fancy colors and git info
@@ -169,3 +170,6 @@ then
 fi
   
 
+alias l='ls -lh --color="auto" --group-directories-first'
+alias la='ls -lhar --color="auto" --group-directories-first'
+alias ll='ls -lA --group-directories-first'
