@@ -7,3 +7,8 @@
 [alias]
 	root = rev-parse --show-toplevel
 	rroot = !"a=\"$(git rev-parse --git-dir)\"; printf %s\\\\n \"${a%.git*}\""
+[color]
+	status = auto
+	ui = auto
+[diff "gpg"]
+	textconv = gpg --no-tty --decrypt
