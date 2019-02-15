@@ -83,9 +83,10 @@ ordered on the priority.")
           ;; latexmk is a little more consistent than pdflatex
           org-latex-pdf-process (list "latexmk -f -pdf %f"))
     ;; make #+NAME easy-template
-    (add-to-list 'org-structure-template-alist '("n" "#+NAME: ?"))
     (add-to-list 'org-structure-template-alist
-                 '("ct" "#+BEGIN: clocktable ?\n#+END:"))))
+                 '("n" . "name"))
+    (add-to-list 'org-structure-template-alist
+                 '("ct" . "clocktable"))))
 
 (use-package ox-twbs)
 (use-package ox-gfm)
@@ -127,6 +128,10 @@ ordered on the priority.")
   ;; while magit buffers are visible
   (setq magit-bury-buffer-function 'magit-mode-quit-window))
 
+;; link to Magit buffers in Org-mode
+;; TODO: customize how export works for these links
+(use-package orgit)
+
 (use-package gitignore-mode)
 
 (use-package haskell-mode)
@@ -154,7 +159,8 @@ ordered on the priority.")
   :demand
   :init (setq sp-base-key-bindings 'sp)
   :hook ((prog-mode . smartparens-mode)
-         (prog-mode . show-smartparens-mode))
+         (prog-mode . show-smartparens-mode)
+         (yaml-mode . smartparens-mode))
   :config
   (progn
     ;; don't do anything with single-quote for elisp
@@ -166,11 +172,12 @@ ordered on the priority.")
 			(sp-local-pair "*" "*")
 			(sp-local-pair "_" "_")
 			(sp-local-pair "$" "$"))
-    (sp-local-pair '(c-mode c++-mode) "#ifdef" "#endif")
-    (sp-local-pair '(c-mode c++-mode) "#if" "#endif")
+    (sp-with-modes '(c-mode c++-mode)
+      (sp-local-pair "#ifdef" "#endif")
+      (sp-local-pair "#if" "#endif")
+      (sp-local-pair "<" ">"))
 	  (sp-with-modes 'c++-mode
 			(sp-local-pair "/*" "*/"))))
-
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
   :hook prog-mode
@@ -209,7 +216,10 @@ ordered on the priority.")
 
 (use-package lsp-mode
   :demand
-  :pin melpa)
+  :pin melpa
+  :config
+  (setq lsp-prefer-flymake nil
+        lsp-keep-workspace-alive nil))
 
 (use-package company-lsp
   :after lsp-mode
@@ -218,9 +228,9 @@ ordered on the priority.")
   ;; expand them properly
   :config (setq company-lsp-enable-snippet nil))
 
-(use-package lsp-ui
-  :after lsp-mode
-  :pin melpa)
+;; (use-package lsp-ui
+;;   :after lsp-mode
+;;   :pin melpa)
 
 ;; C++ stuff
 (use-package ccls
@@ -228,6 +238,10 @@ ordered on the priority.")
   ;; Definitely need lsp for ccls to work
   :pin melpa
   :config
+  (require 'json)
+  (setq ccls-initialization-options
+        (json-encode
+         '((index . ((multiversion . 1))))))
   (lsp-register-client
    (make-lsp-client
     :new-connection (lsp-tramp-connection (lambda () (cons ccls-executable ccls-args)))
@@ -340,13 +354,17 @@ ordered on the priority.")
 (use-package helpful
   :bind ())
 (use-package ivy-yasnippet)
+(use-package prescient
+  :demand
+  :config
+  (setq prescient-save-file
+        (expand-file-name ".cache/prescient-save.el" user-emacs-directory))
+  (prescient-persist-mode 1))
 (use-package ivy-prescient
   :diminish
   :demand
   :config
-  (progn
-    (ivy-prescient-mode 1)
-    (prescient-persist-mode 1)))
+  (ivy-prescient-mode 1))
 
 (use-package ivy-dired-history)
 
@@ -398,7 +416,14 @@ ordered on the priority.")
   :bind (("C-c d" . docker)))
 (use-package dockerfile-mode)
 (use-package docker-compose-mode)
-(use-package docker-tramp)
+(use-package docker-tramp
+  ;; Using names (rather than IDs) is a good idea.  It makes it easier to
+  ;; identify containers when autocompleting for the docker method, and tramp
+  ;; persistency information (in `tramp-persistency-file-name') is no longer
+  ;; tied to an ephemeral ID that is invalided when containers are removed.
+  ;; This could cause issues if a name is reused for wildly different
+  ;; containers, but that's not generally an issue in my use case.
+  :config (setq docker-tramp-use-names t))
 
 (use-package elm-mode)
 
@@ -430,6 +455,7 @@ ordered on the priority.")
 ;; SICP as a texinfo document
 (use-package sicp)
 
+(use-package pinentry)
 
 (use-package zop-to-char
   :bind (("M-z" . zop-to-char)))
@@ -477,11 +503,24 @@ ordered on the priority.")
               ("C-c C-k" . ulam/make)
               ("C-c C-r" . ulam/run)))
 
+;; Info-mode
+(use-package info
+  :config
+  ;; the default is `fixed-pitch-serif', which is bad by default for me in most
+  ;; cases.  Probably could be fixed with fc-*, but this is simpler
+  (set-face-attribute
+           'Info-quoted nil :inherit 'font-lock-constant-face))
+
+;; Remember files with recentf
+(use-package recentf
+  :demand
+  :config
+  (setq recentf-max-menu-items 200)
+  (recentf-mode 1))
+
+
 ;; Use-package stuff ends here.  Below is more standard Elisp config
 
-(require 'recentf)
-(setq recentf-max-menu-items 200)
-(recentf-mode 1)
 
 ;; LLVM usually puts stuff in a system site-lisp directory, and its directory
 ;; should get added to the load path.  If it's there, require it, so .ll files
@@ -510,8 +549,11 @@ ordered on the priority.")
 ;; Don't ask about following links to source-controlled files -- just do it
 (setq vc-follow-symlinks t)
 
-;; Tramp should use SSH by default (it's usually faster than SCP)
+;; Tramp should use SSH by default (it's usually faster than SCP).
 (setq tramp-default-method "ssh")
+;; Let tramp use the PATH set on the remote (NOTE: tramp checks the path in a
+;; shell invoked as "sh -l")
+(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
 
 ;; Don't use a new frame for ediffing, split horizontally by default
 (setq ediff-window-setup-function 'ediff-setup-windows-plain
@@ -635,7 +677,7 @@ ordered on the priority.")
    ;; something?  This is also a function of how
    ;; far from my monitor I am... Can emacs measure
    ;; real-world distance?
-   ((equal my/hostname "zarniwoop") "Office Code Pro-16")
+   ((equal my/hostname "zarniwoop") "Office Code Pro-14")
    (t "Office Code Pro-10")))
 (add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
 ;; note for future me: backtick permits use of commas for evaluation inside a
