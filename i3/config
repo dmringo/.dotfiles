@@ -23,7 +23,7 @@ hide_edge_borders vertical
 floating_modifier $mod
 
 # start preferred term
-bindsym $mod+Return exec "gnome-terminal"
+bindsym $mod+Return exec "my-sensible-terminal"
 
 # kill focused window
 bindsym $mod+q kill

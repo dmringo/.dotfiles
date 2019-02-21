@@ -1,0 +1,30 @@
+#!/bin/sh
+#
+# This is a modification of i3-sensible terminal for my terminal preferences
+# (originally written by Han Boetes <han@mijncomputer.nl>)
+#
+# This script tries to exec a terminal emulator by trying some known terminal
+# emulators.
+#
+
+try_terminal() {
+  if command -v "$1" > /dev/null 2>&1; then
+        exec "$1" "$@"
+  fi
+}
+
+# I've used these before, and like them quite a bit
+for terminal in "$TERMINAL" termite gnome-terminal xfce4-terminal
+do
+  try_terminal "$terminal"
+done
+
+# no strong feelings about these
+for terminal in "$TERMINAL" x-terminal-emulator urxvt rxvt termit terminator Eterm aterm uxterm xterm roxterm  lxterminal mate-terminal terminology st qterminal lilyterm tilix terminix konsole kitty guake tilda alacritty hyper
+do
+  try_terminal "$terminal"
+done
+
+notify-send -u critical \
+            "Missing terminal emulator" \
+            "$0 could not find a terminal emulator. Please install one"
