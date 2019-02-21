@@ -324,6 +324,7 @@ ordered on the priority.")
 (use-package ivy
   :demand
   :diminish ivy-mode
+  :pin melpa
   :bind  (("C-c C-r" . ivy-resume)
           :map ivy-minibuffer-map
           ("C-r" . ivy-previous-line-or-history))
