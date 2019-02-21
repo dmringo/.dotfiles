@@ -523,10 +523,11 @@ ordered on the priority.")
 ;; Use-package stuff ends here.  Below is more standard Elisp config
 
 
-;; LLVM usually puts stuff in a system site-lisp directory, and its directory
-;; should get added to the load path.  If it's there, require it, so .ll files
-;; open in llvm-mode
-(when (member-if (lambda (path) (string-suffix-p "llvm" path)) load-path)
+;; If there's an llvm-ish folder in the load path
+(when (member-if (lambda (path)
+                   (and (file-directory-p path)
+                        (string-match "llvm" path)))
+                 load-path)
   (require 'llvm-mode))
 
 ;; When narrowing to a [de]fun[ction], include preceding comments
@@ -554,7 +555,8 @@ ordered on the priority.")
 (setq tramp-default-method "ssh")
 ;; Let tramp use the PATH set on the remote (NOTE: tramp checks the path in a
 ;; shell invoked as "sh -l")
-(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+(with-eval-after-load 'tramp
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
 
 ;; Don't use a new frame for ediffing, split horizontally by default
 (setq ediff-window-setup-function 'ediff-setup-windows-plain
@@ -601,7 +603,7 @@ ordered on the priority.")
 
  ("C-M-}"                   . enlarge-window-horizontally)
  ("C-M-{"                   . shrink-window-horizontally)
- ("C-h M"                   . man)
+ ("C-h M"                   . woman)
  ([remap eval-expression]   . pp-eval-expression)
  ([remap eval-last-sexp]    . pp-eval-last-sexp))
 ;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:
