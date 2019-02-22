@@ -202,6 +202,7 @@ ordered on the priority.")
         beacon-color 1))
 
 (use-package pdf-tools
+  :demand
   :bind (:map pdf-view-mode-map
               ("C-s" . isearch-forward))
   :config 
@@ -657,7 +658,11 @@ ordered on the priority.")
 (setq-default indent-tabs-mode nil
               tab-width 2)
 
+;; use 80 cols as a reasonable line length limit
 (setq-default fill-column 80)
+
+;; use text-mode in new buffers by default
+(setq-default major-mode 'text-mode)
 
 ;; Whitespace
 (setq whitespace-style '(face tabs lines-tail empty trailing))
@@ -712,7 +717,6 @@ ordered on the priority.")
 (add-hook 'nxml-mode-hook 'hs-minor-mode)
 ;; optional key bindings, easier than hs defaults
 (define-key nxml-mode-map (kbd "C-c h") 'hs-toggle-hiding)
-
 
 
 ;; make Proced auto-update
