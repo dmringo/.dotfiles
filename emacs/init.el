@@ -69,8 +69,54 @@ ordered on the priority.")
 ;; Do this early, in case other packages want something in my $PATH at
 ;; load/install time
 (use-package exec-path-from-shell
+  :demand
   :config
   (exec-path-from-shell-initialize))
+
+(use-package projectile
+  :demand
+  :config
+  (progn
+    (projectile-mode)
+    (setq projectile-completion-system 'ivy
+          projectile-enable-caching t ;; Good even with alien listing
+          projectile-mode-line-prefix " ℙ")) 
+  :bind-keymap ("C-c p" . projectile-command-map))
+
+(use-package ivy
+  :demand
+  :diminish ivy-mode
+  :pin melpa
+  :bind  (("C-c C-r" . ivy-resume)
+          :map ivy-minibuffer-map
+          ("C-r" . ivy-previous-line-or-history))
+  :config (progn
+            (ivy-mode 1)
+            (setq ivy-height 20
+                  ivy-on-del-error-function 'nil
+                  ivy-use-selectable-prompt t
+                  ivy-initial-inputs-alist 'nil
+                  ivy-use-virtual-buffers t)))
+
+(use-package ivy-hydra)
+(use-package swiper
+  :demand)
+(use-package counsel
+  :demand
+  :diminish counsel-mode
+  :bind (("M-x" . counsel-M-x)
+         ("C-h f" . counsel-describe-function)
+         ("C-h v" . counsel-describe-variable)
+         ("C-s" . counsel-grep-or-swiper))
+  :config 
+  ;; Suggested by Oleh
+  (setq counsel-grep-command
+        "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
+  (ivy-add-actions 'counsel-find-file
+                   '(("v" projectile-vc "VC Status")))
+  (counsel-mode 1))
+
+(use-package counsel-projectile)
 
 (use-package org
   :ensure org-plus-contrib
@@ -95,14 +141,13 @@ ordered on the priority.")
 ;; asynchronous execution of src blocks in org via babel
 (use-package ob-async)
 
-
 (defun my/org-babel-load-langs ()
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((python . t)
-     (ditaa . t)
-     (emacs-lisp  . t)
-     (shell . t))))
+   '((python     . t)
+     (ditaa      . t)
+     (emacs-lisp . t)
+     (shell      . t))))
 
 (add-hook 'after-init-hook 'my/org-babel-load-langs)
 
@@ -130,7 +175,8 @@ ordered on the priority.")
 
 ;; link to Magit buffers in Org-mode
 ;; TODO: customize how export works for these links
-(use-package orgit)
+(use-package orgit
+  :after (magit org))
 
 (use-package gitignore-mode)
 
@@ -178,6 +224,7 @@ ordered on the priority.")
       (sp-local-pair "<" ">"))
 	  (sp-with-modes 'c++-mode
 			(sp-local-pair "/*" "*/"))))
+
 ;; Whitespace-related
 (use-package whitespace-cleanup-mode
   :hook prog-mode
@@ -209,11 +256,10 @@ ordered on the priority.")
   (pdf-tools-install))
 
 (use-package google-this
-  :bind (("C-c g" . google-this-mode-submap)))
+  :bind-keymap (("C-c g" . google-this-mode-submap)))
 
 (use-package zeal-at-point
   :bind (("C-c z" . zeal-at-point)))
-
 
 (use-package lsp-mode
   :demand
@@ -322,36 +368,6 @@ ordered on the priority.")
   :bind (:map tablist-minor-mode-map
               ("U" . nil)))
 
-(use-package ivy
-  :demand
-  :diminish ivy-mode
-  :pin melpa
-  :bind  (("C-c C-r" . ivy-resume)
-          :map ivy-minibuffer-map
-          ("C-r" . ivy-previous-line-or-history))
-  :config (progn
-            (ivy-mode 1)
-            (setq ivy-height 20
-                  ivy-on-del-error-function 'nil
-                  ivy-use-selectable-prompt t
-                  ivy-initial-inputs-alist 'nil
-                  ivy-use-virtual-buffers t)))
-
-(use-package ivy-hydra)
-(use-package swiper
-  :demand)
-(use-package counsel
-  :demand
-  :diminish counsel-mode
-  :bind (("M-x" . counsel-M-x)
-         ("C-h f" . counsel-describe-function)
-         ("C-h v" . counsel-describe-variable)
-         ("C-s" . counsel-grep-or-swiper))
-  :config (progn
-            ;; Suggested by Oleh
-            (setq counsel-grep-command
-                  "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
-            (counsel-mode 1)))
 
 (use-package helpful
   :bind ())
@@ -394,19 +410,6 @@ ordered on the priority.")
               ("M-p" . previous-error-no-select))
   :config (rg-enable-default-bindings))
 
-(use-package projectile
-  :demand
-  :config
-  (progn
-    (projectile-mode)
-    (setq projectile-completion-system 'ivy
-          projectile-enable-caching t ;; Good even with alien listing
-          projectile-mode-line-prefix " ℙ")) 
-  :bind (:map projectile-mode-map
-              ("C-c p" . projectile-command-map)))
-
-
-(use-package counsel-projectile)
 
 (use-package easy-kill-extras)
 
