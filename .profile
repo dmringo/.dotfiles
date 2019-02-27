@@ -41,8 +41,18 @@
 #
 # Also worth perusing: https://docstore.mik.ua/orelly/unix/upt/index.htm
 
-ENV="$HOME/.config/sh/ENV"
+# keep all the XDG dirs under the same path
+XDG_CONFIG_HOME="$HOME/.local/etc"
+XDG_DATA_HOME="$HOME/.local/share"
+XDG_CACHE_HOME="$HOME/.local/cache"
+XDG_RUNTIME_DIR="$HOME/.local/run"
 
+
+# do this in install.zsh?
+mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+chmod 0700 "$XDG_RUNTIME_DIR"
+
+ENV="$HOME/.config/sh/ENV"
 
 # Add a component to the PATH.  This really just exists so I can more
 # conveniently document PATH additions item-wise.
@@ -206,10 +216,6 @@ EDITOR="emacs"
 
 # Helps emacs figure out what shell to use for `M-x shell`
 ESHELL="/usr/bin/zsh"
-
-# makes CDing to common directories easier
-CDPATH="$HOME:$HOME/proj"
-
 
 # RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep"
 # DOCKER_CONFIG="$HOME/.config/docker/config"
