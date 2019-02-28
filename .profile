@@ -52,12 +52,15 @@ XDG_RUNTIME_DIR="$HOME/.local/run"
 mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
 chmod 0700 "$XDG_RUNTIME_DIR"
 
-ENV="$HOME/.config/sh/ENV"
+ENV="${XDG_CONFIG_HOME:-$HOME/.config}/sh/env"
 
-# Add a component to the PATH.  This really just exists so I can more
-# conveniently document PATH additions item-wise.
-add2path() {
-  if [ -d "$1" ]; then PATH="$1:$PATH"; fi
+# Add a component to a colon separated PATH-y variables.  This really just exists
+# so I can more conveniently document additions item-wise.
+prepend() {
+  # require the args
+  : "${1:? expecting a variable name to prepend to}"
+  : "${2:? expecting a path argument to prepend}"
+  eval "$1=$2:\$$1"
 }
 
 
@@ -67,9 +70,10 @@ then
   have_brew() { return 0; }
 
   BREW_PFX=$(brew config | grep HOMEBREW_PREFIX | cut -d' ' -f2)
-  add2path "$BREW_PFX/bin"
-  MANPATH="$BREW_PFX/share/man:$MANPATH"
-  INFOPATH="$BREW_PFX/share/info:$INFOPATH"
+
+  prepend PATH "$BREW_PFX/bin"
+  prepend MANPATH "$BREW_PFX/share/man"
+  prepend INFOPATH "$BREW_PFX/share/info"
 else
   have_brew() { return 1; }
 fi
@@ -103,11 +107,11 @@ GOPATH="$HOME/.local/go"
 # PATH components. -------------------------------------------------------------
 
 # This is sometimes missing, but I almost always find/put things here I want
-add2path "/usr/local/bin"
+prepend PATH "/usr/local/bin"
 
 # My local bin directory. *Most* of my local binaries will either reside here,
 # or be symlinked here.
-add2path "$HOME/.local/bin"
+prepend PATH "$HOME/.local/bin"
 # Note: It's not really clear how much I should worry about symlinking
 # built-from-source packages manually, in particular, those that may make
 # assumptions about the (relative) locations of dependencies (e.g. python
@@ -120,8 +124,8 @@ add2path "$HOME/.local/bin"
 # them (mostly because I'd forget to do so frequently enough to be a point of
 # friction).  Usually, I'll prefer something here over something I put in
 # ~/.local/bin.
-add2path "$GOPATH/bin"  # GO managed bins
-add2path "$HOME/.cabal/bin" # Cabal-managed bins
+prepend PATH "$GOPATH/bin"  # GO managed bins
+prepend PATH "$HOME/.cabal/bin" # Cabal-managed bins
 
 
 sys_type="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -135,8 +139,8 @@ case "$sys_type" in
       gnuman="$BREW_PFX/opt/coreutils/libexec/gnuman"
       if [ -d "$gnubin" ] && [ -d "$gnuman" ]
       then
-        add2path "$gnubin"
-        MANPATH="$gnuman:$MANPATH"
+        prepend PATH "$gnubin"
+        prepend MANPATH "$gnuman"
       fi
 
     fi
@@ -191,13 +195,13 @@ esac
 # I almost always use Conda for managing python-y stuff, but only the minimal
 # distribution.  The full distribution comes with a bunch of packages that I
 # prefer to maintain via other channels (e.g. pandoc)
-[ -d "$HOME/miniconda3/bin" ] && add2path "$HOME/miniconda3/bin"
+[ -d "$HOME/miniconda3/bin" ] && prepend PATH "$HOME/miniconda3/bin"
 
 
 # It's possible that some of these components were already in the PATH, so
 # remove the duplicates (script in the bin/ directory of the dotfiles)
-PATH="$(printf '%s' "$PATH" | dedup_path)"
-INFOPATH="$(printf '%s' "$INFOPATH" | dedup_path):"
+PATH="$(printf %s "$PATH" | dedup_path)"
+INFOPATH="$(printf %s "$INFOPATH" | dedup_path):"
 
 # The terminating colon is important here! Basically, it has the effect of
 # appending the system man path(s) at the end of this list.  See manpath(1) for
@@ -209,7 +213,7 @@ fi
 
 
 # Don't need to keep this around
-unset add2path
+unset -f prepend
 
 # Saint IGNUcius be praised
 EDITOR="emacs"
@@ -220,7 +224,9 @@ ESHELL="/usr/bin/zsh"
 # RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep"
 # DOCKER_CONFIG="$HOME/.config/docker/config"
 
-for var in PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH
+for var in \
+  PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH \
+       XDG_CONFIG_HOME XDG_RUNTIME_HOME XDG_DATA_HOME XDG_CACHE_HOME
 do
   if [ -n "$var" ]
   then

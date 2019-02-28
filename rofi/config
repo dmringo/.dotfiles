@@ -1,5 +1,7 @@
 rofi.modi: window,windowcd,run,ssh,drun,combi,keys
 rofi.show-icons: True
 rofi.matching: normal
-rofi.theme: ~/.config/rofi/Paper-mod.rasi
 rofi.disable-history: False
+# should be in same directory as this file
+rofi.theme: Paper-mod.rasi
+
