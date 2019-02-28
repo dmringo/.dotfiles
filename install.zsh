@@ -20,7 +20,6 @@ DOT_HOME=${DOT_HOME:-${0:A:h}}
 # keep track of the return status of linking operations
 lnStat=0
 
-
 # Eventually will make this a real log-ish function, probably with
 # verbosity level either as a parameter or set in some global variable.
 _log(){
@@ -85,6 +84,7 @@ _ln $DOT_HOME/emacs              $HOME/.emacs.d
 _ln $DOT_HOME/emacs/init.el      $HOME/.emacs # convenient, but not necessary
 _ln $DOT_HOME/ssh/config         $HOME/.ssh/config
 _ln $DOT_HOME/.profile           $HOME/.profile
+_ln $DOT_HOME/X11/.xprofile      $HOME/.xprofile
 
 
 ln_config() {
