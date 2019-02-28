@@ -197,8 +197,6 @@ ordered on the priority.")
               ("C-n"   . my/company-next)
               ("C-p"   . my/company-prev)))
 
-(use-package smart-mode-line)
-
 (use-package pass)
 
 (use-package smartparens
@@ -208,27 +206,28 @@ ordered on the priority.")
          (prog-mode . show-smartparens-mode)
          (yaml-mode . smartparens-mode))
   :config
-  (progn
-    ;; don't do anything with single-quote for elisp
-    (sp-with-modes 'emacs-lisp-mode
-      (sp-local-pair "'" nil :actions nil)
-      (sp-local-pair "`" "'" :when '(:add sp-in-comment-p)))
-	  (sp-with-modes 'markdown-mode
-			(sp-local-pair "```" "```")
-			(sp-local-pair "*" "*")
-			(sp-local-pair "_" "_")
-			(sp-local-pair "$" "$"))
-    (sp-with-modes '(c-mode c++-mode)
-      (sp-local-pair "#ifdef" "#endif")
-      (sp-local-pair "#if" "#endif")
-      (sp-local-pair "<" ">"))
-	  (sp-with-modes 'c++-mode
-			(sp-local-pair "/*" "*/"))))
+  ;; don't do anything with single-quote for elisp  
+  (sp-with-modes 'emacs-lisp-mode
+    (sp-local-pair "'" nil :actions nil)
+    ;; pair for identifier references in comments and docstrings
+    (sp-local-pair "`" "'"
+                   :when '(:add sp-in-comment-p sp-in-docstring-p)))
+	(sp-with-modes 'markdown-mode
+		(sp-local-pair "```" "```")
+		(sp-local-pair "*" "*")
+		(sp-local-pair "_" "_")
+		(sp-local-pair "$" "$"))
+  (sp-with-modes '(c-mode c++-mode)
+    (sp-local-pair "#ifdef" "#endif")
+    (sp-local-pair "#if" "#endif")
+		(sp-local-pair "/*" "*/")))
 
-;; Whitespace-related
+
+;; Cleans up whitespace on save.
 (use-package whitespace-cleanup-mode
   :hook prog-mode
   :diminish )
+
 
 ;; Good for Makefiles where actual tabs are important but alignment really ought
 ;; to be accomplished with spaces.
@@ -342,11 +341,23 @@ ordered on the priority.")
 
 (use-package json-mode :diminish)
 
-(use-package rainbow-mode)
+(use-package rainbow-mode
+  :config
+  ;; If we're visiting an elisp theme file (usually globbed as *-theme.el) turn
+  ;; on rainbow mode
+  (defun enable-rainbows-for-theme ()
+    "Enables `rainbow-mode' if the current file is a theme file.
+A file is considered a theme file if it matches the regex
+\"-theme.el\".  Meant to be used as a `find-file-hook'"
+    (when (string-match-p "-theme.el" (or buffer-file-name "")
+      (rainbow-mode 1))))
+  (add-hook 'find-file-hook #'enable-rainbows-for-theme))
+
 
 (use-package markdown-mode
   :hook ((markdown-mode . pandoc-mode)
          (markdown-mode . smartparens-mode)))
+(use-package edit-indirect)
 
 (use-package pandoc-mode :diminish)
 
@@ -471,16 +482,19 @@ ordered on the priority.")
   (setq which-key-idle-delay 0.5)
   (which-key-mode))
 
-
-;; Nice set of non-offensive themes
+;; Sources for themes I like
 (use-package doom-themes)
+(use-package base16-theme
+  :demand
+  :config
+  (load-theme 'base16-ashes t))
+
+;; Add my custom themes
+(let ((my/theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
+  (add-to-list 'custom-theme-load-path my/theme-dir))
 
 
 ;; Local "packages"
-(let ((theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
-  (add-to-list 'custom-theme-load-path theme-dir))
-
-
 (use-package my-utils
   :demand
   :ensure f
@@ -532,7 +546,8 @@ ordered on the priority.")
                    (and (file-directory-p path)
                         (string-match "llvm" path)))
                  load-path)
-  (require 'llvm-mode))
+  (require 'llvm-mode)
+  (require 'tablegen-mode))
 
 ;; When narrowing to a [de]fun[ction], include preceding comments
 (setq narrow-to-defun-include-comments t)
@@ -690,7 +705,8 @@ ordered on the priority.")
    ;; real-world distance?
    ((equal my/hostname "zarniwoop") "Office Code Pro-14")
    (t "Office Code Pro-10")))
-(add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
+;;(add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
+(set-face-attribute 'default nil :font font-office-code-pro)
 ;; note for future me: backtick permits use of commas for evaluation inside a
 ;; quoted thing
 ;; Since I will probably forget this eventually:
@@ -761,7 +777,7 @@ ordered on the priority.")
 
 
 ;; let Custom declare this safe before loading it
-(load-theme 'doom-vibrant)
+;(load-theme 'doom-vibrant)
 
 
 
