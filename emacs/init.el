@@ -560,6 +560,8 @@ A file is considered a theme file if it matches the regex
 (setq split-height-threshold nil
       split-width-threshold 120)
 
+;; Always include some path context in buffer names
+(setq uniquify-min-dir-content 3)
 
 ;; Don't prompt when reverting PDFs
 (setq revert-without-query '(".*\\.pdf"))
