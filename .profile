@@ -44,7 +44,7 @@
 # keep all the XDG dirs under the same path
 XDG_CONFIG_HOME="$HOME/.local/etc"
 XDG_DATA_HOME="$HOME/.local/share"
-XDG_CACHE_HOME="$HOME/.local/cache"
+XDG_CACHE_HOME="$HOME/.local/var"
 XDG_RUNTIME_DIR="$HOME/.local/run"
 
 
