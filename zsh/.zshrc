@@ -39,12 +39,26 @@ bindkey -e
 # let zsh use completions defined for bash
 autoload -U +X bashcompinit && bashcompinit
 
-# make <M-n> and <M-p> a little smarter
+# smarter functions for <M-n> and <M-p>
+# These match all text entered in command line while searching
 autoload -U up-line-or-beginning-search down-line-or-beginning-search
-zle -N up-line-or-beginning-search 
+zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
-bindkey "^[p" up-line-or-beginning-search 
-bindkey "^[n" down-line-or-beginning-search
+
+keybinds=(
+  # <M-p>
+  "^[p" up-line-or-beginning-search
+  # <M-n>
+  "^[n" down-line-or-beginning-search
+  # Home key
+  "^[[H" beginning-of-line
+  # End key
+  "^[[F" end-of-line
+  # Delete key
+  "^[[3~" delete-char-or-list
+)
+
+bindkey $keybinds
 
 # Tell gpg about the TTY.  I think this only makes sense in an interactive
 # session.  I also think this is necessary when GPG assumes no TTY, as is the
@@ -92,7 +106,7 @@ then
   alias gsur='git submodule update --recursive'
   alias gcfo='git config --list --show-origin'
 fi
-   
+
 
 # Haskell stack
 if cmd_exists stack
@@ -112,7 +126,7 @@ zplug "srijanshetty/zsh-pandoc-completion", if:'cmd_exists pandoc'
 #       from:gitlab, \
 #       at:pandoc-completion, \
 #       use:"Completion/Unix/Command/_pandoc"
-      
+
 
 # GTK settings manager
 zplug "jmatsuzawa/zsh-comp-gsettings", if:'cmd_exists gsettings'
@@ -131,7 +145,7 @@ if cmd_exists rg && [ -f "$HOME/.config/ripgrep" ]
 then
   alias rg="RIPGREP_CONFIG_PATH=$HOME/.config/ripgrep rg "
 fi
-  
+
 # ninja build system
 zplug "ninja-build/ninja", as:command, use:"misc/zsh-completion", if:'cmd_exists ninja'
 
@@ -158,7 +172,7 @@ then
   alias dkx='docker exec -i -t'
   alias dke='docker exec'
   alias dkps='docker ps'
-  
+
   if cmd_exists docker-compose
   then
     alias dkc='docker-compose'
@@ -168,7 +182,7 @@ then
     alias dkcd='docker-compose down'
   fi
 fi
-  
+
 
 alias l='ls -lh --color="auto" --group-directories-first'
 alias la='ls -lhar --color="auto" --group-directories-first'
