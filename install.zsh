@@ -98,6 +98,7 @@ ln_config i3status
 ln_config dunst
 ln_config rofi
 ln_config git
+ln_config termite
 ln_config ripgrep
 
 
