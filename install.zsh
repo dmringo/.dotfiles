@@ -84,7 +84,8 @@ _ln $DOT_HOME/emacs              $HOME/.emacs.d
 _ln $DOT_HOME/emacs/init.el      $HOME/.emacs # convenient, but not necessary
 _ln $DOT_HOME/ssh/config         $HOME/.ssh/config
 _ln $DOT_HOME/.profile           $HOME/.profile
-_ln $DOT_HOME/X11/.xprofile      $HOME/.xprofile
+_ln $DOT_HOME/xorg/.xprofile     $HOME/.xprofile
+_ln $DOT_HOME/xorg/.Xresources   $HOME/.Xresources
 
 
 ln_config() {
