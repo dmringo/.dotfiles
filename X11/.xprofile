@@ -1,5 +1,0 @@
-#!/bin/sh
-
-# if we've got autorandr, we're probably using it
-# TODO: "probably" is not a great solution
-command -v autorandr 2>&1 > /dev/null && autorandr -c
