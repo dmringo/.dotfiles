@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# For each branch on the given remote ($1), create a local branch to track it
+# with a prefix ($2/).  If no second arg is given, the remote name is used as
+# the prefix.
+: "${1:? Expecting the name of a remote for this repository as an argument}"
+for b in $(git ls-remote --heads "$1" | sed 's_.*refs/heads/__')
+do
+  git branch -t "${2:-$1}/$b" "$1/$b"
+done
