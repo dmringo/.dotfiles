@@ -76,11 +76,11 @@ ordered on the priority.")
 (use-package projectile
   :demand
   :config
-  (progn
-    (projectile-mode)
-    (setq projectile-completion-system 'ivy
-          projectile-enable-caching t ;; Good even with alien listing
-          projectile-mode-line-prefix " ℙ")) 
+  (projectile-mode)
+  (setq projectile-completion-system 'ivy
+        projectile-enable-caching t ;; Good even with alien listing
+        projectile-mode-line-prefix " ℙ"
+        projectile-switch-project-action 'projectile-vc)
   :bind-keymap ("C-c p" . projectile-command-map))
 
 (use-package ivy
@@ -136,7 +136,9 @@ ordered on the priority.")
 
 (use-package ox-twbs)
 (use-package ox-gfm)
-(use-package ox-pandoc)
+(use-package ox-pandoc
+  :pin melpa) 
+
 
 ;; asynchronous execution of src blocks in org via babel
 (use-package ob-async)
@@ -349,8 +351,8 @@ ordered on the priority.")
     "Enables `rainbow-mode' if the current file is a theme file.
 A file is considered a theme file if it matches the regex
 \"-theme.el\".  Meant to be used as a `find-file-hook'"
-    (when (string-match-p "-theme.el" (or buffer-file-name "")
-      (rainbow-mode 1))))
+    (when (string-match-p "-theme.el" (or buffer-file-name ""))
+      (rainbow-mode 1)))
   (add-hook 'find-file-hook #'enable-rainbows-for-theme))
 
 
@@ -487,7 +489,19 @@ A file is considered a theme file if it matches the regex
 (use-package base16-theme
   :demand
   :config
-  (load-theme 'base16-ashes t))
+  (let ((theme 'base16-ashes))
+    (load-theme theme t)
+    (require 'org-faces)
+    (let ((colors (symbol-value (intern (concat (symbol-name theme) "-colors"))))
+          (faces '((org-todo :background base01)
+                   (org-done :background base01))))
+      (dolist (spec faces)
+        ;; prefer set-face-attribute over base16-set-faces because it preserves
+        ;; any existing face attributes
+        (apply 'set-face-attribute
+               `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors)))))))
+
+
 
 ;; Add my custom themes
 (let ((my/theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
@@ -528,7 +542,7 @@ A file is considered a theme file if it matches the regex
   ;; the default is `fixed-pitch-serif', which is bad by default for me in most
   ;; cases.  Probably could be fixed with fc-*, but this is simpler
   (set-face-attribute
-           'Info-quoted nil :inherit 'font-lock-constant-face))
+   'Info-quoted nil :inherit 'font-lock-constant-face))
 
 ;; Remember files with recentf
 (use-package recentf
@@ -609,6 +623,8 @@ A file is considered a theme file if it matches the regex
  
  ;; Slightly quicker Kill this buffer
  ("C-x k"                   . kill-this-buffer)
+
+ ("C-x C-b"                 . ibuffer)
 
  ;; I'm always aligning things
  ("C-M-;"                   . align-regexp)
@@ -776,10 +792,5 @@ A file is considered a theme file if it matches the regex
 (defconst my-custom-file (expand-file-name "lisp/my-custom.el" "~/.emacs.d"))
 (setq custom-file my-custom-file)
 (load custom-file)
-
-
-;; let Custom declare this safe before loading it
-;(load-theme 'doom-vibrant)
-
 
 
