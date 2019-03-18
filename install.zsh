@@ -37,6 +37,8 @@ maybe_mkdir(){
 # alone is not (unlike `ln`).
 _ln(){
 
+  set -x
+
   src=$1
   trg=$2
 
@@ -44,7 +46,10 @@ _ln(){
   then
 
     # If the files/directories are the same, just return.
-    if diff -rq $trg $src > /dev/null; then return 0; fi
+    if diff -rq $trg $src > /dev/null
+    then
+      return
+    fi
 
     read -r -k 1 'ans?'"$trg already exists. (r)eplace/(s)kip/(b)ackup?"
     echo # newline after response
@@ -54,7 +59,8 @@ _ln(){
       [sS] )
         # skipping means we didn't link something
         lnStat=1
-        return ;;
+        return
+        ;;
       [bB] )
         bkp=$trg.`date +''%F!%T`.bak
         _log -f "backing up %s as %s\n" $trg $bkp
@@ -62,7 +68,8 @@ _ln(){
         ;;
       *    )
         _log -f "unrecognized response: %s\n" $ans
-        return 1
+        return
+        ;;
     esac
   fi
 
@@ -84,7 +91,8 @@ _ln $DOT_HOME/emacs              $HOME/.emacs.d
 _ln $DOT_HOME/emacs/init.el      $HOME/.emacs # convenient, but not necessary
 _ln $DOT_HOME/ssh/config         $HOME/.ssh/config
 _ln $DOT_HOME/.profile           $HOME/.profile
-_ln $DOT_HOME/X11/.xprofile      $HOME/.xprofile
+_ln $DOT_HOME/xorg/.xprofile     $HOME/.xprofile
+_ln $DOT_HOME/xorg/.Xresources   $HOME/.Xresources
 
 
 ln_config() {
