@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # OK idiot, this is for future you when you finally clean this mess up.
 #
 # You need to distinguish between environments necessary (or useful) for
@@ -33,13 +35,43 @@
 #
 #  - Bash has some funny rules for which files are read and when.
 #
-#    See http://www.solipsys.co.uk/new/2BashInitialisationFiles.html
+#    See https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html
 #
-#  - Zsh has a (subjectively) saner set of rules
+#  - Zsh has a (subjectively) saner set of rules:
+#
+#    Unless there's something login-specific, the two files that really matter
+#    are .zshrc and .zshenv (prefixed by $ZDOTDIR, if set).  .zshenv is sourced
+#    on all shell invocations (except when -f (NO_RCS) is given), whereas .zshrc
+#    is only sourced in interactive shells. .zshenv is sourced before .zshrc.
+#    The official documentation has more detailed info, including explanations
+#    of .zprofile, .zlogin, and .zlogout
 #
 #    See http://zsh.sourceforge.net/Intro/intro_3.html
 #
 # Also worth perusing: https://docstore.mik.ua/orelly/unix/upt/index.htm
+#
+# With all this said, this file (linked to $HOME/.profile) should be able to be
+# sourced with {ba,z,da,}sh without issue and should be idempotent w.r.t. the
+# environment (variables, functions, etc.).
+
+
+
+
+# Check if a command (binary or shell function/builtin) is available.
+# This is, as far as I can tell, the most portable way of doing this.
+cmd_exists() {
+  : "${1:? Expecting an argument to test for availability.}"
+  command -v "$1" 2>&1 > /dev/null
+}
+
+# Add a component to a colon separated PATH-y variables.  This really just
+# exists so I can more conveniently document additions item-wise.
+prepend() {
+  # require the args
+  : "${1:? expecting a variable name to prepend to}"
+  : "${2:? expecting a path-y argument to prepend}"
+  eval "$1=$2:\$$1"
+}
 
 # keep all the XDG dirs under the same path
 XDG_CONFIG_HOME="$HOME/.local/etc"
@@ -47,25 +79,18 @@ XDG_DATA_HOME="$HOME/.local/share"
 XDG_CACHE_HOME="$HOME/.local/var"
 XDG_RUNTIME_DIR="$HOME/.local/run"
 
+# make sure we actually have these directories
+mkdir -p \
+      "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
 
-# do this in install.zsh?
-mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+# These permissions are required for the runtime dir to be used
 chmod 0700 "$XDG_RUNTIME_DIR"
 
+# See notes at head of file
 ENV="${XDG_CONFIG_HOME:-$HOME/.config}/sh/env"
 
-# Add a component to a colon separated PATH-y variables.  This really just exists
-# so I can more conveniently document additions item-wise.
-prepend() {
-  # require the args
-  : "${1:? expecting a variable name to prepend to}"
-  : "${2:? expecting a path argument to prepend}"
-  eval "$1=$2:\$$1"
-}
-
-
 # Is homebrew being used?
-if command -v brew 2>&1 > /dev/null
+if cmd_exists brew
 then
   have_brew() { return 0; }
 
@@ -191,12 +216,12 @@ case "$sys_type" in
     ;;
 esac
 
-[ -n "$BREW_PFX" ]
-# I almost always use Conda for managing python-y stuff, but only the minimal
-# distribution.  The full distribution comes with a bunch of packages that I
-# prefer to maintain via other channels (e.g. pandoc)
-[ -d "$HOME/miniconda3/bin" ] && prepend PATH "$HOME/miniconda3/bin"
-
+# I almost always use Conda for managing python-y projects, but only the minimal
+# distribution. Recent versions encourage you to source their init script and
+# activate the base environment, but I only want `conda` available by default. I
+# can always activate the base environment as necessary.
+CONDA_ENV="$HOME/miniconda3/etc/profile.d/conda.sh"
+[ -f "$CONDA_ENV" ] && . "$CONDA_ENV"
 
 # It's possible that some of these components were already in the PATH, so
 # remove the duplicates (script in the bin/ directory of the dotfiles)
@@ -211,7 +236,6 @@ then
   MANPATH="$(printf '%s' "$MANPATH" | dedup_path):"
 fi
 
-
 # Don't need to keep this around
 unset -f prepend
 
@@ -225,7 +249,7 @@ ESHELL="/usr/bin/zsh"
 # DOCKER_CONFIG="$HOME/.config/docker/config"
 
 for var in \
-  PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH \
+  PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH ENV \
        XDG_CONFIG_HOME XDG_RUNTIME_HOME XDG_DATA_HOME XDG_CACHE_HOME
 do
   if [ -n "$var" ]
