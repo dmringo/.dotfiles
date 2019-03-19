@@ -231,13 +231,9 @@ ordered on the priority.")
   :diminish )
 
 
-;; Good for Makefiles where actual tabs are important but alignment really ought
-;; to be accomplished with spaces.
-(use-package smart-tabs-mode
-  :init
-  (add-hook 'makefile-mode-hook 'smart-tabs-mode-enable)
-  :config
-  (smart-tabs-mode/no-tabs-mode-advice open-rectangle))
+(defadvice align-regexp (around align-regexp-with-spaces activate)
+  (let ((indent-tabs-mode nil))
+    ad-do-it))
 
 ;; Show me where the cursor is, when it changes
 (use-package beacon
