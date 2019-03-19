@@ -55,8 +55,6 @@
 # environment (variables, functions, etc.).
 
 
-
-
 # Check if a command (binary or shell function/builtin) is available.
 # This is, as far as I can tell, the most portable way of doing this.
 cmd_exists() {

@@ -15,10 +15,10 @@
 
 
 (defvar my/package-archive-defs
-  '(("melpa-stable" 10 "https://stable.melpa.org/packages/")
-    ("org"          10 "https://orgmode.org/elpa/")
-    ("gnu"          5 "https://elpa.gnu.org/packages/")
-    ("melpa"        1 "https://melpa.org/packages/"))
+  '(("melpa-stable" 10  "https://stable.melpa.org/packages/")
+    ("org"          10  "https://orgmode.org/elpa/")
+    ("gnu"          5   "https://elpa.gnu.org/packages/")
+    ("melpa"        1   "https://melpa.org/packages/"))
   "List holding package archive info.  Each member has the form
 (ARCHIVE-ID URL PRIORITY) for use in the variables
 `package-archives' and `package-archive-priorities'. Order within
@@ -636,7 +636,8 @@ A file is considered a theme file if it matches the regex
 
  ("C-M-}"                   . enlarge-window-horizontally)
  ("C-M-{"                   . shrink-window-horizontally)
- ("C-h M"                   . woman)
+ ("C-h M"                   . man)
+; ("C-h W"                   . woman)
  ([remap eval-expression]   . pp-eval-expression)
  ([remap eval-last-sexp]    . pp-eval-last-sexp))
 ;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:
