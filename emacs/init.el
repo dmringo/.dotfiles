@@ -73,6 +73,8 @@ ordered on the priority.")
   :config
   (exec-path-from-shell-initialize))
 
+(use-package posframe)
+
 (use-package projectile
   :demand
   :config
@@ -99,6 +101,10 @@ ordered on the priority.")
                   ivy-use-virtual-buffers t)))
 
 (use-package ivy-hydra)
+(use-package ivy-posframe
+  :demand
+  :config (setq ivy-display-function
+                #'ivy-posframe-display-at-frame-center))
 (use-package swiper
   :demand)
 (use-package counsel
