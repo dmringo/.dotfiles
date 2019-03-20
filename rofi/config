@@ -1,7 +1,17 @@
-rofi.modi: window,windowcd,run,ssh,drun,combi,keys
-rofi.show-icons: True
-rofi.matching: normal
-rofi.disable-history: False
+rofi.modi:             window,windowcd,run,ssh,drun,combi,keys,pdf>:/home/dringo/.local/bin/rofi-pdf
+rofi.combi-modi:       drun,pdf>,window
+rofi.show-icons:       True
+rofi.matching:         normal
+rofi.disable-history:  False
+rofi.columns:          3
+rofi.display-window:   win>
+rofi.display-windowcd: wincd>
+rofi.display-run:      run>
+rofi.display-ssh:      ssh>
+rofi.display-drun:     drun>
+rofi.display-combi:    comb>
+rofi.display-keys:     keys>
+
 # should be in same directory as this file
 rofi.theme: Paper-mod.rasi
 

@@ -1,0 +1,28 @@
+#!/usr/bin/env zsh
+#
+# This is intended to be used with rofi, invoked something like
+#
+#    rofi -show pdf -modi pdf:path/to/rofi-pdf
+#
+# If given no argument, it will print a list of all files with a pdf extension
+# under $HOME.  It expects one of these files to be passed as an argument by
+# rofi to then be opened with the default pdf viewer (using xdg-open).  It will
+# use `fd` (https://github.com/sharkdp/fd) if available, otherwise it will use
+# `find`, which will usually be slower.
+
+if [[ -z "$@" ]]
+then
+  if command -v fd 2>&1 >dev/null
+  then
+    # -uuu causes fd to really look everywhere, unlike -I
+    fd -uuu -e pdf . $HOME
+  else
+    find $HOME -type f -name '*.pdf'
+  fi
+else
+  # Stolen from the example file browser script in the rofi repo
+  # https://github.com/DaveDavenport/rofi/blob/next/Examples/rofi-file-browser.sh
+  coproc (xdg-open "$1" 2>&1 >/dev/null)
+  exec 1>&-
+  exit
+fi

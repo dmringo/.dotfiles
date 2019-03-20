@@ -29,22 +29,7 @@ bindsym $mod+Return exec "my-sensible-terminal"
 bindsym $mod+q kill
   
 # start rofi (a program launcher)
-# bindsym $mod+space exec dmenu_run -i -l 01 -p '>'
-# bindsym $mod+space exec i3-dmenu-desktop -dmenu='dmenu -i -l 10 -p ">"'
-bindsym $mod+space exec rofi -show combi -combi-modi "drun#run#window" \
-  -display-combi    "comb> "  \
-  -display-drun     "drun> "  \
-  -display-window   "win> "   \
-  -display-run      "run> "   \
-  -display-keys     "keys> "  \
-  -display-windowcd "wincd> " \
-  -display-ssh      "ssh> "   \
-  
-
-# There also is the (new) i3-dmenu-desktop which only displays applications
-# shipping a .desktop file. It is a wrapper around dmenu, so you need that
-# installed.
-# bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
+bindsym $mod+space exec rofi -show combi
 
 # change focus
 bindsym $mod+h focus left
