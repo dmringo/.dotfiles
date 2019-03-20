@@ -1,4 +1,5 @@
-# -*- -*-
+# -*- mode: sh; sh-shell: sh -*-
 
-# should be more or less idempotent
+# .profile holds all the shell-agnostic important stuff, and sourcing it should
+# be more or less idempotent
 . "$HOME/.profile"
