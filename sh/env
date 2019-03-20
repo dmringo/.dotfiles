@@ -1,0 +1,6 @@
+# -*- -*-
+
+echo "In  ENV"
+
+# should be more or less idempotent
+source "$HOME/.profile"
