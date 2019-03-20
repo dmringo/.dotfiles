@@ -485,18 +485,40 @@ A file is considered a theme file if it matches the regex
 (use-package base16-theme
   :demand
   :config
-  (let ((theme 'base16-ashes))
-    (load-theme theme t)
-    (require 'org-faces)
-    (let ((colors (symbol-value (intern (concat (symbol-name theme) "-colors"))))
-          (faces '((org-todo :background base01)
-                   (org-done :background base01))))
+  (defun base16-patch-theme (theme faces)
+    "Apply changes in FACES to THEME, a `base16-theme'.
+FACES should take same form as in `base16-theme-define'."
+    ;; hacky way to get the color list for the given theme.  Maybe something
+    ;; better exists?
+    (let* ((color-var (intern (concat (symbol-name theme) "-colors")))
+           (colors (if (boundp color-var)
+                       (symbol-value color-var)
+                     (error "%s is probably not a base16 theme" theme))))
       (dolist (spec faces)
         ;; prefer set-face-attribute over base16-set-faces because it preserves
         ;; any existing face attributes
-        (apply 'set-face-attribute
-               `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors)))))))
+        (apply
+         'set-face-attribute
+         `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors))))))
+  (let ((theme 'base16-ashes))
+    (load-theme theme t)
+    (require 'org-faces)
+    (base16-patch-theme
+     theme
+     '((org-todo :background base01)
+       (org-done :background base01)
+       (undo-tree-visualizer-current-face :foreground base00
+                                          :background base0B)))))
 
+;; (let* ((theme 'base16-ashes)
+;;       (colors (symbol-value (intern (concat (symbol-name theme) "-colors"))))
+;;       (faces '((undo-tree-visualizer-current-face :foreground base00
+;;                                                   :background base0B))))
+;;       (dolist (spec faces)
+;;         ;; prefer set-face-attribute over base16-set-faces because it preserves
+;;         ;; any existing face attributes
+;;         (apply 'set-face-attribute
+;;                `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors)))))
 
 
 ;; Add my custom themes
@@ -637,7 +659,7 @@ A file is considered a theme file if it matches the regex
  ("C-M-}"                   . enlarge-window-horizontally)
  ("C-M-{"                   . shrink-window-horizontally)
  ("C-h M"                   . man)
-; ("C-h W"                   . woman)
+ ("C-h W"                   . woman)
  ([remap eval-expression]   . pp-eval-expression)
  ([remap eval-last-sexp]    . pp-eval-last-sexp))
 ;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:
