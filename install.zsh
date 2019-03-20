@@ -37,8 +37,6 @@ maybe_mkdir(){
 # alone is not (unlike `ln`).
 _ln(){
 
-  set -x
-
   src=$1
   trg=$2
 
@@ -108,6 +106,7 @@ ln_config rofi
 ln_config git
 ln_config termite
 ln_config ripgrep
+ln_config sh
 
 
 for f in $DOT_HOME/bin/*
