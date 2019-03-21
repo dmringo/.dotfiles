@@ -15,10 +15,10 @@
 
 
 (defvar my/package-archive-defs
-  '(("melpa-stable" 10 "https://stable.melpa.org/packages/")
-    ("org"          10 "https://orgmode.org/elpa/")
-    ("gnu"          5 "https://elpa.gnu.org/packages/")
-    ("melpa"        1 "https://melpa.org/packages/"))
+  '(("melpa-stable" 10  "https://stable.melpa.org/packages/")
+    ("org"          10  "https://orgmode.org/elpa/")
+    ("gnu"          5   "https://elpa.gnu.org/packages/")
+    ("melpa"        1   "https://melpa.org/packages/"))
   "List holding package archive info.  Each member has the form
 (ARCHIVE-ID URL PRIORITY) for use in the variables
 `package-archives' and `package-archive-priorities'. Order within
@@ -73,14 +73,16 @@ ordered on the priority.")
   :config
   (exec-path-from-shell-initialize))
 
+(use-package posframe)
+
 (use-package projectile
   :demand
   :config
-  (progn
-    (projectile-mode)
-    (setq projectile-completion-system 'ivy
-          projectile-enable-caching t ;; Good even with alien listing
-          projectile-mode-line-prefix " ℙ")) 
+  (projectile-mode)
+  (setq projectile-completion-system 'ivy
+        projectile-enable-caching t ;; Good even with alien listing
+        projectile-mode-line-prefix " ℙ"
+        projectile-switch-project-action 'projectile-vc)
   :bind-keymap ("C-c p" . projectile-command-map))
 
 (use-package ivy
@@ -99,6 +101,10 @@ ordered on the priority.")
                   ivy-use-virtual-buffers t)))
 
 (use-package ivy-hydra)
+(use-package ivy-posframe
+  :demand
+  :config (setq ivy-display-function
+                #'ivy-posframe-display-at-frame-center))
 (use-package swiper
   :demand)
 (use-package counsel
@@ -136,7 +142,9 @@ ordered on the priority.")
 
 (use-package ox-twbs)
 (use-package ox-gfm)
-(use-package ox-pandoc)
+(use-package ox-pandoc
+  :pin melpa) 
+
 
 ;; asynchronous execution of src blocks in org via babel
 (use-package ob-async)
@@ -229,13 +237,9 @@ ordered on the priority.")
   :diminish )
 
 
-;; Good for Makefiles where actual tabs are important but alignment really ought
-;; to be accomplished with spaces.
-(use-package smart-tabs-mode
-  :init
-  (add-hook 'makefile-mode-hook 'smart-tabs-mode-enable)
-  :config
-  (smart-tabs-mode/no-tabs-mode-advice open-rectangle))
+(defadvice align-regexp (around align-regexp-with-spaces activate)
+  (let ((indent-tabs-mode nil))
+    ad-do-it))
 
 ;; Show me where the cursor is, when it changes
 (use-package beacon
@@ -349,8 +353,8 @@ ordered on the priority.")
     "Enables `rainbow-mode' if the current file is a theme file.
 A file is considered a theme file if it matches the regex
 \"-theme.el\".  Meant to be used as a `find-file-hook'"
-    (when (string-match-p "-theme.el" (or buffer-file-name "")
-      (rainbow-mode 1))))
+    (when (string-match-p "-theme.el" (or buffer-file-name ""))
+      (rainbow-mode 1)))
   (add-hook 'find-file-hook #'enable-rainbows-for-theme))
 
 
@@ -487,7 +491,41 @@ A file is considered a theme file if it matches the regex
 (use-package base16-theme
   :demand
   :config
-  (load-theme 'base16-ashes t))
+  (defun base16-patch-theme (theme faces)
+    "Apply changes in FACES to THEME, a `base16-theme'.
+FACES should take same form as in `base16-theme-define'."
+    ;; hacky way to get the color list for the given theme.  Maybe something
+    ;; better exists?
+    (let* ((color-var (intern (concat (symbol-name theme) "-colors")))
+           (colors (if (boundp color-var)
+                       (symbol-value color-var)
+                     (error "%s is probably not a base16 theme" theme))))
+      (dolist (spec faces)
+        ;; prefer set-face-attribute over base16-set-faces because it preserves
+        ;; any existing face attributes
+        (apply
+         'set-face-attribute
+         `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors))))))
+  (let ((theme 'base16-ashes))
+    (load-theme theme t)
+    (require 'org-faces)
+    (base16-patch-theme
+     theme
+     '((org-todo :background base01)
+       (org-done :background base01)
+       (undo-tree-visualizer-current-face :foreground base00
+                                          :background base0B)))))
+
+;; (let* ((theme 'base16-ashes)
+;;       (colors (symbol-value (intern (concat (symbol-name theme) "-colors"))))
+;;       (faces '((undo-tree-visualizer-current-face :foreground base00
+;;                                                   :background base0B))))
+;;       (dolist (spec faces)
+;;         ;; prefer set-face-attribute over base16-set-faces because it preserves
+;;         ;; any existing face attributes
+;;         (apply 'set-face-attribute
+;;                `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors)))))
+
 
 ;; Add my custom themes
 (let ((my/theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
@@ -528,7 +566,7 @@ A file is considered a theme file if it matches the regex
   ;; the default is `fixed-pitch-serif', which is bad by default for me in most
   ;; cases.  Probably could be fixed with fc-*, but this is simpler
   (set-face-attribute
-           'Info-quoted nil :inherit 'font-lock-constant-face))
+   'Info-quoted nil :inherit 'font-lock-constant-face))
 
 ;; Remember files with recentf
 (use-package recentf
@@ -610,6 +648,8 @@ A file is considered a theme file if it matches the regex
  ;; Slightly quicker Kill this buffer
  ("C-x k"                   . kill-this-buffer)
 
+ ("C-x C-b"                 . ibuffer)
+
  ;; I'm always aligning things
  ("C-M-;"                   . align-regexp)
 
@@ -624,7 +664,8 @@ A file is considered a theme file if it matches the regex
 
  ("C-M-}"                   . enlarge-window-horizontally)
  ("C-M-{"                   . shrink-window-horizontally)
- ("C-h M"                   . woman)
+ ("C-h M"                   . man)
+ ("C-h W"                   . woman)
  ([remap eval-expression]   . pp-eval-expression)
  ([remap eval-last-sexp]    . pp-eval-last-sexp))
 ;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:
@@ -776,10 +817,5 @@ A file is considered a theme file if it matches the regex
 (defconst my-custom-file (expand-file-name "lisp/my-custom.el" "~/.emacs.d"))
 (setq custom-file my-custom-file)
 (load custom-file)
-
-
-;; let Custom declare this safe before loading it
-;(load-theme 'doom-vibrant)
-
 
 

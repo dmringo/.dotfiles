@@ -44,7 +44,10 @@ _ln(){
   then
 
     # If the files/directories are the same, just return.
-    if diff -rq $trg $src > /dev/null; then return 0; fi
+    if diff -rq $trg $src > /dev/null
+    then
+      return
+    fi
 
     read -r -k 1 'ans?'"$trg already exists. (r)eplace/(s)kip/(b)ackup?"
     echo # newline after response
@@ -54,7 +57,8 @@ _ln(){
       [sS] )
         # skipping means we didn't link something
         lnStat=1
-        return ;;
+        return
+        ;;
       [bB] )
         bkp=$trg.`date +''%F!%T`.bak
         _log -f "backing up %s as %s\n" $trg $bkp
@@ -62,7 +66,8 @@ _ln(){
         ;;
       *    )
         _log -f "unrecognized response: %s\n" $ans
-        return 1
+        return
+        ;;
     esac
   fi
 
@@ -101,6 +106,7 @@ ln_config rofi
 ln_config git
 ln_config termite
 ln_config ripgrep
+ln_config sh
 
 
 for f in $DOT_HOME/bin/*

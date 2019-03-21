@@ -5,10 +5,25 @@
 [commit]
 	gpgsign = true
 [alias]
+  # print the root directory of this repository
 	root = rev-parse --show-toplevel
-	rroot = !"a=\"$(git rev-parse --git-dir)\"; printf %s\\\\n \"${a%.git*}\""
+
+  # print the topmost git directory (e.g. when you've got submodules upon
+  # submodules and want the top-level repo dir)
+	rroot = !"a=\"$(git rev-parse --git-dir)\";  test \"$a\" = \".git\" && pwd || printf %s\\\\n \"${a%/.git*}\";"
+
+  # should be with my local bins
+  track-remote = !"git-track-remote"
 [color]
 	status = auto
 	ui = auto
 [diff "gpg"]
 	textconv = gpg --no-tty --decrypt
+
+# Modified from advice at https://ryuslash.org/tag/git.html
+#
+# Use top-level form as the "function context" for git diffs on lisp files. To
+# be useful, need to also use gitattributes to set diff=lisp for some file
+# patterns, e.g. *.el diff=lisp
+[diff "lisp"]
+  xfuncname = "^\\([^ ]+.*$"

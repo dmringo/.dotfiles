@@ -1,10 +1,6 @@
 # at some point, this should maybe be set by an m4 macro during install
 export MY_ZSH_HOME="$HOME/.dotfiles/zsh"
 
-cmd_exists() {
-  command -v "$1" 2>&1 > /dev/null
-}
-
 # For debugging my shite scripts
 _logz() {
   local logfile="$HOME/zsh-log.txt"
@@ -14,4 +10,4 @@ _logz() {
 
 
 [[ -f $MY_ZSH_HOME/secrets.zsh ]] && . $MY_ZSH_HOME/secrets.zsh
-[[ -f ~/.profile ]] && emulate sh -c 'source ~/.profile'
+[[ -f "$HOME/.profile" ]] && . "$HOME/.profile"
