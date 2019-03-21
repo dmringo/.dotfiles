@@ -237,10 +237,6 @@ ordered on the priority.")
   :diminish )
 
 
-(defadvice align-regexp (around align-regexp-with-spaces activate)
-  (let ((indent-tabs-mode nil))
-    ad-do-it))
-
 ;; Show me where the cursor is, when it changes
 (use-package beacon
   :init
@@ -446,7 +442,6 @@ A file is considered a theme file if it matches the regex
   :config (setq docker-tramp-use-names t))
 
 (use-package elm-mode)
-
 (use-package go-mode)
 (use-package go-eldoc)
 (use-package company-go)
@@ -454,12 +449,6 @@ A file is considered a theme file if it matches the regex
   :pin melpa
   :init
   (add-hook 'go-mode-hook #'lsp-go-enable))
-
-(use-package treemacs
-  :config
-  (treemacs-git-mode 'extended)
-  (treemacs-follow-mode)
-  (setq treemacs-show-hidden-files nil))
 
 (use-package ace-window
   :init
@@ -516,21 +505,6 @@ FACES should take same form as in `base16-theme-define'."
        (undo-tree-visualizer-current-face :foreground base00
                                           :background base0B)))))
 
-;; (let* ((theme 'base16-ashes)
-;;       (colors (symbol-value (intern (concat (symbol-name theme) "-colors"))))
-;;       (faces '((undo-tree-visualizer-current-face :foreground base00
-;;                                                   :background base0B))))
-;;       (dolist (spec faces)
-;;         ;; prefer set-face-attribute over base16-set-faces because it preserves
-;;         ;; any existing face attributes
-;;         (apply 'set-face-attribute
-;;                `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors)))))
-
-
-;; Add my custom themes
-(let ((my/theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
-  (add-to-list 'custom-theme-load-path my/theme-dir))
-
 
 ;; Local "packages"
 (use-package my-utils
@@ -586,6 +560,35 @@ FACES should take same form as in `base16-theme-define'."
                  load-path)
   (require 'llvm-mode)
   (require 'tablegen-mode))
+
+
+;; Better alignment when using tabby modes
+(defadvice align-regexp (around align-regexp-with-spaces activate)
+  "Turn off indent-tabs-mode when aligning.
+Poor man's smart-tabs, but maybe more reliable?"
+  (let ((indent-tabs-mode nil))
+    ad-do-it))
+
+;; Better buffer handing for {async-,}shell-command
+(defadvice shell-command
+    (after shell-rename-buffer activate)
+  "Preserve shell-command output in a well-named buffer unless
+one is manually specified."
+  (let((cmd    ;; The original command
+        (ad-arg-binding-field (car ad-arg-bindings) 'value))
+       (o-buff ;; the (optional) output buffer
+        (ad-arg-binding-field (cadr ad-arg-bindings) 'value)))
+    ;; if there was an output buffer, we don't want to mess with it
+    (unless o-buff
+      (let* ((async? (string-match "[ \t]*&[ \t]*\\'" cmd))
+            (new-bufname ;; what we'll call the new buffer
+             (format "*%s shell: %s*" (if async? "async" "sync") cmd))          
+            (orig-bufname ;; what the old buffer was calld
+             (if async? "*Async Shell Command*" "*Shell Command Output*")))
+        (with-current-buffer orig-bufname
+          (rename-buffer new-bufname))))))
+
+
 
 ;; When narrowing to a [de]fun[ction], include preceding comments
 (setq narrow-to-defun-include-comments t)
