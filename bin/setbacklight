@@ -1,18 +1,6 @@
 #!/usr/bin/env zsh
 
-sysdir="/sys/class/backlight/intel_backlight"
-# This path is good for the HP Spectre 15 with the Elementary OS setup.
-# Probably depends on hardware and maybe rivers installed?
-#
-# TODO: Try to find this programmatically
-# It is always as /sys/class/backlight/<backlight>
-# Could try all available? Is that bad?
-#
-# Note: Had to make a few UDEV rules to allow users in the 'video' group to
-# write to the appropriate file. See:
-# https://wiki.archlinux.org/index.php/backlight#Udev_rule
-
-
+  
 # argument to this script should be a number between 0 and 100, interpreted as a
 # percentage value.
 #
@@ -38,12 +26,40 @@ else
     exit 1
 fi
 
+
 # Is it in range?
 if [[ $num -lt 0 || $num -gt 100 ]]
 then
     print "Argument '$num' out of range. Exiting."
     exit 1
 fi
+
+
+# if light (https://github.com/haikarainen/light) is available, use it
+if command -V light 2>&1 > /dev/null
+then
+  case $op in
+    - ) light -U $num ;;
+    + ) light -A $num ;;
+    * ) light -S $num ;;
+  esac
+  return 0
+fi
+
+# otherwise, try to use the sysfs
+
+sysdir="/sys/class/backlight/intel_backlight"
+# This path is good for a bunch of computers I use, but maybe isn't the most
+# consistent
+#
+# TODO: Try to find this programmatically
+# It is always as /sys/class/backlight/<backlight>
+# Could try all available? Is that bad?
+#
+# Note: Had to make a few UDEV rules to allow users in the 'video' group to
+# write to the appropriate file. See:
+# https://wiki.archlinux.org/index.php/backlight#Udev_rule
+
 
 # Does the sysfs dir exist?
 if [[ ! -d $sysdir ]]
@@ -74,28 +90,27 @@ then
     exit 1
 fi
 
-max=`cat $sysdir/max_brightness`
-cur=`cat $sysdir/actual_brightness`
-curp=$(( (cur * 100) / max ))
+
+max="$(cat $sysdir/max_brightness)"
+cur="$(cat $sysdir/actual_brightness)"
+curp="$(( (cur * 100) / max ))"
 
 case $op in
-    '-' )
-        newp=$(( curp - num ))
-        ;;
-    '+' )
-        newp=$(( curp + num ))
-        ;;
-    *)
-        newp=$num
-        ;;
+  - | + )
+    newp="$(( curp $op num ))"
+    ;;
+  *)
+    newp="$num"
+    ;;
 esac
 
-if [[ $newp -lt 0   ]]; then newp=0  ; fi
-if [[ $newp -gt 100 ]]; then newp=100; fi
 
-new=$(( (newp * max) / 100 ))
+if [[ "$newp" -lt 0   ]]; then newp=0  ; fi
+if [[ "$newp" -gt 100 ]]; then newp=100; fi
 
-print $new > $sysdir/brightness
+new="$(( (newp * max) / 100 ))"
+
+print "$new" > "$sysdir/brightness"
 
         
         
