@@ -238,7 +238,7 @@ fi
 unset -f prepend
 
 # Saint IGNUcius be praised
-EDITOR="emacs"
+EDITOR="emacsclient -c -a ''"
 
 # Helps emacs figure out what shell to use for `M-x shell`
 ESHELL="/usr/bin/zsh"
@@ -248,7 +248,7 @@ ESHELL="/usr/bin/zsh"
 
 for var in \
   PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH ENV \
-       XDG_CONFIG_HOME XDG_RUNTIME_HOME XDG_DATA_HOME XDG_CACHE_HOME
+       XDG_CONFIG_HOME XDG_RUNTIME_DIR XDG_DATA_HOME XDG_CACHE_HOME
 do
   if [ -n "$var" ]
   then
