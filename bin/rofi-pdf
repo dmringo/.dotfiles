@@ -10,19 +10,54 @@
 # use `fd` (https://github.com/sharkdp/fd) if available, otherwise it will use
 # `find`, which will usually be slower.
 
-if [[ -z "$@" ]]
-then
-  if command -v fd 2>&1 >dev/null
+dbfile="$XDG_DATA_HOME/rofi-pdf/db.txt"
+logfile="$XDG_DATA_HOME/rofi-pdf/log.txt"
+
+mkdir -p "$(dirname "$dbfile")"
+
+logg() {
+  printf "%s: %s\\n" "$(date +"%x %X %N")" "$1" >> "$logfile"
+  for msg in ${@[2,-1]}
+  do
+    printf "  %s\\n" "$msg" >> "$logfile"
+  done
+  echo >> "$logfile"
+}
+
+mktemp_idx() {
+  tmp_file="$(mktemp)"
+  if command -v fd 2>&1 >/dev/null
   then
     # -uuu causes fd to really look everywhere, unlike -I
-    fd -uuu -e pdf . $HOME
+    fd -uuu -e pdf . $HOME > "$tmp_file"
   else
-    find $HOME -type f -name '*.pdf'
+    find $HOME -type f -name '*.pdf' > "$tmp_file"
   fi
-else
-  # Stolen from the example file browser script in the rofi repo
-  # https://github.com/DaveDavenport/rofi/blob/next/Examples/rofi-file-browser.sh
-  coproc (xdg-open "$1" 2>&1 >/dev/null)
-  exec 1>&-
-  exit
-fi
+  printf "%s" "$tmp_file"
+}
+
+case "$1" in
+  index )
+    # meant to be called manually to set up the DB
+    logg INDEX "starting index.." $2
+    idx_file="$(mktemp_idx)"
+    flock "$dbfile" cp "$idx_file" "$dbfile"
+    logg INDEX "done index" $2
+    ;;
+  "" )
+    logg ROFI
+    coproc (rofi-pdf index coproc 2>&1 >/dev/null)
+    # (usually) when called from rofi, just give it back the dbfile.  Empirical
+    # tests show that it's probably safe to cat the file without flocking it
+    # first. Try:
+    # (for i in $(seq 1 10000); do echo $i; sleep 0.01; done) > somefile &
+    # cat somefile
+    cat "$dbfile"
+    ;;
+  * )
+    # Stolen from the example file browser script in the rofi repo
+    # https://github.com/DaveDavenport/rofi/blob/next/Examples/rofi-file-browser.sh
+    coproc (xdg-open "$1" 2>&1 >/dev/null)
+    exec 1>&-
+    exit
+esac
