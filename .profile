@@ -218,8 +218,13 @@ esac
 # distribution. Recent versions encourage you to source their init script and
 # activate the base environment, but I only want `conda` available by default. I
 # can always activate the base environment as necessary.
-CONDA_ENV="$HOME/miniconda3/etc/profile.d/conda.sh"
-[ -f "$CONDA_ENV" ] && . "$CONDA_ENV"
+CONDA_SRC="$HOME/miniconda3/etc/profile.d/conda.sh"
+[ -f "$CONDA_SRC" ] && . "$CONDA_SRC"
+
+# If spack is around, we do a similar dance as we did for conda
+SPACK_SRC="$HOME/spack/share/spack/setup-env.sh"
+[ -f "$SPACK_SRC" ] && . "$SPACK_SRC"
+
 
 # It's possible that some of these components were already in the PATH, so
 # remove the duplicates (script in the bin/ directory of the dotfiles)
@@ -237,8 +242,12 @@ fi
 # Don't need to keep this around
 unset -f prepend
 
-# Saint IGNUcius be praised
-EDITOR="emacsclient -c -a ''"
+
+# emacsclient wrapper in bin/. I don't know if this is necessary, but it seems
+# like some things that use EDITOR don't split it on whitespace (so,
+# e.g. EDITOR="emacsclient -c" doesn't work so well). A wrapper script has no
+# such problem.
+EDITOR=ec-wrapper
 
 # Helps emacs figure out what shell to use for `M-x shell`
 ESHELL="/usr/bin/zsh"

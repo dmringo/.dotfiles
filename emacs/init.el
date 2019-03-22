@@ -713,6 +713,22 @@ one is manually specified."
              ("<S-return>" . my/compilation-goto-error-no-select)))
 
 
+(defun my/make-file-mode-prop-line (&optional select)
+  (interactive)
+  (let ((the_mode
+         (if select
+             (let ((modes))
+               (mapatoms
+                (lambda (sym)
+                  (when (string-match "-mode$" (symbol-name sym))
+                    (add-to-list 'modes sym))))
+               (completing-read
+                "Mode (should be a *major* mode): " modes))
+           major-mode)))
+    (add-file-local-variable-prop-line
+     'mode the_mode)))
+
+
 ;; Be Lazy, prefer Y or N to Yes or No
 (fset 'yes-or-no-p 'y-or-n-p)
 
