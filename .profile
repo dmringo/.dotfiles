@@ -218,8 +218,13 @@ esac
 # distribution. Recent versions encourage you to source their init script and
 # activate the base environment, but I only want `conda` available by default. I
 # can always activate the base environment as necessary.
-CONDA_ENV="$HOME/miniconda3/etc/profile.d/conda.sh"
-[ -f "$CONDA_ENV" ] && . "$CONDA_ENV"
+CONDA_SRC="$HOME/miniconda3/etc/profile.d/conda.sh"
+[ -f "$CONDA_SRC" ] && . "$CONDA_SRC"
+
+# If spack is around, we do a similar dance as we did for conda
+SPACK_SRC="$HOME/spack/share/spack/setup-env.sh"
+[ -f "$SPACK_SRC" ] && . "$SPACK_SRC"
+
 
 # It's possible that some of these components were already in the PATH, so
 # remove the duplicates (script in the bin/ directory of the dotfiles)
