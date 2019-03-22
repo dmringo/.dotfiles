@@ -1,4 +1,4 @@
-rofi.modi:             window,windowcd,run,ssh,drun,combi,keys,pdf>:/home/dringo/.local/bin/rofi-pdf
+rofi.modi:             window,windowcd,run,ssh,drun,combi,keys,pdf>:rofi-pdf
 rofi.combi-modi:       drun,pdf>,window
 rofi.show-icons:       True
 rofi.matching:         normal
