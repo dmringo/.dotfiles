@@ -581,14 +581,30 @@ one is manually specified."
     ;; if there was an output buffer, we don't want to mess with it
     (unless o-buff
       (let* ((async? (string-match "[ \t]*&[ \t]*\\'" cmd))
-            (new-bufname ;; what we'll call the new buffer
-             (format "*%s shell: %s*" (if async? "async" "sync") cmd))          
-            (orig-bufname ;; what the old buffer was calld
-             (if async? "*Async Shell Command*" "*Shell Command Output*")))
+             (new-bufname ;; what we'll call the new buffer
+              (format "*%s shell: %s*" (if async? "async" "sync") cmd))          
+             (orig-bufname ;; what the old buffer was calld
+              (if async? "*Async Shell Command*" "*Shell Command Output*")))
         (with-current-buffer orig-bufname
           (rename-buffer new-bufname))))))
 
-
+(defadvice man
+    (around make-man-pushy activate)
+  "Advice to make `man' reuse the window when called from a
+`Man-mode' buffer"
+  ;; TODO: make this interactive, and based on prefix arg, maybe reuse an
+  ;; existing window. Can find such a window like so:
+  ;; (dolist (win (window-list))
+  ;; (let ((buf (window-buffer win)))
+  ;;   (when buf
+  ;;     (with-current-buffer buf
+  ;;       (when (equal major-mode 'Man-mode)
+  ;;         (message "Found one: %S" win))))))
+  (let ((Man-notify-method
+         (if (equal major-mode 'Man-mode)
+             'pushy
+           Man-notify-method)))
+    ad-do-it))
 
 ;; When narrowing to a [de]fun[ction], include preceding comments
 (setq narrow-to-defun-include-comments t)
@@ -733,6 +749,7 @@ one is manually specified."
 
 ;; Make `man' open pages in the other window and switch to that buffer
 (setq Man-notify-method 'aggressive)
+
 
 ;; make scrolling less jarring
 (setq
