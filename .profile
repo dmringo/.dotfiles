@@ -237,8 +237,12 @@ fi
 # Don't need to keep this around
 unset -f prepend
 
-# Saint IGNUcius be praised
-EDITOR="emacsclient -c -a ''"
+
+# emacsclient wrapper in bin/. I don't know if this is necessary, but it seems
+# like some things that use EDITOR don't split it on whitespace (so,
+# e.g. EDITOR="emacsclient -c" doesn't work so well). A wrapper script has no
+# such problem.
+EDITOR=ec-wrapper
 
 # Helps emacs figure out what shell to use for `M-x shell`
 ESHELL="/usr/bin/zsh"
