@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -e
+
+ghub_dir="${GITHUB_DIR:-$HOME/src/github}"
+
+usage () {
+  cat <<EOF 
+github-clone ORG_OR_USER [REPO]
+  
+  Clone a repo from GitHub to ORG_OR_USR/REPO underneath
+  \$HOME/src/github/ or \$GITHUB_DIR if set.  If REPO is not
+  specified, it is assumed to be ORG_OR_USER (e.g. for repos like
+  github.com/pulseaudio/pulseaudio).
+EOF
+  return 1
+}
+
+if [ -z "$1" ]
+then
+  usage
+else
+  org="$1"
+  if [ -z "$2" ]
+  then
+    repo="$1"
+  else
+    repo="$2"
+  fi
+
+  spec="git@github.com:$org/$repo.git"
+  dest="$ghub_dir/$org/$repo"
+  printf "cloning from %s\\nto %s\\n" "$spec" "$dest"
+  mkdir -p "$dest"
+  git clone "$spec" "$dest"
+fi

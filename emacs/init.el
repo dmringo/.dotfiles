@@ -581,14 +581,30 @@ one is manually specified."
     ;; if there was an output buffer, we don't want to mess with it
     (unless o-buff
       (let* ((async? (string-match "[ \t]*&[ \t]*\\'" cmd))
-            (new-bufname ;; what we'll call the new buffer
-             (format "*%s shell: %s*" (if async? "async" "sync") cmd))          
-            (orig-bufname ;; what the old buffer was calld
-             (if async? "*Async Shell Command*" "*Shell Command Output*")))
+             (new-bufname ;; what we'll call the new buffer
+              (format "*%s shell: %s*" (if async? "async" "sync") cmd))          
+             (orig-bufname ;; what the old buffer was calld
+              (if async? "*Async Shell Command*" "*Shell Command Output*")))
         (with-current-buffer orig-bufname
           (rename-buffer new-bufname))))))
 
-
+(defadvice man
+    (around make-man-pushy activate)
+  "Advice to make `man' reuse the window when called from a
+`Man-mode' buffer"
+  ;; TODO: make this interactive, and based on prefix arg, maybe reuse an
+  ;; existing window. Can find such a window like so:
+  ;; (dolist (win (window-list))
+  ;; (let ((buf (window-buffer win)))
+  ;;   (when buf
+  ;;     (with-current-buffer buf
+  ;;       (when (equal major-mode 'Man-mode)
+  ;;         (message "Found one: %S" win))))))
+  (let ((Man-notify-method
+         (if (equal major-mode 'Man-mode)
+             'pushy
+           Man-notify-method)))
+    ad-do-it))
 
 ;; When narrowing to a [de]fun[ction], include preceding comments
 (setq narrow-to-defun-include-comments t)
@@ -697,6 +713,22 @@ one is manually specified."
              ("<S-return>" . my/compilation-goto-error-no-select)))
 
 
+(defun my/make-file-mode-prop-line (&optional select)
+  (interactive)
+  (let ((the_mode
+         (if select
+             (let ((modes))
+               (mapatoms
+                (lambda (sym)
+                  (when (string-match "-mode$" (symbol-name sym))
+                    (add-to-list 'modes sym))))
+               (completing-read
+                "Mode (should be a *major* mode): " modes))
+           major-mode)))
+    (add-file-local-variable-prop-line
+     'mode the_mode)))
+
+
 ;; Be Lazy, prefer Y or N to Yes or No
 (fset 'yes-or-no-p 'y-or-n-p)
 
@@ -733,6 +765,7 @@ one is manually specified."
 
 ;; Make `man' open pages in the other window and switch to that buffer
 (setq Man-notify-method 'aggressive)
+
 
 ;; make scrolling less jarring
 (setq
