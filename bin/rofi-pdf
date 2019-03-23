@@ -30,6 +30,7 @@ logg() {
 }
 
 
+
 # TODO: do something smarter about long paths (grouping? show unique bits?)
 # TODO: do something smarter about ordering (frecency)
 # TODO: probably rewrite this in Go or something?
@@ -47,14 +48,29 @@ case "$1" in
     fi
     flock "$dbfile" cp "$tmp_file" "$dbfile"
     ;;
+  reload* )
+    # catch, but fall through to the normal "list all files" case
+    ;&
   "" )
     coproc (rofi-pdf index coproc 2>&1 >/dev/null)
-    # (usually) when called from rofi, just give it back the dbfile.  Empirical
-    # tests show that it's probably safe to cat the file without flocking it
-    # first. Try:
+
+    # Empirical tests show that it's probably safe to cat the file without
+    # flocking it first. Try:
+    #
     # (for i in $(seq 1 10000); do echo $i; sleep 0.01; done) > somefile &
     # cat somefile
-    cat "$dbfile"
+
+    # if the file's not there, it should be next time
+    if [[ -f "$dbfile" ]]
+    then
+      cat "$dbfile"
+    else
+      print "reload from rofi-pdf DB"
+    fi
+    ;;
+  dbfile )
+    # show the location of the dbfile
+    print "$dbfile"
     ;;
   * )
     # Stolen from the example file browser script in the rofi repo
