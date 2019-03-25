@@ -66,16 +66,16 @@ bindkey $keybinds
 export GPG_TTY="$(tty)"
 
 # Check if zplug is installed
-export ZPLUG_HOME="$MY_ZSH_HOME/.zplug"
+export ZPLUG_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/zplug"
 
-if [[ ! -d $ZPLUG_HOME ]]
+if [[ ! -d $ZPLUG_ROOT ]]
 then
-  git clone https://github.com/zplug/zplug $ZPLUG_HOME
-  source $ZPLUG_HOME/init.zsh && zplug --self-manage
+  git clone https://github.com/zplug/zplug $ZPLUG_ROOT
+  source $ZPLUG_ROOT/init.zsh && zplug --self-manage
 fi
 
 # Essential
-source $ZPLUG_HOME/init.zsh
+source $ZPLUG_ROOT/init.zsh
 
 # Make sure to use double quotes to prevent shell expansion
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
