@@ -15,10 +15,10 @@
 
 
 (defvar my/package-archive-defs
-  '(("melpa-stable" 10 "https://stable.melpa.org/packages/")
-    ("org"          10 "https://orgmode.org/elpa/")
-    ("gnu"          5 "https://elpa.gnu.org/packages/")
-    ("melpa"        1 "https://melpa.org/packages/"))
+  '(("melpa-stable" 10  "https://stable.melpa.org/packages/")
+    ("org"          10  "https://orgmode.org/elpa/")
+    ("gnu"          5   "https://elpa.gnu.org/packages/")
+    ("melpa"        1   "https://melpa.org/packages/"))
   "List holding package archive info.  Each member has the form
 (ARCHIVE-ID URL PRIORITY) for use in the variables
 `package-archives' and `package-archive-priorities'. Order within
@@ -73,6 +73,8 @@ ordered on the priority.")
   :config
   (exec-path-from-shell-initialize))
 
+(use-package posframe)
+
 (use-package projectile
   :demand
   :config
@@ -99,6 +101,10 @@ ordered on the priority.")
                   ivy-use-virtual-buffers t)))
 
 (use-package ivy-hydra)
+(use-package ivy-posframe
+  :demand
+  :config (setq ivy-display-function
+                #'ivy-posframe-display-at-frame-center))
 (use-package swiper
   :demand)
 (use-package counsel
@@ -230,14 +236,6 @@ ordered on the priority.")
   :hook prog-mode
   :diminish )
 
-
-;; Good for Makefiles where actual tabs are important but alignment really ought
-;; to be accomplished with spaces.
-(use-package smart-tabs-mode
-  :init
-  (add-hook 'makefile-mode-hook 'smart-tabs-mode-enable)
-  :config
-  (smart-tabs-mode/no-tabs-mode-advice open-rectangle))
 
 ;; Show me where the cursor is, when it changes
 (use-package beacon
@@ -444,7 +442,6 @@ A file is considered a theme file if it matches the regex
   :config (setq docker-tramp-use-names t))
 
 (use-package elm-mode)
-
 (use-package go-mode)
 (use-package go-eldoc)
 (use-package company-go)
@@ -452,12 +449,6 @@ A file is considered a theme file if it matches the regex
   :pin melpa
   :init
   (add-hook 'go-mode-hook #'lsp-go-enable))
-
-(use-package treemacs
-  :config
-  (treemacs-git-mode 'extended)
-  (treemacs-follow-mode)
-  (setq treemacs-show-hidden-files nil))
 
 (use-package ace-window
   :init
@@ -489,23 +480,30 @@ A file is considered a theme file if it matches the regex
 (use-package base16-theme
   :demand
   :config
-  (let ((theme 'base16-ashes))
-    (load-theme theme t)
-    (require 'org-faces)
-    (let ((colors (symbol-value (intern (concat (symbol-name theme) "-colors"))))
-          (faces '((org-todo :background base01)
-                   (org-done :background base01))))
+  (defun base16-patch-theme (theme faces)
+    "Apply changes in FACES to THEME, a `base16-theme'.
+FACES should take same form as in `base16-theme-define'."
+    ;; hacky way to get the color list for the given theme.  Maybe something
+    ;; better exists?
+    (let* ((color-var (intern (concat (symbol-name theme) "-colors")))
+           (colors (if (boundp color-var)
+                       (symbol-value color-var)
+                     (error "%s is probably not a base16 theme" theme))))
       (dolist (spec faces)
         ;; prefer set-face-attribute over base16-set-faces because it preserves
         ;; any existing face attributes
-        (apply 'set-face-attribute
-               `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors)))))))
-
-
-
-;; Add my custom themes
-(let ((my/theme-dir (expand-file-name "lisp/themes" "~/.emacs.d")))
-  (add-to-list 'custom-theme-load-path my/theme-dir))
+        (apply
+         'set-face-attribute
+         `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors))))))
+  (let ((theme 'base16-ashes))
+    (load-theme theme t)
+    (require 'org-faces)
+    (base16-patch-theme
+     theme
+     '((org-todo :background base01)
+       (org-done :background base01)
+       (undo-tree-visualizer-current-face :foreground base00
+                                          :background base0B)))))
 
 
 ;; Local "packages"
@@ -562,6 +560,51 @@ A file is considered a theme file if it matches the regex
                  load-path)
   (require 'llvm-mode)
   (require 'tablegen-mode))
+
+
+;; Better alignment when using tabby modes
+(defadvice align-regexp (around align-regexp-with-spaces activate)
+  "Turn off indent-tabs-mode when aligning.
+Poor man's smart-tabs, but maybe more reliable?"
+  (let ((indent-tabs-mode nil))
+    ad-do-it))
+
+;; Better buffer handing for {async-,}shell-command
+(defadvice shell-command
+    (after shell-rename-buffer activate)
+  "Preserve shell-command output in a well-named buffer unless
+one is manually specified."
+  (let((cmd    ;; The original command
+        (ad-arg-binding-field (car ad-arg-bindings) 'value))
+       (o-buff ;; the (optional) output buffer
+        (ad-arg-binding-field (cadr ad-arg-bindings) 'value)))
+    ;; if there was an output buffer, we don't want to mess with it
+    (unless o-buff
+      (let* ((async? (string-match "[ \t]*&[ \t]*\\'" cmd))
+             (new-bufname ;; what we'll call the new buffer
+              (format "*%s shell: %s*" (if async? "async" "sync") cmd))          
+             (orig-bufname ;; what the old buffer was calld
+              (if async? "*Async Shell Command*" "*Shell Command Output*")))
+        (with-current-buffer orig-bufname
+          (rename-buffer new-bufname))))))
+
+(defadvice man
+    (around make-man-pushy activate)
+  "Advice to make `man' reuse the window when called from a
+`Man-mode' buffer"
+  ;; TODO: make this interactive, and based on prefix arg, maybe reuse an
+  ;; existing window. Can find such a window like so:
+  ;; (dolist (win (window-list))
+  ;; (let ((buf (window-buffer win)))
+  ;;   (when buf
+  ;;     (with-current-buffer buf
+  ;;       (when (equal major-mode 'Man-mode)
+  ;;         (message "Found one: %S" win))))))
+  (let ((Man-notify-method
+         (if (equal major-mode 'Man-mode)
+             'pushy
+           Man-notify-method)))
+    ad-do-it))
 
 ;; When narrowing to a [de]fun[ction], include preceding comments
 (setq narrow-to-defun-include-comments t)
@@ -640,7 +683,8 @@ A file is considered a theme file if it matches the regex
 
  ("C-M-}"                   . enlarge-window-horizontally)
  ("C-M-{"                   . shrink-window-horizontally)
- ("C-h M"                   . woman)
+ ("C-h M"                   . man)
+ ("C-h W"                   . woman)
  ([remap eval-expression]   . pp-eval-expression)
  ([remap eval-last-sexp]    . pp-eval-last-sexp))
 ;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:
@@ -667,6 +711,22 @@ A file is considered a theme file if it matches the regex
   (bind-keys :map compilation-button-map
              ("Q" . kill-this-buffer)
              ("<S-return>" . my/compilation-goto-error-no-select)))
+
+
+(defun my/make-file-mode-prop-line (&optional select)
+  (interactive)
+  (let ((the_mode
+         (if select
+             (let ((modes))
+               (mapatoms
+                (lambda (sym)
+                  (when (string-match "-mode$" (symbol-name sym))
+                    (add-to-list 'modes sym))))
+               (completing-read
+                "Mode (should be a *major* mode): " modes))
+           major-mode)))
+    (add-file-local-variable-prop-line
+     'mode the_mode)))
 
 
 ;; Be Lazy, prefer Y or N to Yes or No
@@ -705,6 +765,7 @@ A file is considered a theme file if it matches the regex
 
 ;; Make `man' open pages in the other window and switch to that buffer
 (setq Man-notify-method 'aggressive)
+
 
 ;; make scrolling less jarring
 (setq

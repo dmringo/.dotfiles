@@ -1,0 +1,81 @@
+#!/usr/bin/zsh -f
+#
+# Note: using -f (NO_RCS) is a good idea, so long as whatever environment
+# variables you need are properly set up outside of .zshrc and .zshenv (sourced
+# by login shell, xsession etc.)
+#
+# This is intended to be used with rofi, invoked something like
+#
+#    rofi -show pdf -modi pdf:path/to/rofi-pdf
+#
+# If given no argument, it will print a list of all files with a pdf extension
+# under $HOME.  It expects one of these files to be passed as an argument by
+# rofi to then be opened with the default pdf viewer (using xdg-open).  It will
+# use `fd` (https://github.com/sharkdp/fd) if available, otherwise it will use
+# `find`, which will usually be slower.
+
+data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/rofi-pdf"
+dbfile="$data_dir/db.txt"
+logfile="$data_dir/log.txt"
+
+[[ ! -d "$data_dir" ]] && mkdir -p "$data_dir"
+
+logg() {
+  printf "%s: %s\\n" "$(date +"%x %X %N")" "$1" >> "$logfile"
+  for msg in ${@[2,-1]}
+  do
+    printf "  %s\\n" "$msg" >> "$logfile"p
+  done
+  echo >> "$logfile"
+}
+
+
+
+# TODO: do something smarter about long paths (grouping? show unique bits?)
+# TODO: do something smarter about ordering (frecency)
+# TODO: probably rewrite this in Go or something?
+
+case "$1" in
+  index )
+    # meant to be called manually to set up the DB
+    tmp_file="$(mktemp)"
+    if command -v fd 2>&1 >/dev/null
+    then
+    # -uuu causes fd to really look everywhere, unlike -I
+      fd -uuu -e pdf . $HOME | sed "s|$HOME/||"> "$tmp_file"
+    else
+      find $HOME -type f -name '*.pdf' > "$tmp_file"
+    fi
+    flock "$dbfile" cp "$tmp_file" "$dbfile"
+    ;;
+  reload* )
+    # catch, but fall through to the normal "list all files" case
+    ;&
+  "" )
+    coproc (rofi-pdf index coproc 2>&1 >/dev/null)
+
+    # Empirical tests show that it's probably safe to cat the file without
+    # flocking it first. Try:
+    #
+    # (for i in $(seq 1 10000); do echo $i; sleep 0.01; done) > somefile &
+    # cat somefile
+
+    # if the file's not there, it should be next time
+    if [[ -f "$dbfile" ]]
+    then
+      cat "$dbfile"
+    else
+      print "reload from rofi-pdf DB"
+    fi
+    ;;
+  dbfile )
+    # show the location of the dbfile
+    print "$dbfile"
+    ;;
+  * )
+    # Stolen from the example file browser script in the rofi repo
+    # https://github.com/DaveDavenport/rofi/blob/next/Examples/rofi-file-browser.sh
+    coproc (xdg-open "$1" 2>&1 >/dev/null)
+    exec 1>&-
+    exit
+esac

@@ -141,9 +141,16 @@ zplug "vasyharan/zsh-brew-services", if:'cmd_exists brew'
 zplug "joepvd/zsh-hints"
 
 # Alias ripgrep to use a config file
-if cmd_exists rg && [ -f "$HOME/.config/ripgrep" ]
+if cmd_exists rg
 then
-  alias rg="RIPGREP_CONFIG_PATH=$HOME/.config/ripgrep rg "
+  alias rgi="rg -i"
+  rg_conf="${XDG_CONFIG_HOME:-$HOME/.config}/ripgrep/config"
+  if [[ -f "$rg_conf" ]]
+  then
+    # TODO: Don't do this. Just export the var and deal with it.
+    # also move this. It's useful in all shells
+    alias rg="RIPGREP_CONFIG_PATH=$rg_conf rg"
+  fi
 fi
 
 # ninja build system

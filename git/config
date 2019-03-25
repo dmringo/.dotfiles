@@ -10,10 +10,12 @@
 
   # print the topmost git directory (e.g. when you've got submodules upon
   # submodules and want the top-level repo dir)
-	rroot = !"a=\"$(git rev-parse --git-dir)\"; printf %s\\\\n \"${a%.git*}\""
+	rroot = !"a=\"$(git rev-parse --git-dir)\";  test \"$a\" = \".git\" && pwd || printf %s\\\\n \"${a%/.git*}\";"
 
   # should be with my local bins
   track-remote = !"git-track-remote"
+
+  hub-clone = !"github-clone"
 [color]
 	status = auto
 	ui = auto
