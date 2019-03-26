@@ -163,7 +163,7 @@ bar {
 }
 
 # Pulse Audio controls
-set     $volCtl exec --no-startup-id amixer -D pulse sset Master
+set     $volCtl exec --no-startup-id amixer sset Master
 
 # Should only use these when the kdb doesn't have native XF86 keys, right?
 bindsym $mod+F6 $volCtl toggle

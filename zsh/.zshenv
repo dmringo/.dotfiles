@@ -1,5 +1,6 @@
 # at some point, this should maybe be set by an m4 macro during install
-export MY_ZSH_HOME="$HOME/.dotfiles/zsh"
+
+[[ -f "$HOME/.profile" ]] && . "$HOME/.profile"
 
 # For debugging my shite scripts
 _logz() {
@@ -10,4 +11,3 @@ _logz() {
 
 
 [[ -f $MY_ZSH_HOME/secrets.zsh ]] && . $MY_ZSH_HOME/secrets.zsh
-[[ -f "$HOME/.profile" ]] && . "$HOME/.profile"
