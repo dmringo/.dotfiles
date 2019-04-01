@@ -264,3 +264,8 @@ do
     export $var
   fi
 done
+
+
+# make systemd and dbus use my environment
+fix_env=dbus-update-activation-environment
+cmd_exists $fix_env && $fix_env --systemd --all
