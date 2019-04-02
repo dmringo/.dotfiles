@@ -439,6 +439,8 @@ A file is considered a theme file if it matches the regex
 ;; Ideally, this should be set in .profile
 (use-package pyvenv)
 
+;; Protocol buffer support
+(use-package protobuf-mode)
 
 (use-package easy-kill-extras)
 
