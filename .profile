@@ -223,7 +223,7 @@ if [ -f "$CONDA_SRC" ]
 then
   . "$CONDA_SRC"
   # WORKON_HOME is used by virtualenvwrapper.sh and pyvenv for Emacs
-  WORKON_HOME="$(conda config --show env_dirs | awk 'NR==2{print$2}')"
+  WORKON_HOME="$(conda config --show envs_dirs | awk 'NR==2{print$2}')"
   export WORKON_HOME
 fi
 
