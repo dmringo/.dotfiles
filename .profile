@@ -219,7 +219,13 @@ esac
 # activate the base environment, but I only want `conda` available by default. I
 # can always activate the base environment as necessary.
 CONDA_SRC="$HOME/miniconda3/etc/profile.d/conda.sh"
-[ -f "$CONDA_SRC" ] && . "$CONDA_SRC"
+if [ -f "$CONDA_SRC" ]
+then
+  . "$CONDA_SRC"
+  # WORKON_HOME is used by virtualenvwrapper.sh and pyvenv for Emacs
+  WORKON_HOME="$(conda config --show env_dirs | awk 'NR==2{print$2}')"
+  export WORKON_HOME
+fi
 
 # If spack is around, we do a similar dance as we did for conda
 SPACK_SRC="$HOME/spack/share/spack/setup-env.sh"
