@@ -5,3 +5,5 @@
 # C/C++ CMake build directories
 build/
 build-*
+
+.mypy_cache
