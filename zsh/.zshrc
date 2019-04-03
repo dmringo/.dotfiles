@@ -88,8 +88,11 @@ zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
 # seems to be much faster than the default.  This isn't currently possible with
 # direnv though, so it may be worth looking into a custom CD hook.  For now, the
 # basic set of components is just fine
-SPACESHIP_DIR_TRUNC_PREFIX="…"
-SPACESHIP_PROMPT_ORDER=(dir user host git exec_time line_sep exit_code char)
+SPACESHIP_DIR_TRUNC_PREFIX="…/"
+SPACESHIP_CONDA_PREFIX="["
+SPACESHIP_CONDA_SUFFIX="]"
+SPACESHIP_CONDA_SYMBOL=""
+SPACESHIP_PROMPT_ORDER=(dir user host git conda exec_time line_sep exit_code char)
 
 # l with fancy colors and git info
 zplug "supercrabtree/k", hook-load:"alias k='k -h'"
