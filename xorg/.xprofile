@@ -1,10 +1,5 @@
 #!/bin/sh
 
-# if we've got autorandr, we're probably using it
-# TODO: "probably" is not a great solution
-command -v autorandr 2>&1 > /dev/null && autorandr -c
-
-
 xrandr --setprovideroutputsource modesetting NVIDIA-0
 xrandr --auto
 
@@ -13,4 +8,4 @@ xres="$HOME/.Xresources"
 if [ -f "$xres" ]
 then
   xrdb -merge "$HOME/.Xresources"
-fi
+fi   
