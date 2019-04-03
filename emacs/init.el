@@ -302,9 +302,12 @@ ordered on the priority.")
   ;; expand them properly
   :config (setq company-lsp-enable-snippet nil))
 
-;; (use-package lsp-ui
-;;   :after lsp-mode
-;;   :pin melpa)
+(use-package lsp-ui
+  :after lsp-mode
+  :pin melpa
+  :config
+  (setq lsp-ui-doc-position 'at-point
+        lsp-ui-sideline-enable nil))
 
 ;; C++ stuff
 (use-package ccls
