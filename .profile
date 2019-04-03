@@ -165,27 +165,39 @@ case "$sys_type" in
         prepend PATH "$gnubin"
         prepend MANPATH "$gnuman"
       fi
-
     fi
-
+    read_all() { while [ -n "$*" ]; do cat "$1"; shift; done }
     clip() {
+      set -eu
+      cmd=pbcopy
+      mode=i
       case "$1" in
-        ""|i|in )
-          cmd=pbcopy
-          ;;
+        i|in ) shift ;;
         o|out )
           cmd=pbpaste
+          mode=o
+          shift
           ;;
-        * )
-          printf "Unrecognized option: %s\n" "$1"
-          return 1
+        f|filter )
+          mode=f
+          shift
           ;;
       esac
-      if [ -n "$2" ]
+      if [ -n "$*" ]
       then
-        "$cmd" < "$2"
+        if [ $mode = i ]
+        then read_all "$@" | $cmd
+        elif [ $mode = f ]
+        then
+          # eww
+          tmp=$(mktemp)
+          read_all "$@" | tee "$tmp"
+          < "$tmp" $cmd
+        else $cmd | tee -- "$@" > /dev/null
+        fi
       else
-        "$cmd"
+        # just copy from stdin/paste to stdout
+        $cmd
       fi
     }
     ;;
@@ -194,23 +206,24 @@ case "$sys_type" in
     alias o='xdg-open'
 
     clip() {
+      mode=i
       case "$1" in
-        f|filter|i|in|o|out )
-          mode="$1"
+        f|filter )
+          mode=f
           shift
           ;;
-        "" )
-          mode=i
-          ;;
-        * )
-          printf "Unrecognized option: %s\n" "$1"
-          return 1
+        o|out )
+          mode=o
+          shift
           ;;
       esac
-      xclip -"$mode" -selection clipboard "$@"
+      if [ $mode = o ] && [ -n "$*" ]
+      then
+        xclip -"$mode" -selection clipboard | tee -- "$@" > /dev/null
+      else
+        xclip -"$mode" -selection clipboard -- "$@"
+      fi
     }
-    ;;
-  * )
     ;;
 esac
 
@@ -219,7 +232,13 @@ esac
 # activate the base environment, but I only want `conda` available by default. I
 # can always activate the base environment as necessary.
 CONDA_SRC="$HOME/miniconda3/etc/profile.d/conda.sh"
-[ -f "$CONDA_SRC" ] && . "$CONDA_SRC"
+if [ -f "$CONDA_SRC" ]
+then
+  . "$CONDA_SRC"
+  # WORKON_HOME is used by virtualenvwrapper.sh and pyvenv for Emacs
+  WORKON_HOME="$(conda config --show envs_dirs | awk 'NR==2{print$2}')"
+  export WORKON_HOME
+fi
 
 # If spack is around, we do a similar dance as we did for conda
 SPACK_SRC="$HOME/spack/share/spack/setup-env.sh"

@@ -302,9 +302,12 @@ ordered on the priority.")
   ;; expand them properly
   :config (setq company-lsp-enable-snippet nil))
 
-;; (use-package lsp-ui
-;;   :after lsp-mode
-;;   :pin melpa)
+(use-package lsp-ui
+  :after lsp-mode
+  :pin melpa
+  :config
+  (setq lsp-ui-doc-position 'at-point
+        lsp-ui-sideline-enable nil))
 
 ;; C++ stuff
 (use-package ccls
@@ -434,8 +437,13 @@ A file is considered a theme file if it matches the regex
 ;; Python stuff
 (use-package py-autopep8)
 
+;; Support for python virtual environments.  This requires the environment
+;; variable WORKON_HOME to be set as the location of python environments.
+;; Ideally, this should be set in .profile
+(use-package pyvenv)
 
-
+;; Protocol buffer support
+(use-package protobuf-mode)
 
 (use-package easy-kill-extras)
 
