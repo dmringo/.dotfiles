@@ -85,6 +85,33 @@ ordered on the priority.")
         projectile-switch-project-action 'projectile-vc)
   :bind-keymap ("C-c p" . projectile-command-map))
 
+(use-package rg
+  :demand
+  :bind (:map rg-mode-map
+              ;; unbind nav conventions that I like
+              ;; TODO: consider rebinding the history commands
+              ("C-f") ("C-b") ("C-n") ("C-p")
+              ;; moves cursor only
+              ("n" . rg-next-file)
+              ("p" . rg-prev-file)
+              ;; moves cursor and navigates to point in relevant file
+              ("M-n" . next-error-no-select)
+              ("M-p" . previous-error-no-select))
+  :config
+  (rg-enable-default-bindings)
+  (defun my/rg-counsel-action (path)
+    "Ripgrep in a directory/file, meant for counsel dispatch"
+    (require 'f)
+    (let ((dir (cond
+                ((f-dir? path) path)
+                ((f-file? path) (f-dirname path))
+                t (error "%s isn't a file or directory :(" path)))
+          (pat (rg-read-pattern nil))
+          (files (rg-read-files)))
+      (rg-run pat files dir))))
+
+
+
 (use-package ivy
   :demand
   :diminish ivy-mode
@@ -119,7 +146,8 @@ ordered on the priority.")
   (setq counsel-grep-command
         "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
   (ivy-add-actions 'counsel-find-file
-                   '(("v" projectile-vc "VC Status")))
+                   '(("v" projectile-vc "VC Status")
+                     ("s" my/rg-counsel-action "ripgrep")))
   (counsel-mode 1))
 
 (use-package counsel-projectile)
@@ -274,9 +302,12 @@ ordered on the priority.")
   ;; expand them properly
   :config (setq company-lsp-enable-snippet nil))
 
-;; (use-package lsp-ui
-;;   :after lsp-mode
-;;   :pin melpa)
+(use-package lsp-ui
+  :after lsp-mode
+  :pin melpa
+  :config
+  (setq lsp-ui-doc-position 'at-point
+        lsp-ui-sideline-enable nil))
 
 ;; C++ stuff
 (use-package ccls
@@ -406,21 +437,13 @@ A file is considered a theme file if it matches the regex
 ;; Python stuff
 (use-package py-autopep8)
 
+;; Support for python virtual environments.  This requires the environment
+;; variable WORKON_HOME to be set as the location of python environments.
+;; Ideally, this should be set in .profile
+(use-package pyvenv)
 
-(use-package rg
-  :demand
-  :bind (:map rg-mode-map
-              ;; unbind nav conventions that I like
-              ;; TODO: consider rebinding the history commands
-              ("C-f") ("C-b") ("C-n") ("C-p")
-              ;; moves cursor only
-              ("n" . rg-next-file)
-              ("p" . rg-prev-file)
-              ;; moves cursor and navigates to point in relevant file
-              ("M-n" . next-error-no-select)
-              ("M-p" . previous-error-no-select))
-  :config (rg-enable-default-bindings))
-
+;; Protocol buffer support
+(use-package protobuf-mode)
 
 (use-package easy-kill-extras)
 
@@ -586,7 +609,7 @@ one is manually specified."
              (orig-bufname ;; what the old buffer was calld
               (if async? "*Async Shell Command*" "*Shell Command Output*")))
         (with-current-buffer orig-bufname
-          (rename-buffer new-bufname))))))
+          (rename-buffer new-bufname t))))))
 
 (defadvice man
     (around make-man-pushy activate)

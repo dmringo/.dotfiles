@@ -66,16 +66,16 @@ bindkey $keybinds
 export GPG_TTY="$(tty)"
 
 # Check if zplug is installed
-export ZPLUG_HOME="$MY_ZSH_HOME/.zplug"
+export ZPLUG_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/zplug"
 
-if [[ ! -d $ZPLUG_HOME ]]
+if [[ ! -d $ZPLUG_ROOT ]]
 then
-  git clone https://github.com/zplug/zplug $ZPLUG_HOME
-  source $ZPLUG_HOME/init.zsh && zplug --self-manage
+  git clone https://github.com/zplug/zplug $ZPLUG_ROOT
+  source $ZPLUG_ROOT/init.zsh && zplug --self-manage
 fi
 
 # Essential
-source $ZPLUG_HOME/init.zsh
+source $ZPLUG_ROOT/init.zsh
 
 # Make sure to use double quotes to prevent shell expansion
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
@@ -88,8 +88,11 @@ zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
 # seems to be much faster than the default.  This isn't currently possible with
 # direnv though, so it may be worth looking into a custom CD hook.  For now, the
 # basic set of components is just fine
-SPACESHIP_DIR_TRUNC_PREFIX="…"
-SPACESHIP_PROMPT_ORDER=(dir user host git exec_time line_sep exit_code char)
+SPACESHIP_DIR_TRUNC_PREFIX="…/"
+SPACESHIP_CONDA_PREFIX="["
+SPACESHIP_CONDA_SUFFIX="]"
+SPACESHIP_CONDA_SYMBOL=""
+SPACESHIP_PROMPT_ORDER=(dir user host git conda exec_time line_sep exit_code char)
 
 # l with fancy colors and git info
 zplug "supercrabtree/k", hook-load:"alias k='k -h'"

@@ -4,20 +4,10 @@ set $mod Mod4
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
 font pango:Office Code Pro 8
 
-# COLORS  
-# class                 border  backgr. text    indicator child_border
-client.focused          #2c2099 #6c20c9 #ffffff #2e9ef4   #285577
-client.focused_inactive #333333 #5f676a #ffffff #484e50   #5f676a
-client.unfocused        #333333 #222222 #888888 #292d2e   #222222
-client.urgent           #2f343a #900000 #ffffff #900000   #900000
-client.placeholder      #000000 #0c0c0c #ffffff #000000   #0c0c0c
-client.background       #ffffff
-
-  
 # Minimal borders
 # TODO: change this to default_border with a more recent i3
-new_window pixel 2
-hide_edge_borders vertical
+default_border pixel 2
+hide_edge_borders smart
  
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod
@@ -68,20 +58,16 @@ bindsym $mod+Control+Up    move workspace to output up
 bindsym $mod+Control+Right move workspace to output right
 
 
-# split in horizontal orientation
-bindsym $mod+z split h
-
-# split in vertical orientation
-bindsym $mod+v split v
 
 # enter fullscreen mode for the focused container
 bindsym $mod+f fullscreen toggle
+# fullscreen across monitors (I think)
 bindsym $mod+Control+f fullscreen toggle global
 
+# split in horizontal orientation
+bindsym $mod+Shift+t split toggle
 # change container layout (stacked, tabbed, toggle split)
-bindsym $mod+s layout stacking
-bindsym $mod+w layout tabbed
-bindsym $mod+e layout toggle split
+bindsym $mod+t layout toggle
 
 # toggle tiling / floating
 bindsym $mod+Shift+f floating toggle
@@ -123,8 +109,6 @@ bindsym $mod+Shift+0 move container to workspace 10
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
 bindsym $mod+Shift+r restart
-# exit i3 (logs you out of your X session)
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
 
 # resize window (you can also use the mouse for that)
 mode "resize" {
@@ -153,14 +137,7 @@ mode "resize" {
 
 bindsym $mod+r mode "resize"
 
-# Start i3bar to display a workspace bar (plus the system information i3status
-# finds out, if available)
-bar {
-        wheel_up_cmd nop  
-        wheel_down_cmd nop
-        status_command i3status
-        tray_output primary
-}
+
 
 # Pulse Audio controls
 set     $volCtl exec --no-startup-id amixer sset Master
@@ -250,3 +227,69 @@ exec_always --no-startup-id xset r rate 200 100
 # Make the capslock key an extra control key
 # TODO: Should this be a configuration parameter in some file?
 exec_always --no-startup-id setxkbmap -option ctrl:nocaps
+
+# Get a base16 theme like this:
+#
+# curl -SsL \
+# https://raw.githubusercontent.com/khamer/base16-i3/master/themes/base16-THEME.config \
+# | head -n 22
+#
+# `head` clips everything but the variable setting, which is appropriate for my use.
+#
+# TODO: use Xresources and set_from_resource to make this more flexible
+#       See: https://redd.it/4if9xc
+
+## Base16 Material
+# Author: Nate Peterson
+#
+# You can use these variables anywhere in the i3 configuration file.
+
+set $base00 #263238
+set $base01 #2E3C43
+set $base02 #314549
+set $base03 #546E7A
+set $base04 #B2CCD6
+set $base05 #EEFFFF
+set $base06 #EEFFFF
+set $base07 #FFFFFF
+set $base08 #F07178
+set $base09 #F78C6C
+set $base0A #FFCB6B
+set $base0B #C3E88D
+set $base0C #89DDFF
+set $base0D #82AAFF
+set $base0E #C792EA
+set $base0F #FF5370
+
+bar {
+    status_command i3status
+    wheel_up_cmd nop  
+    wheel_down_cmd nop
+    tray_output primary
+
+    colors {
+        background $base00
+        separator  $base01
+        statusline $base04
+
+        # State             Border  BG      Text
+        focused_workspace   $base05 $base0D $base00
+        active_workspace    $base05 $base03 $base00
+        inactive_workspace  $base03 $base01 $base05
+        urgent_workspace    $base08 $base08 $base00
+        binding_mode        $base00 $base0A $base00
+    }
+}
+
+# Note: Changed Indicator on client.focused to base0F from the khamer/base16-i3
+# default (base0D) to help differentiate it from the normal border. This is the
+# color used when a container has been toggled to split horizontal or vertical.
+#
+# Basic color configuration using the Base16 variables for windows and borders.
+# Property Name         Border  BG      Text    Indicator Child Border
+client.focused          $base05 $base0D $base00 $base0F $base0C
+client.focused_inactive $base01 $base01 $base05 $base03 $base01
+client.unfocused        $base01 $base00 $base05 $base01 $base01
+client.urgent           $base08 $base08 $base00 $base08 $base08
+client.placeholder      $base00 $base00 $base05 $base00 $base00
+client.background       $base07
