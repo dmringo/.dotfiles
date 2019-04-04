@@ -217,11 +217,16 @@ case "$sys_type" in
           shift
           ;;
       esac
-      if [ $mode = o ] && [ -n "$*" ]
+      if [ -n "$*" ]
       then
-        xclip -"$mode" -selection clipboard | tee -- "$@" > /dev/null
+        if [ $mode = o ]
+        then
+          xclip -"$mode" -selection clipboard | tee -- "$@" > /dev/null
+        else
+          xclip -"$mode" -selection clipboard -- "$@"
+        fi
       else
-        xclip -"$mode" -selection clipboard -- "$@"
+        xclip -"$mode" -selection clipboard
       fi
     }
     ;;
