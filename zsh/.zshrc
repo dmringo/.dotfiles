@@ -7,28 +7,41 @@ then
   fpath=("$(brew --prefix)/share/zsh/site-functions" $fpath)
 fi
 
+# cd to recent dirs
+autoload -Uz chpwd_recent_dirs cdr add-zsh-hook
+add-zsh-hook chpwd chpwd_recent_dirs
+
 # The following lines were added by compinstall
-zstyle ':completion:*' completer _expand _complete _ignored _match _approximate _prefix
+zstyle ':completion:*' completer \
+       _expand _complete _ignored _match _approximate _prefix
 zstyle ':completion:*' completions 1
 zstyle ':completion:*' format 'Completing %d ...'
 zstyle ':completion:*' glob 1
 zstyle ':completion:*' group-name ''
 zstyle ':completion:*' list-colors ''
-zstyle ':completion:*' matcher-list 'm:{[:lower:]}={[:upper:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'r:|[._-]=** r:|=**' 'l:|=* r:|=*'
+zstyle ':completion:*' matcher-list \
+       'm:{[:lower:]}={[:upper:]}' \
+       'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' \
+       'r:|[._-]=** r:|=**' 'l:|=* r:|=*'
 zstyle ':completion:*' max-errors 2
 zstyle ':completion:*' menu select=0
 zstyle ':completion:*' prompt '%e errors corrected for completion'
 zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
 zstyle ':completion:*' substitute 1
 zstyle ':completion:*' word true
+
+# This is what lets you navigate with e.g. up-line-or-history in completion
+# menus.  Usually has to be triggered by entering a menu for ambiguous
+# completion with an extra <tab>.
+zstyle ':completion:*' menu selection
+
 zstyle :compinstall filename '/$HOME/.zshrc'
 
 autoload -Uz compinit
 compinit
-
 # End of lines added by compinstall
 # Lines configured by zsh-newuser-install
-HISTFILE=~/.histfile
+HISTFILE="${XDG_DATA_HOME:-$HOME/.local/share}"/zsh/history
 HISTSIZE=10000
 SAVEHIST=10000
 setopt appendhistory autocd extendedglob nomatch notify
@@ -36,8 +49,10 @@ unsetopt beep
 bindkey -e
 # End of lines configured by zsh-newuser-install
 
+
 # let zsh use completions defined for bash
 autoload -U +X bashcompinit && bashcompinit
+
 
 # smarter functions for <M-n> and <M-p>
 # These match all text entered in command line while searching
@@ -47,13 +62,13 @@ zle -N down-line-or-beginning-search
 
 keybinds=(
   # <M-p>
-  "^[p" up-line-or-beginning-search
+  "^[p"   up-line-or-beginning-search
   # <M-n>
-  "^[n" down-line-or-beginning-search
+  "^[n"   down-line-or-beginning-search
   # Home key
-  "^[[H" beginning-of-line
+  "^[[H"  beginning-of-line
   # End key
-  "^[[F" end-of-line
+  "^[[F"  end-of-line
   # Delete key
   "^[[3~" delete-char-or-list
 )
