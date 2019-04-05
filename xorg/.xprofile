@@ -13,5 +13,11 @@ xres="$HOME/.Xresources"
 
 if [ -f "$xres" ]
 then
-  xrdb -merge "$HOME/.Xresources"
+  xrdb -merge "$xres"
+fi
+
+profile="$HOME/.profile"
+if [ -f "$profile" ]
+then
+  . "$profile"
 fi

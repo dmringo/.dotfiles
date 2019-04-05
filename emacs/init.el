@@ -195,6 +195,7 @@ ordered on the priority.")
   :config (global-undo-tree-mode))
 
 (use-package magit
+  :pin melpa
   :demand
   :bind
   (("M-G"     . magit-status)
