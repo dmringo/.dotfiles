@@ -29,10 +29,11 @@
   (interactive)
   (let* ((spack (ensure-spack)))
     (with-temp-buffer
-      (process-file "spack" nil (list t nil) nil "env" "st"))))
+      (process-file "spack" nil (list t nil) nil "env" "st")
+      (message (string-trim (buffer-string))))))
 
 (defun spack-edit ()
+  (interactive)
   (with-editor (process-file "spack" nil 0 nil "config" "edit")))
-
 
 (provide 'spack)

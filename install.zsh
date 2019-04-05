@@ -105,8 +105,10 @@ ln_config dunst
 ln_config rofi
 ln_config git
 ln_config termite
+ln_config kitty
 ln_config ripgrep
 ln_config sh
+
 
 
 for f in $DOT_HOME/bin/*
