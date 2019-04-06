@@ -7,5 +7,12 @@ xres="$HOME/.Xresources"
 
 if [ -f "$xres" ]
 then
-  xrdb -merge "$HOME/.Xresources"
-fi   
+  xrdb -merge "$xres"
+fi
+
+# X session should inherit get .profile environment
+profile="$HOME/.profile"
+if [ -f "$profile" ]
+then
+  . "$profile"
+fi
