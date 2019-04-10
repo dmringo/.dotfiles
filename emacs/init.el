@@ -130,8 +130,10 @@ ordered on the priority.")
 (use-package ivy-hydra)
 (use-package ivy-posframe
   :demand
-  :config (setq ivy-display-function
-                #'ivy-posframe-display-at-frame-center))
+  :config
+  (ivy-posframe-enable)
+  (setq ivy-display-function
+        #'ivy-posframe-display-at-frame-center))
 (use-package swiper
   :demand)
 (use-package counsel
