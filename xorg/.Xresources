@@ -1,1 +1,18 @@
-Xft.dpi: 120
+#if HOST == frootmig
+
+  Xft.dpi: 105
+
+#elif HOST == slartibartfast
+
+  Xft.dpi: 140
+
+#elif HOST == trillian
+
+  Xft.dpi: 80
+
+#else
+
+  ! some reasonable default
+  Xft.dpi: 100
+
+#endif

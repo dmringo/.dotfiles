@@ -16,6 +16,14 @@ then
   xrdb -merge "$xres"
 fi
 
+if [ "$(hostname -s)" -eq "frootmig" ]
+then
+  # necessary when using nvidia driver on frootmig. Should check for nvidia,
+  # probably, but I haven't switched in a while
+  xrandr --setprovideroutputsource modesetting NVIDIA-0
+  xrandr --auto
+fi
+
 profile="$HOME/.profile"
 if [ -f "$profile" ]
 then
