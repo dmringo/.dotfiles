@@ -1,12 +1,12 @@
-#if HOST == frootmig
+#if defined(CLNT_frootmig)
 
   Xft.dpi: 105
 
-#elif HOST == slartibartfast
+#elif defined(CLNT_slartibartfast)
 
   Xft.dpi: 140
 
-#elif HOST == trillian
+#elif defined(CLNT_trillian)
 
   Xft.dpi: 80
 
@@ -16,3 +16,4 @@
   Xft.dpi: 100
 
 #endif
+
