@@ -71,10 +71,15 @@ prepend() {
   eval "$1=$2:\$$1"
 }
 
-# keep all the XDG dirs under the same path
-XDG_CONFIG_HOME="$HOME/.local/etc"
+# set these for convenience, but the paths are all the defaults*
+# Rationale
+#  1. There are a programs that use the XDG defaults but don't read env vars
+#  2. In some cases, it's difficult to ensure these are set when a program
+#     starts (dunst, started by dbus is a good example)
+XDG_CONFIG_HOME="$HOME/.config"
 XDG_DATA_HOME="$HOME/.local/share"
-XDG_CACHE_HOME="$HOME/.local/var"
+XDG_CACHE_HOME="$HOME/.cache"
+# No default for the RUNTIME_DIR, so keep it under an existing prefix
 XDG_RUNTIME_DIR="$HOME/.local/run"
 
 # make sure we actually have these directories
