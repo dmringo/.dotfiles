@@ -196,6 +196,12 @@ ordered on the priority.")
   :diminish undo-tree-mode
   :config (global-undo-tree-mode))
 
+
+(use-package transient
+  ;; keep transient in sync with magit on melpa
+  :pin melpa
+  :config (transient-bind-q-to-quit))
+
 (use-package magit
   :pin melpa
   :demand
