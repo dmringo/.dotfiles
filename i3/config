@@ -1,7 +1,8 @@
+
+# mod4 = Super/Win/Cmd
 set $mod Mod4
 
-# This font is widely installed, provides lots of unicode glyphs, right-to-left
-# text rendering and scalability on retina/hidpi displays (thanks to pango).
+# I almost always have this installed
 font pango:Office Code Pro 8
 
 # Minimal borders
@@ -64,10 +65,12 @@ bindsym $mod+f fullscreen toggle
 # fullscreen across monitors (I think)
 bindsym $mod+Control+f fullscreen toggle global
 
-# split in horizontal orientation
-bindsym $mod+Shift+t split toggle
+
 # change container layout (stacked, tabbed, toggle split)
-bindsym $mod+t layout toggle
+bindsym $mod+w layout toggle
+
+# split in horizontal orientation
+bindsym $mod+Shift+w split toggle
 
 # toggle tiling / floating
 bindsym $mod+Shift+f floating toggle
