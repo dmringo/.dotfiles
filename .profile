@@ -171,7 +171,7 @@ case "$sys_type" in
         prepend MANPATH "$gnuman"
       fi
     fi
-    read_all() { while [ -n "$*" ]; do cat "$1"; shift; done }
+    read_all() { while [ -n "$*" ]; do cat "$1"; shift; done; } ;
     clip() {
       set -eu
       cmd=pbcopy
