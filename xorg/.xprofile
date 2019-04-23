@@ -16,7 +16,7 @@ then
   xrdb -merge "$xres"
 fi
 
-if [ "$(hostname -s)" -eq "frootmig" ]
+if [ "$(hostname -s)" = "frootmig" ]
 then
   # necessary when using nvidia driver on frootmig. Should check for nvidia,
   # probably, but I haven't switched in a while
