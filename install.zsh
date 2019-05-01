@@ -108,6 +108,7 @@ ln_config termite
 ln_config kitty
 ln_config ripgrep
 ln_config sh
+ln_config autorandr
 
 
 
