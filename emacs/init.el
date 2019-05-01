@@ -508,7 +508,6 @@ A file is considered a theme file if it matches the regex
   (which-key-mode))
 
 ;; Sources for themes I like
-(use-package doom-themes)
 (use-package base16-theme
   :demand
   :config
