@@ -29,3 +29,5 @@
 # patterns, e.g. *.el diff=lisp
 [diff "lisp"]
   xfuncname = "^\\([^ ]+.*$"
+[github]
+	user = dmringo
