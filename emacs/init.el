@@ -516,7 +516,7 @@ FACES should take same form as in `base16-theme-define'."
         (apply
          'set-face-attribute
          `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors))))))
-  (let ((theme 'base16-ashes))
+  (let ((theme 'base16-material))
     (load-theme theme t)
     (require 'org-faces)
     (base16-patch-theme
