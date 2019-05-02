@@ -279,6 +279,8 @@ ordered on the priority.")
         beacon-size 1000 ; make the whole line (up to 1000 chars) blink
         beacon-color 1))
 
+(use-package writeroom-mode)
+
 (use-package pdf-tools
   :demand
   :bind (:map pdf-view-mode-map
