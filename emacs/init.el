@@ -465,13 +465,6 @@ A file is considered a theme file if it matches the regex
   :config (setq docker-tramp-use-names t))
 
 (use-package elm-mode)
-(use-package go-mode)
-(use-package go-eldoc)
-(use-package company-go)
-(use-package lsp-go
-  :pin melpa
-  :init
-  (add-hook 'go-mode-hook #'lsp-go-enable))
 
 (use-package ace-window
   :init
