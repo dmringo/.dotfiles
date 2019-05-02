@@ -73,7 +73,6 @@ ordered on the priority.")
   :config
   (exec-path-from-shell-initialize))
 
-(use-package posframe)
 
 (use-package projectile
   :demand
@@ -110,8 +109,6 @@ ordered on the priority.")
           (files (rg-read-files)))
       (rg-run pat files dir))))
 
-
-
 (use-package ivy
   :demand
   :diminish ivy-mode
@@ -126,14 +123,8 @@ ordered on the priority.")
                   ivy-use-selectable-prompt t
                   ivy-initial-inputs-alist 'nil
                   ivy-use-virtual-buffers t)))
-
 (use-package ivy-hydra)
-(use-package ivy-posframe
-  :demand
-  :config
-  (ivy-posframe-enable)
-  (setq ivy-display-function
-        #'ivy-posframe-display-at-frame-center))
+
 (use-package swiper
   :demand)
 (use-package counsel
