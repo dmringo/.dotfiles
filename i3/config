@@ -65,9 +65,8 @@ bindsym $mod+f fullscreen toggle
 # fullscreen across monitors (I think)
 bindsym $mod+Control+f fullscreen toggle global
 
-
 # change container layout (stacked, tabbed, toggle split)
-bindsym $mod+w layout toggle
+bindsym $mod+w layout toggle all
 
 # split in horizontal orientation
 bindsym $mod+Shift+w split toggle
