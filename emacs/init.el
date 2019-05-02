@@ -213,6 +213,13 @@ ordered on the priority.")
   :after magit
   :pin melpa)
 
+(use-package auth-source-pass
+  ;; Note: use-package doesn't have a good way to override builtin packages, so
+  ;; this has to be manually installed from either melpa or melpa-stable to
+  ;; shadow the builtin version
+  :pin melpa
+  :ensure t)
+
 ;; link to Magit buffers in Org-mode
 ;; TODO: customize how export works for these links
 (use-package orgit
