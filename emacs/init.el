@@ -209,6 +209,10 @@ ordered on the priority.")
   ;; while magit buffers are visible
   (setq magit-bury-buffer-function 'magit-mode-quit-window))
 
+(use-package forge
+  :after magit
+  :pin melpa)
+
 ;; link to Magit buffers in Org-mode
 ;; TODO: customize how export works for these links
 (use-package orgit
