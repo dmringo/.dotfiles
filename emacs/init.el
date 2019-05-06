@@ -366,6 +366,7 @@ ordered on the priority.")
     (fset 'c-indent-line-or-region 'clang-format)))
 
 (add-hook 'c++-mode-hook #'my/maybe-enable-c++-lsp-server)
+(add-hook 'c++-mode-hook #'hs-minor-mode)
 
 (use-package google-c-style
   :config (c-add-style "Google" google-c-style))
@@ -831,6 +832,7 @@ one is manually specified."
 (require 'sgml-mode)
 (require 'nxml-mode)
 
+(bind-key "M-<tab>" 'hs-toggle-hiding hs-minor-mode-map)
 (add-to-list 'hs-special-modes-alist
              '(nxml-mode
                "<!--\\|<[^/>]*[^/]>"
