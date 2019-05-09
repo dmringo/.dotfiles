@@ -313,7 +313,7 @@ ordered on the priority.")
   :pin melpa
   ;; snippets don't seem to work too well.  At least, I can't figure out how to
   ;; expand them properly
-  :config (setq company-lsp-enable-snippet nil))
+  :config (setq company-lsp-enable-snippet t))
 
 (use-package lsp-ui
   :after lsp-mode
@@ -743,7 +743,7 @@ one is manually specified."
 
 
 (defun my/make-file-mode-prop-line (&optional select)
-  (interactive)
+  (interactive "p")
   (let ((the_mode
          (if select
              (let ((modes))
