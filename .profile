@@ -1,4 +1,4 @@
-#!/bin/sh
+#   -*- mode: sh-mode; -*-
 
 # OK idiot, this is for future you when you finally clean this mess up.
 #
@@ -171,69 +171,6 @@ case "$sys_type" in
         prepend MANPATH "$gnuman"
       fi
     fi
-    read_all() { while [ -n "$*" ]; do cat "$1"; shift; done; } ;
-    clip() {
-      set -eu
-      cmd=pbcopy
-      mode=i
-      case "$1" in
-        i|in ) shift ;;
-        o|out )
-          cmd=pbpaste
-          mode=o
-          shift
-          ;;
-        f|filter )
-          mode=f
-          shift
-          ;;
-      esac
-      if [ -n "$*" ]
-      then
-        if [ $mode = i ]
-        then read_all "$@" | $cmd
-        elif [ $mode = f ]
-        then
-          # eww
-          tmp=$(mktemp)
-          read_all "$@" | tee "$tmp"
-          < "$tmp" $cmd
-        else $cmd | tee -- "$@" > /dev/null
-        fi
-      else
-        # just copy from stdin/paste to stdout
-        $cmd
-      fi
-    }
-    ;;
-
-  linux* )
-    alias o='xdg-open'
-
-    clip() {
-      mode=i
-      case "$1" in
-        f|filter )
-          mode=f
-          shift
-          ;;
-        o|out )
-          mode=o
-          shift
-          ;;
-      esac
-      if [ -n "$*" ]
-      then
-        if [ $mode = o ]
-        then
-          xclip -"$mode" -selection clipboard | tee -- "$@" > /dev/null
-        else
-          xclip -"$mode" -selection clipboard -- "$@"
-        fi
-      else
-        xclip -"$mode" -selection clipboard
-      fi
-    }
     ;;
 esac
 
