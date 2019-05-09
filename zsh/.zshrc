@@ -104,6 +104,7 @@ zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
 # direnv though, so it may be worth looking into a custom CD hook.  For now, the
 # basic set of components is just fine
 SPACESHIP_DIR_TRUNC_PREFIX="…/"
+SPACESHIP_DIR_TRUNC_REPO="false"
 SPACESHIP_CONDA_PREFIX="["
 SPACESHIP_CONDA_SUFFIX="]"
 SPACESHIP_CONDA_SYMBOL=""
