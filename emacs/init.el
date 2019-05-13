@@ -239,9 +239,6 @@ sexpr."
   ;; while magit buffers are visible
   (setq magit-bury-buffer-function 'magit-mode-quit-window))
 
-(use-package forge
-  :after magit
-  :pin melpa)
 
 (use-package auth-source-pass
   ;; Note: use-package doesn't have a good way to override builtin packages, so
