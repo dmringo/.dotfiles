@@ -110,12 +110,6 @@ SPACESHIP_CONDA_SUFFIX="]"
 SPACESHIP_CONDA_SYMBOL=""
 SPACESHIP_PROMPT_ORDER=(dir user host git conda exec_time line_sep exit_code char)
 
-# l with fancy colors and git info
-zplug "supercrabtree/k", hook-load:"alias k='k -h'"
-
-# tell me if there's a faster way to run some command
-zplug "djui/alias-tips"
-
 # oh-my-zsh git plugin is nice
 zplug "plugins/git", from:oh-my-zsh, if:'cmd_exists git'
 
@@ -137,17 +131,7 @@ fi
 # pandoc completion
 zplug "srijanshetty/zsh-pandoc-completion", if:'cmd_exists pandoc'
 
-
-
-# Doron Behar's pandoc completion (maybe to be merged into ZSH proper?)
-# Not sure why this doesn't work.
-# zplug "doronbehar/zsh", if:'cmd_exists pandoc', \
-#       from:gitlab, \
-#       at:pandoc-completion, \
-#       use:"Completion/Unix/Command/_pandoc"
-
-
-# GTK settings manager
+# GTK settings manager completion
 zplug "jmatsuzawa/zsh-comp-gsettings", if:'cmd_exists gsettings'
 
 # Keybase.io
@@ -155,9 +139,6 @@ zplug "rbirnie/oh-my-zsh-keybase", if:'cmd_exists keybase'
 
 # Homebrew
 zplug "vasyharan/zsh-brew-services", if:'cmd_exists brew'
-
-# ZSH scripting hints
-zplug "joepvd/zsh-hints"
 
 # Alias ripgrep to use a config file
 if cmd_exists rg
