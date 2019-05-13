@@ -803,8 +803,14 @@ one is manually specified."
 ;; Make paste over selection *replace* the selection
 (delete-selection-mode)
 
-;; Column numbers are good though
+;; Column numbers are good
 (column-number-mode)
+
+;; Set scratch buffer custom message and make it an elisp buffer
+(setq initial-scratch-message
+      ";; -*- lexical-binding: t -*-
+;; --------------- Emacs Lisp Scratch buffer --------------- ;;"
+      initial-major-mode 'emacs-lisp-mode)
 
 ;; Basic indentation rules
 (setq-default indent-tabs-mode nil
