@@ -744,7 +744,13 @@ one is manually specified."
  ("C-h M"                   . man)
  ("C-h W"                   . woman)
  ([remap eval-expression]   . pp-eval-expression)
- ([remap eval-last-sexp]    . pp-eval-last-sexp))
+ ([remap eval-last-sexp]    . pp-eval-last-sexp)
+
+ :map kmacro-keymap ;; default bound to C-x C-k prefix
+ 
+ ;; From function docs: "You can call the macro again by repeating just the last
+ ;; key in the key sequence used to call this command".
+ ("c" . kmacro-call-macro))
 ;; Interesting quirk of emacs - Ctrl+Shift vs Meta+Shift:
 ;; eval this:
 ;; (mapcar #'kbd '("C-T" "C-t" "C-S-t" "M-T" "M-t" "M-S-t"))
