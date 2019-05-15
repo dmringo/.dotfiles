@@ -505,7 +505,6 @@ A file is considered a theme file if it matches the regex
   ;; containers, but that's not generally an issue in my use case.
   :config (setq docker-tramp-use-names t))
 
-(use-package elm-mode)
 
 (use-package ace-window
   :init
@@ -515,6 +514,9 @@ A file is considered a theme file if it matches the regex
   (set-face-attribute 'aw-leading-char-face nil :height 3.0)
   :bind (("C-x o" . 'ace-window)))
 
+
+(use-package hl-todo
+  :hook ((prog-mode . hl-todo-mode)))
 
 (use-package ssh-config-mode)
 
