@@ -509,7 +509,6 @@ A file is considered a theme file if it matches the regex
 (use-package ace-window
   :init
   (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-  (setq aw-background nil)
   :config
   (set-face-attribute 'aw-leading-char-face nil :height 3.0)
   :bind (("C-x o" . 'ace-window)))
