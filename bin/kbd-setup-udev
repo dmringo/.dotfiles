@@ -1,0 +1,9 @@
+#!/bin/sh
+
+printf "%s udev\\n" "$(date +'%x %X %N')" >> /home/dringo/udevtest.log
+env >> /home/dringo/udevtest.log
+echo >> /home/dringo/udevtest.log
+
+# udev rule should set ENV{_HOME}
+# HOME is unused because it might be treated as special by who-knows-what
+"${_HOME}/.local/bin/kbd-setup.sh" &
