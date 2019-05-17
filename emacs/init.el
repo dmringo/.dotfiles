@@ -324,7 +324,7 @@ sexpr."
   (pdf-tools-install))
 
 (use-package google-this
-  :bind-keymap (("C-c g" . google-this-mode-submap)))
+  :bind-keymap ("C-c g" . google-this-mode-submap))
 
 (use-package zeal-at-point
   :bind (("C-c z" . zeal-at-point)))
@@ -334,7 +334,9 @@ sexpr."
   :pin melpa
   :config
   (setq lsp-prefer-flymake nil
-        lsp-keep-workspace-alive nil))
+        lsp-keep-workspace-alive nil)
+  :bind (:map lsp-mode-map ("C-c l r" . lsp-rename)))
+
 
 (use-package company-lsp
   :after lsp-mode
