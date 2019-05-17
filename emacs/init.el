@@ -163,7 +163,8 @@ sexpr."
   :bind (("M-x" . counsel-M-x)
          ("C-h f" . counsel-describe-function)
          ("C-h v" . counsel-describe-variable)
-         ("C-s" . counsel-grep-or-swiper))
+         ("C-s" . counsel-grep-or-swiper)
+         ("C-c i" . counsel-imenu))
   :config 
   ;; Suggested by Oleh
   (setq counsel-grep-command
