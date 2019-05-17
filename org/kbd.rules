@@ -1,0 +1,10 @@
+ATTRS{interface}!="Keyboard", GOTO="is_not_kbd"
+ACTION=="add", RUN+="/home/dringo/.local/bin/kbd-setup-udev", ENV{_HOME}=/home/dringo
+
+# unconditional jump for anything not matching above
+GOTO="is_not_kbd"
+
+LABEL="is_kbd"
+
+
+LABEL="is_not_kbd"

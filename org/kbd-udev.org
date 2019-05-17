@@ -1,0 +1,48 @@
+#+MACRO: HOME (getenv "HOME")
+
+* Setting up a udev rule for newly connected keyboards
+:PROPERTIES:
+:header-args: :mkdirp yes :comments yes :noweb yes
+:END:
+
+
+#+NAME: get-home
+#+begin_src emacs-lisp 
+
+(getenv "HOME")
+#+end_src
+
+Investigating org babel specs to see how hard it is to make custom comment behavior
+
+#+begin_src emacs-lisp
+(nth 4 (car (cdr (car (org-babel-tangle-collect-blocks nil nil)))))
+#+end_src
+
+#+RESULTS:
+
+
+
+#+begin_src conf-unix :tangle "/sudo::/etc/udev/rules.d/00-kbd-add.rules" 
+
+# unconditional jump for anything that doesn't identify as a keyboard
+ATTRS{interface}!="Keyboard", GOTO="is_not_kbd"
+ACTION=="add", RUN+="<<get-home()>>/.local/bin/kbd-setup-udev", ENV{_HOME}="<<get-home()>>"
+
+LABEL="is_not_kbd"
+#+end_src
+
+
+#+begin_src sh :shebang "#!/bin/sh" :tangle "~/kbd.sh"
+sleep 1
+DISPLAY=${DISPLAY:-:0}
+HOME=${HOME:-/home/dringo/}
+XAUTHORITY=${XAUTHORITY:-$HOME/.Xauthority}
+export DISPLAY XAUTHORITY HOME
+
+printf "%s kbd\\n" "$(date +'%x %X %N')" >> $HOME/udevtest.log
+
+xset r rate 200 100
+setxkbmap -option ctrl:nocaps
+#+end_src
+
+
