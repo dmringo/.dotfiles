@@ -191,6 +191,16 @@ then
 fi
 
 
-alias l='ls -lh --color="auto" --group-directories-first'
-alias la='ls -lhar --color="auto" --group-directories-first'
-alias ll='ls -lA --group-directories-first'
+
+case "$(ls --version | head -n 1)" in
+  *GNU*)
+    extopts=" --color --group-directories-first"
+    ;;
+  *)
+    extopts=""
+    ;;
+esac
+
+alias l="ls -lh $extopts"
+alias la="ls -lha $extopts"
+alias ll="ls -lhA $extopts"
