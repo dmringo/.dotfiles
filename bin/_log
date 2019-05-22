@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# For debugging my shite scripts
+_logfile="$HOME/my-log.txt"
+_date="$(date +'%x %X %N')"
+_cmd="$(ps -o args= $PPID)"
+printf "%s: %s\\n" "$_date" "$_cmd" >> "$_logfile"
+if [ "$1" = "-l" ]
+then
+  shift
+  printf "  %s\\n" "$@" >> "$_logfile"
+else
+  printf "  %s\\n" "$*" >> "$_logfile"
+fi
