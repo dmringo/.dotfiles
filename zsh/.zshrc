@@ -85,7 +85,7 @@ export ZPLUG_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/zplug"
 
 if [[ ! -d $ZPLUG_ROOT ]]
 then
-  git clone https://github.com/zplug/zplug $ZPLUG_ROOT
+  git clone git@github.com:zplug/zplug $ZPLUG_ROOT
   source $ZPLUG_ROOT/init.zsh && zplug --self-manage
 fi
 
