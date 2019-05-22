@@ -235,6 +235,7 @@ sexpr."
    ("C-<tab>" . nil)
    ("<tab>"   . magit-section-cycle))
   :config
+  (pinentry-start)
   ;; This prevents Magit from trying to intelligently restore a window
   ;; configuration - useful when you tend to do any amount of window changing
   ;; while magit buffers are visible
@@ -525,7 +526,9 @@ A file is considered a theme file if it matches the regex
 ;; SICP as a texinfo document
 (use-package sicp)
 
-(use-package pinentry)
+(use-package pinentry
+  :init
+  (setq epa-pinentry-mode 'loopback))
 
 (use-package zop-to-char
   :bind (("M-z" . zop-to-char)))
