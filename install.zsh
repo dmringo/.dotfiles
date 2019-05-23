@@ -20,10 +20,8 @@ DOT_HOME=${DOT_HOME:-${0:A:h}}
 # keep track of the return status of linking operations
 lnStat=0
 
-# Eventually will make this a real log-ish function, probably with
-# verbosity level either as a parameter or set in some global variable.
 _log(){
-  print $@
+  print "$@"
 }
 
 # Check if directory path exists.  Create it if it doesn't
