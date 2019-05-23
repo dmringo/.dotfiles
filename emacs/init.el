@@ -832,6 +832,9 @@ one is manually specified."
 ;; use 80 cols as a reasonable line length limit
 (setq-default fill-column 80)
 
+;; I like boxes
+(setq cursor-type 'box)
+
 ;; use text-mode in new buffers by default
 (setq-default major-mode 'text-mode)
 
