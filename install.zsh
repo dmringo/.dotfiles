@@ -73,7 +73,7 @@ _ln(){
 
   # create path if necessary
   maybe_mkdir `dirname $trg`
-  _log -f "linking %s --> %s\n" $src $trg
+  _log -f "linking %s ==> %s\\n" $src $trg
   ln -s $src $trg
   lnStat=$((lnStat | ?))
   return 0
@@ -82,11 +82,14 @@ _ln(){
 
 _log "using $DOT_HOME as base location of '.dotfiles' repo"
 
-_ln $DOT_HOME/zsh/.zshrc         $HOME/.zshrc
+# only need zshenv, since other Zsh startup things are under ZDOTDIR, which will
+# always be $XDG_CONFIG_HOME/zsh
 _ln $DOT_HOME/zsh/.zshenv        $HOME/.zshenv
-_ln $DOT_HOME/zsh/.zprofile      $HOME/.zprofile
+
+ # convenient, but not necessary
+_ln $DOT_HOME/emacs/init.el      $HOME/.emacs
 _ln $DOT_HOME/emacs              $HOME/.emacs.d
-_ln $DOT_HOME/emacs/init.el      $HOME/.emacs # convenient, but not necessary
+
 _ln $DOT_HOME/ssh/config         $HOME/.ssh/config
 _ln $DOT_HOME/.profile           $HOME/.profile
 _ln $DOT_HOME/xorg/.xprofile     $HOME/.xprofile
@@ -97,8 +100,6 @@ ln_config() {
   _ln "$DOT_HOME/$1" "${XDG_CONFIG_HOME:-$HOME/.config}/$1"
 }
 
-# TODO: Need to generate these per system somehow.  Good case for switching to
-# xmonad? git branches?
 ln_config i3
 ln_config i3status
 ln_config dunst
@@ -108,6 +109,7 @@ ln_config termite
 ln_config kitty
 ln_config ripgrep
 ln_config sh
+ln_config zsh
 ln_config autorandr
 
 

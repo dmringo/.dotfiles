@@ -1,5 +1,11 @@
 [[ -f "$HOME/.profile" ]] && emulate sh -c ". $HOME/.profile"
 
+export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
+fpath=( $ZDOTDIR $fpath )
+
+# Maybe there are some secrets that should be loaded too
+[[ -f "$ZDOTDIR/secrets.zsh" ]] && . "$ZDOTDIR/secrets.zsh"
+
 # I almost always use Conda for managing python-y projects, but only the minimal
 # distribution. Recent versions encourage you to source their init script and
 # activate the base environment, but I only want `conda` available by default. I
@@ -16,7 +22,3 @@ fi
 # If spack is around, we do a similar dance as we did for conda
 SPACK_SRC="$HOME/spack/share/spack/setup-env.sh"
 [[ -f "$SPACK_SRC" ]] && . "$SPACK_SRC"
-
-
-# Maybe there are some secrets that should be loaded too
-[[ -f "$MY_ZSH_HOME/secrets.zsh" ]] && . "$MY_ZSH_HOME/secrets.zsh"
