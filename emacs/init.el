@@ -851,18 +851,9 @@ one is manually specified."
  scroll-margin 10)
 
 
-(defconst font-office-code-pro
-  (cond
-   ;; TODO: pick font size based on DPI or
-   ;; something?  This is also a function of how
-   ;; far from my monitor I am... Can emacs measure
-   ;; real-world distance?
-   ((equal my/hostname "zarniwoop") "Office Code Pro-14")
-   (t "Office Code Pro-10")))
-;;(add-to-list 'default-frame-alist `(font . ,font-office-code-pro))
+(defconst font-office-code-pro "Office Code Pro-12")
+
 (set-face-attribute 'default nil :font font-office-code-pro)
-;; note for future me: backtick permits use of commas for evaluation inside a
-;; quoted thing
 ;; Since I will probably forget this eventually:
 ;;  `M-x set-frame-font` is good (with completion) for switching between
 ;;  typefaces but not so much for choosing a different size unless you know the
