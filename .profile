@@ -92,17 +92,46 @@ chmod 0700 "$XDG_RUNTIME_DIR"
 # See notes at head of file
 ENV="${XDG_CONFIG_HOME}/sh/env"
 
+
+
+
+# Try to keep $HOME cleanish, keep Go-managed stuff out of sight
+GOPATH="$HOME/.local/go"
+
+# This is sometimes missing, but important for homebrew (on macOS, at least)
+prepend PATH "/usr/local/bin"
+
+# My local bin directory. *Most* of my local binaries will either reside here,
+# or be symlinked here.
+prepend PATH "$HOME/.local/bin"
+# Note: It's not really clear how much I should worry about symlinking
+# built-from-source packages manually, in particular, those that may make
+# assumptions about the (relative) locations of dependencies (e.g. python
+# modules or shared libs).  Ideally, install scripts will manage all this
+# properly, of course.
+
+
+# Some systems can manage their own local binary directories.  Since the
+# contents of theses tend to fluctuate between my computers, I don't symlink
+# them (mostly because I'd forget to do so frequently enough to be a point of
+# friction).  Usually, I'll prefer something here over something I put in
+# ~/.local/bin.
+prepend PATH "$GOPATH/bin"  # GO managed bins
+prepend PATH "$HOME/.cabal/bin" # Cabal-managed bins
+
+sys_type="$(uname -s | tr '[:upper:]' '[:lower:]')"
+
 # Is homebrew being used?
 if cmd_exists brew
 then
   have_brew() { return 0; }
-
   BREW_PFX=$(brew config | grep HOMEBREW_PREFIX | cut -d' ' -f2)
 
   prepend PATH "$BREW_PFX/bin"
   prepend MANPATH "$BREW_PFX/share/man"
   prepend INFOPATH "$BREW_PFX/share/info"
 else
+
   have_brew() { return 1; }
 fi
 
@@ -127,36 +156,6 @@ then
     done
   fi
 fi
-
-
-# Try to keep $HOME cleanish, keep Go-managed stuff out of sight
-GOPATH="$HOME/.local/go"
-
-# PATH components. -------------------------------------------------------------
-
-# This is sometimes missing, but I almost always find/put things here I want
-prepend PATH "/usr/local/bin"
-
-# My local bin directory. *Most* of my local binaries will either reside here,
-# or be symlinked here.
-prepend PATH "$HOME/.local/bin"
-# Note: It's not really clear how much I should worry about symlinking
-# built-from-source packages manually, in particular, those that may make
-# assumptions about the (relative) locations of dependencies (e.g. python
-# modules or shared libs).  Ideally, install scripts will manage all this
-# properly, of course.
-
-
-# Some systems can manage their own local binary directories.  Since the
-# contents of theses tend to fluctuate between my computers, I don't symlink
-# them (mostly because I'd forget to do so frequently enough to be a point of
-# friction).  Usually, I'll prefer something here over something I put in
-# ~/.local/bin.
-prepend PATH "$GOPATH/bin"  # GO managed bins
-prepend PATH "$HOME/.cabal/bin" # Cabal-managed bins
-
-
-sys_type="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
 case "$sys_type" in
   darwin* )
