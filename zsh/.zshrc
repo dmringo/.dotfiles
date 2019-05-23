@@ -80,45 +80,39 @@ bindkey $keybinds
 # case when $HOME/.gnupg/gpg.conf has 'no-tty' specified.
 export GPG_TTY="$(tty)"
 
-# Check if zplug is installed
-export ZPLUG_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/zplug"
+#--------- prompt setup
 
-if [[ ! -d $ZPLUG_ROOT ]]
-then
-  git clone git@github.com:zplug/zplug $ZPLUG_ROOT
-  source $ZPLUG_ROOT/init.zsh && zplug --self-manage
-fi
+autoload -U promptinit && promptinit
+# spaceship is 3rd party, all others are bundled with Zsh
+my_prompts=(spaceship clint elite adam bart)
+sys_prompts=($(prompt -l | sed -n 2p))
 
-# Essential
-source $ZPLUG_ROOT/init.zsh
+for p in $my_prompts
+do
+  # (r)$p in the subscript says "give me the value of the element that matches
+  # the pattern $p"
+  found_prompt=${sys_prompts[(r)$p]}
+  if [[ -n $found_prompt ]]
+  then
+    # TODO: There's a better way to do this for sure
+    case $found_prompt in
+      spaceship )
+        SPACESHIP_DIR_TRUNC_PREFIX="…/"
+        SPACESHIP_DIR_TRUNC_REPO="false"
+        SPACESHIP_CONDA_PREFIX="["
+        SPACESHIP_CONDA_SUFFIX="]"
+        SPACESHIP_CONDA_SYMBOL=""
+        SPACESHIP_PROMPT_ORDER=(dir user host git conda exec_time line_sep exit_code char)
+        ;;
+    esac
 
-# Make sure to use double quotes to prevent shell expansion
-zplug "zsh-users/zsh-syntax-highlighting", defer:2
+    prompt $p
+    break
+  fi
+done
 
-zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
 
-# Using direnv to conditionally modify the spaceship sections would be nice
-# (rather than enabling all the extras, only load them when I know I'll need
-# them).  This would have a noticeable performance improvement -- the set I use
-# seems to be much faster than the default.  This isn't currently possible with
-# direnv though, so it may be worth looking into a custom CD hook.  For now, the
-# basic set of components is just fine
-SPACESHIP_DIR_TRUNC_PREFIX="…/"
-SPACESHIP_DIR_TRUNC_REPO="false"
-SPACESHIP_CONDA_PREFIX="["
-SPACESHIP_CONDA_SUFFIX="]"
-SPACESHIP_CONDA_SYMBOL=""
-SPACESHIP_PROMPT_ORDER=(dir user host git conda exec_time line_sep exit_code char)
 
-# oh-my-zsh git plugin is nice
-zplug "plugins/git", from:oh-my-zsh, if:'cmd_exists git'
-
-if cmd_exists git
-then
-  # in the style of the omz git aliases
-  alias gsur='git submodule update --recursive'
-  alias gcfo='git config --list --show-origin'
-fi
 
 
 # Haskell stack
@@ -127,18 +121,6 @@ then
   # note that this requires the bashcompinit module loaded to work
   eval "$(stack --bash-completion-script stack)"
 fi
-
-# pandoc completion
-zplug "srijanshetty/zsh-pandoc-completion", if:'cmd_exists pandoc'
-
-# GTK settings manager completion
-zplug "jmatsuzawa/zsh-comp-gsettings", if:'cmd_exists gsettings'
-
-# Keybase.io
-zplug "rbirnie/oh-my-zsh-keybase", if:'cmd_exists keybase'
-
-# Homebrew
-zplug "vasyharan/zsh-brew-services", if:'cmd_exists brew'
 
 # Alias ripgrep to use a config file
 if cmd_exists rg
@@ -152,23 +134,6 @@ then
     alias rg="RIPGREP_CONFIG_PATH=$rg_conf rg"
   fi
 fi
-
-# ninja build system
-zplug "ninja-build/ninja", as:command, use:"misc/zsh-completion", if:'cmd_exists ninja'
-
-# Install packages that have not been installed yet
-if ! zplug check --verbose
-then
-  printf "Install? [y/N]: "
-  if read -q
-  then
-    echo; zplug install
-  else
-    echo
-  fi
-fi
-
-zplug load
 
 # if we have direnv, get its hook setup
 cmd_exists direnv && eval "$(direnv hook zsh)"
@@ -190,9 +155,7 @@ then
   fi
 fi
 
-
-
-case "$(ls --version | head -n 1)" in
+case "$(ls --version 2>/dev/null | head -n 1)" in
   *GNU*)
     extopts=" --color --group-directories-first"
     ;;
