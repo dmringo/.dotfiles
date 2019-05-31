@@ -174,6 +174,10 @@ case "$sys_type" in
 esac
 
 
+# Rust(up) bin dir
+[ -d "$HOME/.cargo/bin" ] && prepend PATH "$HOME/.cargo/bin"
+
+
 # It's possible that some of these components were already in the PATH, so
 # remove the duplicates (script in the bin/ directory of the dotfiles)
 PATH="$(printf %s "$PATH" | dedup_path)"
