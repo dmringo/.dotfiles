@@ -50,6 +50,11 @@ bindkey -e
 # End of lines configured by zsh-newuser-install
 
 
+# make the directory for the history file if it doesn't exist
+histdir="$(dirname $HISTFILE)"
+[[ -d $histdir ]] || mkdir -p $histdir
+
+
 # let zsh use completions defined for bash
 autoload -U +X bashcompinit && bashcompinit
 
