@@ -58,6 +58,8 @@ histdir="$(dirname $HISTFILE)"
 # let zsh use completions defined for bash
 autoload -U +X bashcompinit && bashcompinit
 
+# Use bash-style word boundaries (i.e. anything not alphanumeric)
+autoload -U select-word-style && select-word-style bash
 
 # smarter functions for <M-n> and <M-p>
 # These match all text entered in command line while searching
@@ -107,7 +109,8 @@ do
         SPACESHIP_CONDA_PREFIX="["
         SPACESHIP_CONDA_SUFFIX="]"
         SPACESHIP_CONDA_SYMBOL=""
-        SPACESHIP_PROMPT_ORDER=(dir user host git conda exec_time line_sep exit_code char)
+        SPACESHIP_PROMPT_ORDER=(dir user host git conda exec_time
+                                line_sep exit_code char)
         ;;
     esac
 
