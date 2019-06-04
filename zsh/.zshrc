@@ -44,7 +44,7 @@ compinit
 HISTFILE="${XDG_DATA_HOME:-$HOME/.local/share}"/zsh/history
 HISTSIZE=10000
 SAVEHIST=10000
-setopt appendhistory autocd extendedglob nomatch notify
+setopt appendhistory autocd extendedglob nomatch notify incappendhistory
 unsetopt beep
 bindkey -e
 # End of lines configured by zsh-newuser-install
