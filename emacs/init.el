@@ -224,6 +224,10 @@ sexpr."
   :pin melpa
   :config (transient-bind-q-to-quit))
 
+(use-package pinentry
+  :init
+  (setq epa-pinentry-mode 'loopback))
+
 (use-package magit
   :pin melpa
   :demand
@@ -526,9 +530,6 @@ A file is considered a theme file if it matches the regex
 ;; SICP as a texinfo document
 (use-package sicp)
 
-(use-package pinentry
-  :init
-  (setq epa-pinentry-mode 'loopback))
 
 (use-package zop-to-char
   :bind (("M-z" . zop-to-char)))
