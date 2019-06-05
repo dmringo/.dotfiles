@@ -37,6 +37,7 @@ ordered on the priority.")
 
 
 (package-refresh-contents)
+
 (mapc (lambda (pkg)
 	      (unless (package-installed-p pkg)
 	        (package-install pkg)))
@@ -210,6 +211,8 @@ sexpr."
      (shell      . t))))
 
 (add-hook 'after-init-hook 'my/org-babel-load-langs)
+
+(use-package hyperbole)
 
 ;; Undo-tree is great - enable it globally and remove it from the modeline
 ;; (since it should always be active)
@@ -582,22 +585,6 @@ FACES should take same form as in `base16-theme-define'."
             (push '("tag" . my/pandoc-include-tag) pandoc-directives)))
 
 
-;; for Ackley's Living Computation course. Java-derived major-mode
-(use-package ulam-mode
-  :ensure f
-  :demand
-  :load-path my/lisp-dir
-  :config
-  (defun ulam/make () (interactive) (compile "make -k"))
-  (defun ulam/run (&optional args)
-    (interactive "smfzrun arguments:\n")
-    (let ((cmd (format "make run ARGS=%s"
-                       (shell-quote-argument args))))
-      (compile cmd)))
-  :bind (:map ulam-mode-map
-              ("C-c C-k" . ulam/make)
-              ("C-c C-r" . ulam/run)))
-
 ;; Info-mode
 (use-package info
   :config
@@ -618,7 +605,8 @@ FACES should take same form as in `base16-theme-define'."
 
 
 ;; If there's an llvm-ish folder in the load path
-(when (member-if (lambda (path)
+(require 'cl)
+(when (cl-member-if (lambda (path)
                    (and (file-directory-p path)
                         (string-match "llvm" path)))
                  load-path)
