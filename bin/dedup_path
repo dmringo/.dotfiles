@@ -5,7 +5,7 @@
 # probably be modified to read ENVIRON["SOMEPATH"], but I like the idiomatic
 # record-by-record approach.
 
-scr="$(cat<<'EOF'
+scr=$(cat<<'EOF'
 BEGIN { RS=":" }
 
 {
@@ -29,6 +29,6 @@ END {
   }
 }
 EOF
-)"
+)
 
 awk "$scr"
