@@ -1,11 +1,11 @@
-#!/usr/bin/env sh
+#!/usr/bin/awk -f
 
 # This script expects a PATH-like variable (PATH, MANPATH, etc.) to be passed on
 # STDIN, and prints a valid PATH with trailing duplicates removed.  It could
 # probably be modified to read ENVIRON["SOMEPATH"], but I like the idiomatic
 # record-by-record approach.
 
-scr=$(cat<<'EOF'
+
 BEGIN { RS=":" }
 
 {
@@ -17,18 +17,14 @@ BEGIN { RS=":" }
   }
 }
 
-# after we're done reading the input, just print the filtered PATH in order
+# after were done reading the input, just print the filtered PATH in order
 END {
   # we want to print a valid PATH, so use colon as the record separator
   ORS=":"
   for(i=0; i < count; i++)
   {
-    # don't want a trailing colon, so reset ORS on the last element
+    # dont want a trailing colon, so reset ORS on the last element
     if(i==count-1) ORS="";
     print path[i]
   }
 }
-EOF
-)
-
-awk "$scr"
