@@ -176,6 +176,14 @@ case "$sys_type" in
         prepend PATH "$gnubin"
         prepend MANPATH "$gnuman"
       fi
+      # same deal for gnu-tar (supports xattrs)
+      gnubin="$BREW_PFX/opt/gnu-tar/libexec/gnubin"
+      gnuman="$BREW_PFX/opt/gnu-tar/libexec/gnuman"
+      if [ -d "$gnubin" ] && [ -d "$gnuman" ]
+      then
+        prepend PATH "$gnubin"
+        prepend MANPATH "$gnuman"
+      fi
     fi
     ;;
 esac
