@@ -1,0 +1,77 @@
+#!/usr/bin/awk -f
+
+# This script inspired by and modified from that found at
+# https://dmorgan.info/posts/mac-network-proxy-terminal/
+
+# This parses the output of `scutil --proxy` and produces output meant for
+# `eval` to set proxy environment variables.  This is useful because programs
+# like `curl` and `git` won't use the macos system proxy. Instead, they will
+# environment variables (or specific config values).
+
+# I've made an attempt to sanitize the recognized variables in the case of
+# uncontrolled input (maybe scutil has been overridden in the PATH by something
+# sneaky?). I'm always a little worried when something is meant to be consumed
+# by `eval`.  I don't know that I've done a great job though, or even properly
+# considered the space of attacks, but it's a fun exercise if nothing else.
+
+
+# join() stolen from GNU awk manual
+function join(array, start, end, sep,    result, i)
+{
+    if (sep == "")
+       sep = " "
+    else if (sep == SUBSEP) # magic value
+       sep = ""
+    result = array[start]
+    for (i = start + 1; i <= end; i++)
+        result = result sep array[i]
+    return result
+}
+
+# escape all(?) the dangerous stuff
+function san(var) {
+  gsub(/\\/,"\\\\",var)
+  gsub(/"/,"\\\042",var)
+  gsub(/\$/,"\\$",var)
+  gsub(/`/,"\\`",var)
+  return var
+}
+
+/HTTPEnable/ { http = $3; }
+/HTTPProxy/ { http_dom = $3; }
+/HTTPPort/ { http_port = $3; }
+/HTTPSEnable/ { https = $3; }
+/HTTPSProxy/ { https_dom = $3; }
+/HTTPSPort/ { https_port = $3; }
+/ExceptionsList/ {
+  read_exceptions=1
+  next
+}
+read_exceptions && /\}/ {
+  read_exceptions=0
+}
+read_exceptions {
+  no_prox[n_ex++]=$3
+}
+
+
+# vars are exported WITHOUT the protocol (e.g. http://) because it seems to
+# work, and in my (limited) experience, you can't assume that the proxy is
+# available via the expected protocol.
+END {
+  if(http == "1") {
+    # \042 is double-quote. Given that awk is splitting on whitespace, I don't
+    # know that it's strictly necessary.
+    print "export http_proxy=\042" san(http_dom) ":" san(http_port) "\042"
+    print "export HTTP_PROXY=\042" san(http_dom) ":" san(http_port) "\042"
+  }
+  if(https == "1") {
+    print "export https_proxy=\042" san(https_dom) ":" san(https_port) "\042"
+    print "export HTTPS_PROXY=\042" san(https_dom) ":" san(https_port) "\042"
+  }
+  if(n_ex) {
+    avar=join(no_prox,0,n_ex-1,",")
+    print "export no_proxy=\042" san(avar) "\042"
+    print "export NO_PROXY=\042" san(avar) "\042"
+  }
+}

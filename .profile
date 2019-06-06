@@ -160,22 +160,8 @@ fi
 case "$sys_type" in
   darwin* )
     # detect system-configured proxies and export them if they exist
-    # see https://dmorgan.info/posts/mac-network-proxy-terminal/
-    # TODO: check no_proxy?
-    http_proxy=$(scutil --proxy | \
-                   awk '
-  /HTTPEnable/ { enabled = $3; }
-  /HTTPProxy/ { server = $3; }
-  /HTTPPort/ { port = $3; }
-  END { if (enabled == "1") { print "http://" server ":" port; } }')
-    https_proxy=$(scutil --proxy | \
-                    awk '
-  /HTTPSEnable/ { enabled = $3; }
-  /HTTPSProxy/ { server = $3; }
-  /HTTPSPort/ { port = $3; }
-  END { if (enabled == "1") { print "https://" server ":" port; } }')
-    HTTP_PROXY="$http_proxy"
-    HTTPS_PROXY="$https_proxy"
+    cmd_exists mac-prox \
+      && eval $(scutil --proxy | mac-prox)
 
     if [ -n "$http_proxy" ]; then export http_proxy HTTP_PROXY; fi
     if [ -n "$https_proxy" ]; then export https_proxy HTTPS_PROXY; fi
