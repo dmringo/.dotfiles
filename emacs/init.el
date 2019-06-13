@@ -179,8 +179,6 @@ sexpr."
 
 (use-package org
   :ensure org-plus-contrib
-  :bind ((:map org-mode-map
-               ("<C-tab>" . other-window)))
   :config
   (progn
     ;; ditaa path as installed by apt
@@ -238,8 +236,6 @@ sexpr."
   (("M-G"     . magit-status)
    ("C-x v B" . magit-blame-addition)
    :map magit-mode-map
-   ;; reserved for my window navigation bindings
-   ("C-<tab>" . nil)
    ("<tab>"   . magit-section-cycle))
   :config
   (pinentry-start)
@@ -707,9 +703,6 @@ one is manually specified."
 ;; Personal global keybindings
 (bind-keys
  :map global-map
- ;; Simpler buffer and window nav
- ("C-<tab>"                 . other-window)
- ("<C-iso-lefttab>"         . (lambda () (interactive) (other-window -1)))
  ("M-["                     . previous-buffer)
  ("M-]"                     . next-buffer)
 
