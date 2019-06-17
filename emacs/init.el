@@ -27,7 +27,7 @@ ordered on the priority.")
 
 (setq package-archives
       (mapcar
-       (lambda (spec) (cons (car spec) (caddr spec)))
+       (lambda (spec) (cons (car spec) (nth 2 spec)))
        my/package-archive-defs))
 
 (setq package-archive-priorities
