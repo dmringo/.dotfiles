@@ -38,3 +38,8 @@ then
   # that path_helper might have added.
   MY_PATH="$PATH"
 fi
+
+# Source the local file last. This will be before zshrc, but that's ok.  It may
+# define things useful for non-interactive use.  If it becomes an issue, maybe
+# have a local.zsh and localrc.zsh or something?
+[[ -f $ZDOTDIR/local.zsh ]] && . $ZDOTDIR/local.zsh

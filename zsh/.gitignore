@@ -1,7 +1,1 @@
-*
-!dmr.zsh-theme
-!.zshrc
-!.zprofile
-!.zshenv
-!.gitignore
-!*.zsh
+local.zsh
