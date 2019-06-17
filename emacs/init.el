@@ -321,6 +321,7 @@ sexpr."
 (use-package writeroom-mode)
 
 (use-package pdf-tools
+  :if (display-graphic-p)
   :demand
   :bind (:map pdf-view-mode-map
               ("C-s" . isearch-forward))
@@ -541,6 +542,7 @@ A file is considered a theme file if it matches the regex
 
 ;; Sources for themes I like
 (use-package base16-theme
+  :if (display-graphic-p)
   :demand
   :config
   (defun base16-patch-theme (theme faces)
