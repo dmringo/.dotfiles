@@ -35,7 +35,7 @@ zstyle ':completion:*' word true
 # completion with an extra <tab>.
 zstyle ':completion:*' menu selection
 
-zstyle :compinstall filename '/$HOME/.zshrc'
+zstyle :compinstall filename '$ZDOTDIR/.zshrc'
 
 autoload -Uz compinit
 compinit
