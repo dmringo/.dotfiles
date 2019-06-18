@@ -176,4 +176,23 @@ important ones."
          (font (apply #'font-spec (apply #'append attr-pairs))))
     (set-face-attribute 'default nil :font font)))
 
+
+(defun my/other-win (arg)
+  "Like `other-window' but with a conveneient transient map.
+
+Similar to `text-scale-adjust', after initial invocation, <o> and
+<C-o> both repeat `other-window', moving focus to the next window
+in the cyle, whereas <O> and <C-S-o> move backwards, as if
+`other-window' was called with an argument of negative 1."
+  (interactive "p")
+  (other-window arg)
+  (set-transient-map
+   (let ((map (make-sparse-keymap)))
+     (define-key map (kbd "C-o") (lambda () (interactive) (my/other-win 1)))
+     (define-key map (kbd "o")   (lambda () (interactive) (my/other-win 1)))
+     (define-key map (kbd "O")   (lambda () (interactive) (my/other-win -1)))
+     (define-key map (kbd "C-S-o") (lambda () (interactive) (my/other-win -1)))
+     map)))
+
+
 (provide 'my-utils)

@@ -570,13 +570,21 @@ FACES should take same form as in `base16-theme-define'."
        (undo-tree-visualizer-current-face :foreground base00
                                           :background base0B)))))
 
+;; When in a terminal, prefer the simple builtin tsdh-dark theme over base16 (at
+;; least until I figure out how to make base16 themes look decent in the
+;; terminal)
+(when (not (display-graphic-p))
+  (load-theme 'tsdh-dark t)
+  (set-face-attribute 'mode-line nil :family '(:inherit default)))
+
 
 ;; Local "packages"
 (use-package my-utils
   :demand
   :ensure f
   :load-path my/lisp-dir
-  :bind (("M-Q" . my/unfill-paragraph))
+  :bind (("M-Q" . my/unfill-paragraph)
+         ("C-x C-o" . my/other-win))
   :config (progn 
             (require 'pandoc-mode)
             (push '("lines" . my/pandoc-include-lines) pandoc-directives)
