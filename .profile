@@ -115,8 +115,6 @@ chmod 0700 "$XDG_RUNTIME_DIR"
 ENV="${XDG_CONFIG_HOME}/sh/env"
 
 
-
-
 # Try to keep $HOME cleanish, keep Go-managed stuff out of sight
 GOPATH="$HOME/.local/go"
 
@@ -140,6 +138,33 @@ prepend PATH "$HOME/.local/bin"
 # ~/.local/bin.
 prepend PATH "$GOPATH/bin"  # GO managed bins
 prepend PATH "$HOME/.cabal/bin" # Cabal-managed bins
+
+# I almost always use Conda for managing python-y projects, but only the minimal
+# distribution. Recent versions encourage you to source their init script and
+# activate the base environment, but I only want `conda` available by default. I
+# can always activate the base environment as necessary.
+_conda_base="$HOME/miniconda3"
+
+if [ -f "$_conda_base" ]
+then
+  if [ "$_shell" = "bash" ] || [ "$_shell" = "zsh" ]
+  then
+    # source the fancier setup with known compatible shells
+    . "$_conda_base/etc/profile.d/conda.sh"
+  else
+    # unknown/simple shell, just do the dumb thing
+    prepend PATH "$_conda_base/bin"
+  fi
+  # WORKON_HOME is used by virtualenvwrapper.sh and pyvenv for Emacs
+  WORKON_HOME="$(conda info | awk '/envs directories/{print$3}')"
+  export WORKON_HOME
+fi
+
+
+# if I have linuxbrew around, I'm probably using it for something
+_lbrew="$HOME/.linuxbrew/bin"
+[ -d "$_lbrew" ] && prepend PATH "$_lbrew"
+
 
 sys_type="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
