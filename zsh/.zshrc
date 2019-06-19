@@ -175,3 +175,6 @@ esac
 alias l="ls -lh $extopts"
 alias la="ls -lha $extopts"
 alias ll="ls -lhA $extopts"
+
+# Source a local rc file (for interactive use)
+[[ -f $ZDOTDIR/localrc.zsh ]] && . $ZDOTDIR/localrc.zsh
