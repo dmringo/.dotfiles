@@ -71,6 +71,28 @@ prepend() {
   eval "$1=$2:\$$1"
 }
 
+
+shell_type() {
+  # Try to determine what the actual shell is, not whether it was
+  # invoked as `sh` or anything like that.
+  if [ -n "${BASH_VERSION:-}" ]
+  then
+    echo bash
+  elif [ -n "${ZSH_VERSION:-}" ]
+  then
+    echo zsh
+  elif [ -n "${KSH_VERSION:-}" ]
+  then
+    echo ksh
+  else
+    # Try to figure it out based on the program invocation
+    basename "$(ps -p $$ -o comm | sed -ne '2s/^-//p')"
+  fi
+}
+
+_shell="$(shell_type)"
+
+
 # set these for convenience, but the paths are all the defaults*
 # Rationale
 #  1. There are a programs that use the XDG defaults but don't read env vars
