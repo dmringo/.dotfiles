@@ -14,6 +14,18 @@
   (expand-file-name "lisp" user-emacs-directory))
 
 
+(defmacro setq-doc (var val &optional explanation)
+  "Set VAR to VAL and update the docstring with an EXPLANATION"
+  (declare (doc-string 3))
+  `(unless (equal ,var ,val)
+     (let* ((doc (documentation-property (quote ,var) 'variable-documentation))
+            (newdoc (format "%s\n\n[%s]\nold: %S new: %S\nreason: %s\n"
+                            doc (format-time-string "%c") ,var ,val
+                            (or ,explanation "No reason given"))))
+       (put (quote ,var) 'variable-documentation newdoc))
+     (setq ,var ,val)))
+
+
 (defvar my/package-archive-defs
   '(("melpa-stable" 10  "https://stable.melpa.org/packages/")
     ("org"          10  "https://orgmode.org/elpa/")
