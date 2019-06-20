@@ -131,6 +131,7 @@ prepend PATH "$HOME/.local/bin"
 # properly, of course.
 
 
+
 # Some systems can manage their own local binary directories.  Since the
 # contents of theses tend to fluctuate between my computers, I don't symlink
 # them (mostly because I'd forget to do so frequently enough to be a point of
@@ -261,7 +262,8 @@ unset -f prepend
 # like some things that use EDITOR don't split it on whitespace (so,
 # e.g. EDITOR="emacsclient -c" doesn't work so well). A wrapper script has no
 # such problem.
-EDITOR=ec-wrapper
+EDITOR=ec-wrapper-nw
+VISUAL=ec-wrapper
 
 # Helps emacs figure out what shell to use for `M-x shell`
 ESHELL="/usr/bin/zsh"

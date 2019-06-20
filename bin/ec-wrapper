@@ -1,2 +1,2 @@
-#!/usr/bin/sh
-/usr/bin/emacsclient -n -a "" -c $@
+#!/usr/bin/env sh
+emacsclient -n -a "" -c "$@"
