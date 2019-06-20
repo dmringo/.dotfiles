@@ -72,6 +72,9 @@ ordered on the priority.")
 (use-package exec-path-from-shell
   :demand
   :config
+  (setq exec-path-from-shell-variables
+        '("PATH" "MANPATH" "WORKON_HOME")
+        exec-path-from-shell-debug t)
   (exec-path-from-shell-initialize))
 
 
@@ -488,7 +491,8 @@ A file is considered a theme file if it matches the regex
 
 ;; Support for python virtual environments.  This requires the environment
 ;; variable WORKON_HOME to be set as the location of python environments.
-;; Ideally, this should be set in .profile
+;; Ideally, this should be set in the environment emacs is invoked in, or picked
+;; up by exec-path-from-shell
 (use-package pyvenv)
 
 ;; Protocol buffer support
