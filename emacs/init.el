@@ -184,9 +184,7 @@ sexpr."
   :ensure org-plus-contrib
   :config
   (progn
-    ;; ditaa path as installed by apt
-    (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar"
-          ;; latexmk is a little more consistent than pdflatex
+    (setq ;; latexmk is a little more consistent than pdflatex
           org-latex-pdf-process (list "latexmk -f -pdf %f"))
     ;; make #+NAME easy-template
     (add-to-list 'org-structure-template-alist
@@ -194,11 +192,9 @@ sexpr."
     (add-to-list 'org-structure-template-alist
                  '("ct" . "clocktable"))))
 
-(use-package ox-twbs)
 (use-package ox-gfm)
 (use-package ox-pandoc
   :pin melpa) 
-
 
 ;; asynchronous execution of src blocks in org via babel
 (use-package ob-async)
@@ -221,7 +217,6 @@ sexpr."
   :demand
   :diminish undo-tree-mode
   :config (global-undo-tree-mode))
-
 
 (use-package transient
   ;; keep transient in sync with magit on melpa
@@ -246,14 +241,6 @@ sexpr."
   ;; configuration - useful when you tend to do any amount of window changing
   ;; while magit buffers are visible
   (setq magit-bury-buffer-function 'magit-mode-quit-window))
-
-
-(use-package auth-source-pass
-  ;; Note: use-package doesn't have a good way to override builtin packages, so
-  ;; this has to be manually installed from either melpa or melpa-stable to
-  ;; shadow the builtin version
-  :pin melpa
-  :ensure t)
 
 ;; link to Magit buffers in Org-mode
 ;; TODO: customize how export works for these links
@@ -309,7 +296,6 @@ sexpr."
 (use-package whitespace-cleanup-mode
   :hook prog-mode
   :diminish )
-
 
 ;; Show me where the cursor is, when it changes
 (use-package beacon
@@ -450,12 +436,6 @@ A file is considered a theme file if it matches the regex
   (keyfreq-autosave-mode 1)
   (setq keyfreq-file (expand-file-name ".emacs.keyfreq" user-emacs-directory)))
 
-(use-package yasnippet
-  :diminish yas-minor-mode)
-(use-package yasnippet-snippets)
-
-(use-package haskell-snippets)
-
 (use-package tablist
   :config
   (add-hook 'tabulated-list-mode-hook 'tablist-minor-mode)
@@ -465,7 +445,7 @@ A file is considered a theme file if it matches the regex
 
 (use-package helpful
   :bind ())
-(use-package ivy-yasnippet)
+
 (use-package prescient
   :demand
   :config
@@ -478,13 +458,8 @@ A file is considered a theme file if it matches the regex
   :config
   (ivy-prescient-mode 1))
 
-(use-package ivy-dired-history)
-
 ;; 
 (use-package direnv)
-
-;; Racket
-(use-package racket-mode)
 
 ;; Python stuff
 (use-package py-autopep8)
@@ -517,14 +492,12 @@ A file is considered a theme file if it matches the regex
   ;; containers, but that's not generally an issue in my use case.
   :config (setq docker-tramp-use-names t))
 
-
 (use-package ace-window
   :init
   (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
   :config
   (set-face-attribute 'aw-leading-char-face nil :height 3.0)
   :bind (("C-x o" . 'ace-window)))
-
 
 (use-package hl-todo
   :hook ((prog-mode . hl-todo-mode)))
@@ -533,7 +506,6 @@ A file is considered a theme file if it matches the regex
 
 ;; SICP as a texinfo document
 (use-package sicp)
-
 
 (use-package zop-to-char
   :bind (("M-z" . zop-to-char)))
@@ -593,7 +565,6 @@ FACES should take same form as in `base16-theme-define'."
             (require 'pandoc-mode)
             (push '("lines" . my/pandoc-include-lines) pandoc-directives)
             (push '("tag" . my/pandoc-include-tag) pandoc-directives)))
-
 
 ;; Info-mode
 (use-package info
