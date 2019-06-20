@@ -340,7 +340,8 @@ sexpr."
   :pin melpa
   :config
   (setq lsp-prefer-flymake nil
-        lsp-keep-workspace-alive nil)
+        lsp-keep-workspace-alive nil
+        lsp-enable-snippet nil)
   :bind (:map lsp-mode-map ("C-c l r" . lsp-rename)))
 
 
