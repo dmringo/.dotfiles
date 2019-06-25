@@ -784,10 +784,11 @@ one is manually specified."
 ;; Bars suck
 (tool-bar-mode -1)
 (menu-bar-mode -1)
-(scroll-bar-mode -1)
+(when (display-graphic-p)
+  (scroll-bar-mode -1)
+  ;; Don't really like big fringes much either
+  (set-fringe-mode '(0 . 0)))
 
-;; Don't really like big fringes much either
-(set-fringe-mode '(0 . 0))
 
 ;; disable bell and screen flashing
 (defun my/do-nothing () nil)
