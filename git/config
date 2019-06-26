@@ -31,3 +31,5 @@
   xfuncname = "^\\([^ ]+.*$"
 [github]
 	user = dmringo
+[core]
+	fileMode = true
