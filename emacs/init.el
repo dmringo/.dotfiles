@@ -834,6 +834,20 @@ one is manually specified."
  ;; This sets the margin at which scrolling will happen when the point enters it
  scroll-margin 10)
 
+(require 'dash)
+(-when-let*
+    ((fontlist
+      '(("Office Code Pro" . 11)
+        ("Inconsolata" . 12)
+        ("DejaVu Sans Mono" . 10)))
+     (fontpair (-first
+                (lambda (pr)
+                  (find-font (font-spec :name (car pr))))
+                fontlist))
+     ((name . size) fontpair)
+     (fontstring (format "%s-%s" name size )))
+  (message fontstring)
+  (set-face-attribute 'default nil :font fontstring))
 
 (defconst font-office-code-pro "Office Code Pro-12")
 
