@@ -309,16 +309,6 @@ sexpr."
   :hook prog-mode
   :diminish )
 
-;; Show me where the cursor is, when it changes
-(use-package beacon
-  :init
-  (beacon-mode 1)
-  (setq beacon-blink-when-point-moves-horizontally nil
-        beacon-blink-when-point-moves-vertically nil
-        beacon-blink-when-window-scrolls 0
-        beacon-size 1000 ; make the whole line (up to 1000 chars) blink
-        beacon-color 1))
-
 (use-package writeroom-mode)
 
 (use-package pdf-tools
