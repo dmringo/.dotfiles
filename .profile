@@ -146,7 +146,7 @@ prepend PATH "$HOME/.cabal/bin" # Cabal-managed bins
 # can always activate the base environment as necessary.
 _conda_base="$HOME/miniconda3"
 
-if [ -f "$_conda_base" ]
+if [ -d "$_conda_base" ]
 then
   if [ "$_shell" = "bash" ] || [ "$_shell" = "zsh" ]
   then
