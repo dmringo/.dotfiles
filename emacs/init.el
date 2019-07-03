@@ -430,7 +430,13 @@ A file is considered a theme file if it matches the regex
 
 (use-package markdown-mode
   :hook ((markdown-mode . pandoc-mode)
-         (markdown-mode . smartparens-mode)))
+         (markdown-mode . smartparens-mode))
+  :config
+  ;; 
+  (set-face-attribute 'markdown-code-face nil
+                      :background 'unspecified
+                      :inherit 'font-lock-constant-face))
+
 (use-package edit-indirect)
 
 (use-package pandoc-mode :diminish)
@@ -498,10 +504,13 @@ A file is considered a theme file if it matches the regex
   :config (setq docker-tramp-use-names t))
 
 (use-package ace-window
+  :pin melpa
   :init
   (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
   :config
-  (set-face-attribute 'aw-leading-char-face nil :height 3.0)
+  (set-face-attribute 'aw-leading-char-face nil
+                      :height 5.0
+                      :inherit 'error)
   :bind (("C-x o" . 'ace-window)))
 
 (use-package hl-todo
@@ -826,9 +835,11 @@ one is manually specified."
  ;; This sets the margin at which scrolling will happen when the point enters it
  scroll-margin 10)
 
+;; Font selection
 (require 'dash)
 (-when-let*
-    ((fontlist
+    ((_ (display-graphic-p))
+     (fontlist
       '(("Office Code Pro" . 11)
         ("Inconsolata" . 12)
         ("DejaVu Sans Mono" . 10)))
@@ -840,17 +851,6 @@ one is manually specified."
      (fontstring (format "%s-%s" name size )))
   (message fontstring)
   (set-face-attribute 'default nil :font fontstring))
-
-(defconst font-office-code-pro "Office Code Pro-12")
-
-(set-face-attribute 'default nil :font font-office-code-pro)
-;; Since I will probably forget this eventually:
-;;  `M-x set-frame-font` is good (with completion) for switching between
-;;  typefaces but not so much for choosing a different size unless you know the
-;;  exact font spec string.
-;;  (e.g. "-NATH-Office Code Pro-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1")
-;;  The best way to change the full font is to use `set-face-attribute' as far as
-;;  I can tell.  e.g. (set-face-attribute 'default nil :font "Office Code Pro-10"
 
 
 
