@@ -164,7 +164,15 @@ fi
 
 # if I have linuxbrew around, I'm probably using it for something
 _lbrew="$HOME/.linuxbrew/bin"
-[ -d "$_lbrew" ] && prepend PATH "$_lbrew"
+if [ -d "$_lbrew" ]
+then
+  prepend PATH "$_lbrew"
+  unbrew() {
+    PATH=$(printenv PATH | tr : \\n | grep -v $(brew --prefix)/bin | tr \\n :)
+    export PATH
+  }
+
+fi
 
 
 sys_type="$(uname -s | tr '[:upper:]' '[:lower:]')"
