@@ -200,17 +200,14 @@ bindsym $mod+F1 $mediaPrev
 bindsym $mod+F2 $mediaPlay
 bindsym $mod+F3 $mediaNext
 
-
-  
-# Brightness uses custom script at:
-# https://github.com/dmringo/.dotfiles/blob/master/bin/setbacklight  
+ 
 # For some reason, on the XPS 9560, the normal XF86 brightness keys repeat
 # very slowly.  So those have a coarser step size, whereas these (basically
 # the same binding plus the 'Fn' modifier) repeat quickly
-bindsym XF86MonBrightnessDown exec setbacklight -10
-bindsym XF86MonBrightnessUp   exec setbacklight +10
-bindsym $mod+F11 exec setbacklight -1  
-bindsym $mod+F12 exec setbacklight +1
+bindsym XF86MonBrightnessDown exec light -U 10
+bindsym XF86MonBrightnessUp   exec light -A 10
+bindsym $mod+F11 exec light -U 1  
+bindsym $mod+F12 exec light -A 1
 
 set $fs-pause exec --no-startup-id i3-fs-pause
 
