@@ -386,11 +386,8 @@ sexpr."
 
 (use-package clang-format
   :commands (clang-format clang-format-region)
-  :bind (:map c-mode-base-map
-              ("C-M-\\" . clang-format-region)
-              ("C-i" . clang-format))
   :init
-  (with-eval-after-load 'cc-cmds
+  (with-eval-after-load 'cc-mode
     (fset 'c-indent-region 'clang-format-region)
     (fset 'c-indent-line-or-region 'clang-format)))
 
