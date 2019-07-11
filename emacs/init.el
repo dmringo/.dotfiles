@@ -507,6 +507,7 @@ A file is considered a theme file if it matches the regex
   :config
   (set-face-attribute 'aw-leading-char-face nil
                       :height 5.0
+                      :foreground 'unspecified
                       :inherit 'error)
   :bind (("C-x o" . 'ace-window)))
 
