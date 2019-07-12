@@ -30,7 +30,7 @@ maybe_mkdir(){
 }
 
 # Convenience linking function.  It expects exactly two arguments (source and
-# target for linking) which should be fully "specified".  That is, relative
+# target for linking) which should be fully specified.  That is, relative
 # paths are fine, but specifying the target as an existing destination directory
 # alone is not (unlike `ln`).
 _ln(){
@@ -70,7 +70,7 @@ _ln(){
   fi
 
   # create path if necessary
-  maybe_mkdir `dirname $trg`
+  maybe_mkdir $(dirname $trg)
   _log -f "linking %s ==> %s\\n" $src $trg
   ln -s $src $trg
   lnStat=$((lnStat | ?))
@@ -85,13 +85,14 @@ _log "using $DOT_HOME as base location of '.dotfiles' repo"
 _ln $DOT_HOME/zsh/.zshenv        $HOME/.zshenv
 
  # convenient, but not necessary
-_ln $DOT_HOME/emacs/init.el      $HOME/.emacs
-_ln $DOT_HOME/emacs              $HOME/.emacs.d
-
-_ln $DOT_HOME/ssh/config         $HOME/.ssh/config
-_ln $DOT_HOME/.profile           $HOME/.profile
-_ln $DOT_HOME/xorg/.xprofile     $HOME/.xprofile
-_ln $DOT_HOME/xorg/.Xresources   $HOME/.Xresources
+_ln $DOT_HOME/emacs/init.el        $HOME/.emacs
+_ln $DOT_HOME/emacs                $HOME/.emacs.d
+_ln $DOT_HOME/ssh/config           $HOME/.ssh/config
+_ln $DOT_HOME/.profile             $HOME/.profile
+_ln $DOT_HOME/xorg/.xprofile       $HOME/.xprofile
+_ln $DOT_HOME/xorg/.Xresources     $HOME/.Xresources
+_ln $DOT_HOME/gnupg/gpg-agent.conf $HOME/.gnupg/gpg-agent.conf
+_ln $DOT_HOME/gnupg/gpg.conf       $HOME/.gnupg/gpg.conf
 
 
 ln_config() {
