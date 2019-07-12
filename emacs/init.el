@@ -503,7 +503,7 @@ A file is considered a theme file if it matches the regex
 (use-package ace-window
   :pin melpa
   :init
-  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  (setq aw-keys '(?a ?s ?d ?f))
   :config
   (set-face-attribute 'aw-leading-char-face nil
                       :height 5.0
@@ -666,7 +666,7 @@ one is manually specified."
 (setq uniquify-min-dir-content 3)
 
 ;; Don't prompt when reverting PDFs
-(setq revert-without-query '(".*\\.pdf"))
+(add-to-list 'revert-without-query ".*\\.pdf")
 
 ;; Do not ping known domains when finding file at point
 (setq ffap-machine-p-known "reject")
