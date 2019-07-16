@@ -1,0 +1,14 @@
+* Notes and config related to the DNF package manager
+
+
+** 
+
+#+begin_src conf-unix :tangle /etc/dnf/aliases.d/USER.conf
+[main]
+enabled = True
+
+[aliases]
+iny = install -y
+upy = update -y
+contents = repoquery -l
+#+end_src
