@@ -206,6 +206,9 @@ bindsym $mod+F3 $mediaNext
 # the same binding plus the 'Fn' modifier) repeat quickly
 bindsym XF86MonBrightnessDown exec light -U 10
 bindsym XF86MonBrightnessUp   exec light -A 10
+bindsym $mod+XF86MonBrightnessDown exec light -U 1  
+bindsym $mod+XF86MonBrightnessUp exec light -A 1
+
 bindsym $mod+F11 exec light -U 1  
 bindsym $mod+F12 exec light -A 1
 
@@ -236,8 +239,6 @@ mode "$mode_system" {
 bindsym $mod+Control+q $fs-pause, exec --no-startup-id i3exit lock, $fs-pause -k
 
 
-bindsym $mod+XF86MonBrightnessDown exec setbacklight -1  
-bindsym $mod+XF86MonBrightnessUp exec setbacklight +1
 
 
 # TODO: Can I use feh to set the wallpaper for a Gnome or KDE session? If so,
