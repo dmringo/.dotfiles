@@ -566,19 +566,6 @@ FACES should take same form as in `base16-theme-define'."
   (load-theme 'tsdh-dark t)
   (set-face-attribute 'mode-line nil :family '(:inherit default)))
 
-
-;; Local "packages"
-(use-package my-utils
-  :demand
-  :ensure f
-  :load-path my/lisp-dir
-  :bind (("M-Q" . my/unfill-paragraph)
-         ("C-x C-o" . my/other-win))
-  :config (progn 
-            (require 'pandoc-mode)
-            (push '("lines" . my/pandoc-include-lines) pandoc-directives)
-            (push '("tag" . my/pandoc-include-tag) pandoc-directives)))
-
 ;; Info-mode
 (use-package info
   :config
@@ -595,6 +582,25 @@ FACES should take same form as in `base16-theme-define'."
   (recentf-mode 1))
 
 
+
+;; Local "packages"
+(use-package my-utils
+  :demand
+  :ensure f
+  :load-path my/lisp-dir
+  :bind (("M-Q" . my/unfill-paragraph)
+         ("C-x C-o" . my/other-win))
+  :config (progn 
+            (require 'pandoc-mode)
+            (push '("lines" . my/pandoc-include-lines) pandoc-directives)
+            (push '("tag" . my/pandoc-include-tag) pandoc-directives)))
+
+;; Uncomment when ready to use mu4e
+;; (use-package my-email
+;;   :load-path my/lisp-dir)
+
+
+
 ;; Use-package stuff ends here.  Below is more standard Elisp config
 
 
@@ -606,6 +612,21 @@ FACES should take same form as in `base16-theme-define'."
                  load-path)
   (require 'llvm-mode)
   (require 'tablegen-mode))
+
+
+(add-hook 'prog-mode-hook
+          (defun my/set-paragraph-sep-for-todos ()
+            "Set `paragraph-separate'"
+            (message "running p-sep setter")
+            (require 'rx)
+            (unless (boundp 'my/-set-para)
+              (setq-local paragraph-separate
+                          (concat "[[:space:]]*\\(NOTE\\|TODO\\):.*$" "\\|"
+                                  paragraph-separate))
+              (setq-local paragraph-start
+                          (concat "[[:space:]]*\\(NOTE\\|TODO\\):.*$" "\\|"
+                              paragraph-start))
+              (setq-local my/-set-para t))))
 
 
 ;; Better alignment when using tabby modes
