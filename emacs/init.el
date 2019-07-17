@@ -515,6 +515,7 @@ A file is considered a theme file if it matches the regex
   :hook ((prog-mode . hl-todo-mode)))
 
 (use-package ssh-config-mode)
+(use-package crontab-mode)
 
 ;; SICP as a texinfo document
 (use-package sicp)
