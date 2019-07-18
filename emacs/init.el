@@ -3,7 +3,7 @@
 (setq gc-cons-threshold (* 100 1024 1024))
 (setq my/hostname (shell-command-to-string "printf %s $(hostname -s)"))
 
-(package-initialize)
+(when (version< emacs-version "27") (package-initialize))
 
 ;; Good to have some secrets
 (let ((s-file (expand-file-name "secrets.el" user-emacs-directory)))
@@ -47,13 +47,22 @@ ordered on the priority.")
        (lambda (spec) (cons (car spec) (cadr spec)))
        my/package-archive-defs))
 
-
 (package-refresh-contents)
 
-(mapc (lambda (pkg)
-	      (unless (package-installed-p pkg)
-	        (package-install pkg)))
-      '(use-package diminish bind-key))
+(dolist (pkg '(use-package bind-key diminish))
+  (unless (package-installed-p pkg) (package-install pkg)))
+
+;; (progn
+;;    (unless (package-installed-p 'use-package)
+;;      (package-install 'use-package)
+;;      ;; seems to be necessary on emacs27 behind a proxy?
+;;      (sit-for 0.2))
+;;    (unless (package-installed-p 'bind-key)
+;;      (package-install 'bind-key)
+;;      (sit-for 0.2)
+;;    (unless (package-installed-p 'diminish)
+;;      (package-install 'diminish)
+;;      (sit-for 0.2))))
 
 (setq
  ;; get more info from use-package - good for newbs like me
