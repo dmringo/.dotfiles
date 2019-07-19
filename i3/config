@@ -249,18 +249,6 @@ bindsym $mod+Control+q $fs-pause, exec --no-startup-id i3exit lock, $fs-pause -k
 exec_always --no-startup-id feh --bg-fill ~/Pictures/wp/current
 
 
-# TODO: Move these somewhere more appropriate
-#
-# set a better keyboard repeat delay and rate - 200ms delay before repeat, 100
-# repetitions per second. Note: the delay is pretty accurate, I think, but the
-# number of repetitions is nowhere near 100.  It's just the value that produces
-# a good rate for me
-exec_always --no-startup-id xset r rate 200 100
-
-# Make the capslock key an extra control key
-# TODO: Should this be a configuration parameter in some file?
-exec_always --no-startup-id setxkbmap -option ctrl:nocaps
-
 # Get a base16 theme like this:
 #
 # curl -SsL \

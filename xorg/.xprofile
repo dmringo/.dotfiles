@@ -1,5 +1,15 @@
 #!/bin/sh
 
+# set a better keyboard repeat delay and rate - 200ms delay before repeat, 100
+# repetitions per second. Note: the delay is pretty accurate, I think, but the
+# number of repetitions is nowhere near 100.  It's just the value that produces
+# a good rate for me
+xset r rate 200 100
+
+# Make the capslock key an extra control key
+setxkbmap -option ctrl:nocaps
+
+
 # if we've got autorandr, we're probably using it
 # TODO: "probably" is not a great solution
 command -v autorandr 2>&1 > /dev/null && autorandr -c
