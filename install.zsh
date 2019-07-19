@@ -15,7 +15,7 @@ set -e
 # set -x
 
 # Unless DOT_HOME is set, use dirname of this script
-DOT_HOME=${DOT_HOME:-${0:A:h}}
+DOT_HOME=${DOT_HOME:-$(dirname ${(%):-%x})}
 
 # keep track of the return status of linking operations
 lnStat=0
