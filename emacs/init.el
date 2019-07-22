@@ -882,6 +882,8 @@ one is manually specified."
   (set-face-attribute 'default nil :font fontstring))
 
 
+(require 'auth-source-pass)
+(auth-source-pass-enable)
 
 ;; from https://emacs.stackexchange.com/a/3157
 (require 'hideshow)
