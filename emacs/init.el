@@ -622,12 +622,13 @@ FACES should take same form as in `base16-theme-define'."
   (require 'llvm-mode)
   (require 'tablegen-mode))
 
-
+;; TODO: Try to make this work.
+;;
+;; Goal is to make it so that lines with TODO: or NOTE: are considered their own
+;; paragraph for the purpose of fill-paragraph.
 (add-hook 'prog-mode-hook
           (defun my/set-paragraph-sep-for-todos ()
             "Set `paragraph-separate'"
-            (message "running p-sep setter")
-            (require 'rx)
             (unless (boundp 'my/-set-para)
               (setq-local paragraph-separate
                           (concat "[[:space:]]*\\(NOTE\\|TODO\\):.*$" "\\|"

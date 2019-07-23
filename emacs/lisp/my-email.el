@@ -8,11 +8,7 @@
 (require 'mu4e)
 (require 'smtpmail)
 
-
 (setq
- ;; TODO: set this per-host maybe?
- ;; It would be nice if this was parameterized on a context or something
- mu4e-get-mail-command "mbsync -a"
  ;; Keep downloads consistent with other apps
  mu4e-attachment-dir "~/Downloads"
  ;; Prefer text over HTML (default)
@@ -96,6 +92,10 @@ of contexts"
 
 
 
+;; TODO: Use msmtp `message-send-mail-with-sendmail'.
+
+;; Probably can configure args to msmtp in the mu4e contexts, but it may be
+;; better to just use a properly configured ~/.msmtprc
 (cl-defmacro my/make-mu4e-context (name email smtp-spec &key match-fn vars)
   "wrapper for `make-mu4e-context' specific to my setup.
 This references `mu4e-maildir', so make sure that's set."
@@ -105,19 +105,20 @@ This references `mu4e-maildir', so make sure that's set."
     :leave-func ,(lambda () (mu4e-message "Leaving context: [%s]" name))
     :match-func
     ,(or match-fn
-         (lambda (msg)
-           (and msg
-                (mu4e-message-contact-field-matches
-                 msg '(:to :cc :bcc) email))))
+         `(lambda (msg)
+            (and msg
+                 (mu4e-message-contact-field-matches
+                  msg '(:to :cc :bcc) ,email))))
     :vars
     (quote
      ((user-mail-address          . ,email)
       (mu4e-sent-folder           . ,(f-join "/" name "sent"))
       (mu4e-drafts-folder         . ,(f-join "/" name "drafts"))
       (mu4e-trash-folder          . ,(f-join "/" name "trash"))
+      (mu4e-refile-folder         . ,(f-join "/" name "archive"))
       (smtpmail-queue-dir         . ,(f-join mu4e-maildir name "q"))
-      (send-mail-function         . smtpmail-send-it)
-      (message-send-mail-function . smtpmail-send-it)
+      (send-mail-function         . sendmail-send-it)
+      (message-send-mail-function . sendmail-send-it)
       (smtpmail-debug-info        . t)
       (smtpmail-debug-verbose     . t)
       (mu4e-get-mail-command      . ,(format "mbsync %s" name))
@@ -136,11 +137,14 @@ This references `mu4e-maildir', so make sure that's set."
        (my/make-mu4e-context
         "dmr"
         "davidmringo@gmail.com"
-        "smtp.gmail.com:587")
+        "smtp.gmail.com:587"
+
+        :vars ((sendmail-program . "~/mysendmail.sh")))
        (my/make-mu4e-context
         "lanl"
         "dringo@lanl.gov"
-        "mail.lanl.gov:25")
+        "mail.lanl.gov:25"
+        )
        ))
 
 
