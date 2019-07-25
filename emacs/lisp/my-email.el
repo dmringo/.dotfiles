@@ -62,14 +62,38 @@
 (setq old-mu4e-pwd-regex mu4e~get-mail-password-regexp)
 (setq mu4e~get-mail-password-regexp (concat "^Enter passphrase: $\\|" old-mu4e-pwd-regex))
 
-(setq mu4e-html2text-command 'mu4e-shr2text)
-(setq mu4e-html2text-command "iconv -c -t UTF-8 | pandoc -f html -t plain")
-(when (executable-find "html2text")
-  (setq mu4e-html2text-command
-        (format "html2text --body-width 72 - utf-8%s"
-                (if (executable-find "pandoc")
-                    " | pandoc -f markdown -t plain"
-                  ""))))
+(defun my/mu4e-set-pandoc-fmt (fmt)
+  (interactive (list (completing-read
+                      "Select format: "
+                      (split-string
+                       ;; could work with internal var pandoc--formats from
+                       ;; pandoc mode, but that feels wrong
+                       (shell-command-to-string "pandoc --list-output-formats"))
+                      nil 'require-match nil 'my/pandoc-fmt-hist)))
+  ;; It would be better to verify that its a real format, but this is better
+  ;; than nothing
+  (setq fmt (or fmt "plain"))
+  (let* ((old-cmd mu4e-html2text-command)
+         (pandoc-ifmt "html-native_spans-native_divs")
+         (pandoc-ofmt (shell-quote-argument fmt))
+         ;; needed so pandoc doesn't choke on invalid bytes
+         (iconv-opts "-c -t UTF-8")
+         (cmd (format "iconv %s | pandoc -f %s -t %s"
+                      iconv-opts pandoc-ifmt pandoc-ofmt)))
+    ;; If nothing has changed, no need to set the mu4e var or refresh the display
+  (unless (equal old-cmd cmd)
+    (setq mu4e-html2text-command cmd)
+    (when-let ((win (get-buffer-window mu4e~view-buffer-name)))
+      (select-window win)
+      (mu4e-view-refresh)))))
+
+(bind-keys :map mu4e-view-mode-map
+           ("c" . my/mu4e-set-pandoc-fmt)
+           ("G" . mu4e-view-refresh))
+
+(my/mu4e-set-pandoc-fmt "markdown")
+
+
 
 ;; use imagemagick for displaying images
 (when (fboundp 'imagemagick-register-types)
@@ -167,7 +191,7 @@ This references `mu4e-maildir', so make sure that's set."
       ,(pcase (split-string smtp-spec ":")
           (`(,host ,port)
            (let ((prog (format
-                        "~/mysendmail.sh %s %s %s %s"
+                        "sendmail.sh %s %s %s %s"
                         name my/location host port)))
              (cons 'sendmail-program prog)))
           (_ (error "Bad `smtp-spec': %S" smtp-spec)))
