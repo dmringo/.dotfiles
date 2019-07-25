@@ -538,6 +538,16 @@ A file is considered a theme file if it matches the regex
   (setq which-key-idle-delay 0.5)
   (which-key-mode))
 
+
+;; Stolen from u/pkkm: https://www.reddit.com/r/emacs/comments/4v7tcj/-/d5wyu1r/
+;; This is useful when e.g. setting color variables based on the current loaded
+;; theme.
+(defvar after-load-theme-hook nil
+  "Hook run after a color theme is loaded using `load-theme'.")
+(defadvice load-theme (after run-after-load-theme-hook activate)
+  "Run `after-load-theme-hook'."
+  (run-hooks 'after-load-theme-hook))
+
 ;; Sources for themes I like
 (use-package base16-theme
   :if (display-graphic-p)
