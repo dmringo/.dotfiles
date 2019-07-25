@@ -123,6 +123,11 @@ ordered on the priority.")
               ("M-p" . previous-error-no-select))
   :config
   (rg-enable-default-bindings)
+  (setq
+   ;; Show the full command in the *rg* buffer
+   rg-hide-command nil
+   ;; always search in compressed files files
+   rg-command-line-flags (list "-z"))
   (defun my/rg-counsel-action (path)
     "Ripgrep in a directory/file, meant for counsel dispatch"
     (require 'f)
@@ -188,7 +193,7 @@ sexpr."
   :bind (("M-x" . counsel-M-x)
          ("C-h f" . counsel-describe-function)
          ;; Note: this overrides `Info-goto-emacs-command-node'
-         ("C-h F" . counsel-describe-face)
+         ("C-h F" . counsel-faces)
          ("C-h v" . counsel-describe-variable)
          ("C-s" . counsel-grep-or-swiper)
          ("C-c i" . counsel-imenu))
@@ -772,6 +777,10 @@ one is manually specified."
  ("C-h W"                   . woman)
  ([remap eval-expression]   . pp-eval-expression)
  ([remap eval-last-sexp]    . pp-eval-last-sexp)
+ ;; Disable `xref-find-definitions' in global map and put it in prog-mode-map instead
+ ("M-." . nil)
+ :map prog-mode-map
+ ("M-." . xref-find-definitions)
 
  :map kmacro-keymap ;; default bound to C-x C-k prefix
  
