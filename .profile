@@ -265,7 +265,6 @@ fi
 # Don't need to keep this around
 unset -f prepend
 
-
 # emacsclient wrapper in bin/. I don't know if this is necessary, but it seems
 # like some things that use EDITOR don't split it on whitespace (so,
 # e.g. EDITOR="emacsclient -c" doesn't work so well). A wrapper script has no
@@ -276,8 +275,6 @@ VISUAL=ec-wrapper
 # Helps emacs figure out what shell to use for `M-x shell`
 ESHELL="/usr/bin/zsh"
 
-# RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep"
-# DOCKER_CONFIG="$HOME/.config/docker/config"
 
 for var in \
   PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH ENV \
@@ -288,3 +285,13 @@ do
     export $var
   fi
 done
+
+
+# Since I use loopback pinentry with gnupg for simplicity, we need to tell
+# password-store to use the "ask" pinentry-mode (i.e. force the use of Pinentry)
+# since it operates in the loopback-incompatible "batch" mode.
+if cmd_exists pass
+then
+  PASSWORD_STORE_GPG_OPTS='--pinentry-mode ask'
+  export PASSWORD_STORE_GPG_OPTS
+fi
