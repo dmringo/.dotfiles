@@ -531,6 +531,11 @@ A file is considered a theme file if it matches the regex
 
 (use-package ssh-config-mode)
 (use-package crontab-mode)
+(use-package nov
+  :init (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+  :config
+  (setq nov-variable-pitch nil)
+  (setq nov-text-width 72))
 
 ;; SICP as a texinfo document
 (use-package sicp)
