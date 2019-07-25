@@ -1,5 +1,4 @@
 ;; TODO: should I be using use-package here or in init.el?
-(use-package org-mime)
 
 ;; This is almost certainly where mu4e will be installed, but it feels awfully
 ;; ugly
@@ -7,6 +6,16 @@
 
 (require 'mu4e)
 (require 'smtpmail)
+(require 'message)
+
+(use-package mu4e-alert
+  :config
+  (mu4e-alert-set-default-style 'log)
+  (add-hook 'after-init-hook
+            (defun my/mu4e-enable-alerts ()
+              (mu4e-alert-enable-notifications)
+              (mu4e-alert-enable-mode-line-display))))
+
 
 (setq
  ;; Keep downloads consistent with other apps
@@ -40,7 +49,28 @@
  ;; use generic `completing-read' since it should be configued to use whatever
  ;; completion system I'm already invested in
  mu4e-completing-read-function 'completing-read
+ ;; This has the effect of setting the point below the cited email in a message
+ ;; reply.  For me, at least, bottom or inline posting style is preferable, but
+ ;; 'traditional (which is nominally "inline") places the point as if for
+ ;; top-posting.
+ message-cite-reply-position 'below
+ ;; Bit of a hack using the internal variable here, but I'd really like to be
+ ;; able to use loopback pinentry with gpg (invoked by mbsync)
+ mu4e~get-mail-password-regexp (concat "^Enter passphrase: $|" mu4e~get-mail-password-regexp)
  )
+
+(setq old-mu4e-pwd-regex mu4e~get-mail-password-regexp)
+(setq mu4e~get-mail-password-regexp (concat "^Enter passphrase: $\\|" old-mu4e-pwd-regex))
+
+(setq mu4e-html2text-command 'mu4e-shr2text)
+(setq mu4e-html2text-command "iconv -c -t UTF-8 | pandoc -f html -t plain")
+(when (executable-find "html2text")
+  (setq mu4e-html2text-command
+        (format "html2text --body-width 72 - utf-8%s"
+                (if (executable-find "pandoc")
+                    " | pandoc -f markdown -t plain"
+                  ""))))
+
 ;; use imagemagick for displaying images
 (when (fboundp 'imagemagick-register-types)
   (imagemagick-register-types))
@@ -50,27 +80,38 @@
              (cons "View in browser" 'mu4e-action-view-in-browser) t)
 
 ;; from https://www.reddit.com/r/emacs/comments/bfsck6/mu4e_for_dummies/elgoumx
-(add-hook 'mu4e-headers-mode-hook
-          (defun my/mu4e-change-headers ()
-            (interactive)
-            (setq mu4e-headers-fields
-                  `((:human-date . 25) ;; alternatively, use :date
-                    (:flags . 6)
-                    (:from . 22)
-                    (:thread-subject . ,(- (window-body-width) 70)) ;; alternatively, use :subject
-                    (:size . 7)))))
+(add-hook
+ 'mu4e-headers-mode-hook
+ (defun my/mu4e-change-headers ()
+   (interactive)
+   (setq mu4e-headers-fields
+         `((:human-date . 25) ;; alternatively, use :date
+           (:flags . 6)
+           (:from . 22)
+           (:thread-subject . ,(- (window-body-width) 70)) ;; alternatively, use :subject
+           (:size . 7)))))
+
 
 (add-hook 'mu4e-headers-search-hook
-          (defun my/h-search-hook (query)
+          (defun my/mu4e-switch-context-on-search (query)
+            "Trys to switch the `mu4e' context intelligently by
+checking for \"maildir:\" in a search query.  If the first path
+element of the maildir in the query is not a context, this may
+blow up."
             (if-let*
                 ((_ (string-match "maildir:\\\"/\\([^/]+\\)/.*\\\"" query))
                  (ctx (match-string 1 query)))
                 (mu4e-context-switch nil ctx))))
 
 (add-hook 'mu4e-compose-mode-hook
-          (defun my/setup-compose ()
+          (defun my/mu4e-setup-compose ()
             "Setup function for composing email from `mu4e'"
             (flyspell-mode)))
+
+(add-hook 'mu4e-view-mode-hook
+          (defun my/mu4e-setup-view ()
+            "Setup function for viewing email from `mu4e'"
+            (turn-on-visual-line-mode)))
 
 ;; There's probably a better way of doing this, rather than a complete redef.
 ;; `defadvice' doesn't seem to work so well though, since it's expecting that
@@ -92,7 +133,7 @@ of contexts"
 
 
 
-;; TODO: Use msmtp `message-send-mail-with-sendmail'.
+;; TODO: Use msmtp and `message-send-mail-with-sendmail'.
 
 ;; Probably can configure args to msmtp in the mu4e contexts, but it may be
 ;; better to just use a properly configured ~/.msmtprc
@@ -123,10 +164,12 @@ This references `mu4e-maildir', so make sure that's set."
       (smtpmail-debug-verbose     . t)
       (mu4e-get-mail-command      . ,(format "mbsync %s" name))
       ;; split the smtp-spec as host:port.  Anything else is an error
-      ,@(pcase (split-string smtp-spec ":")
+      ,(pcase (split-string smtp-spec ":")
           (`(,host ,port)
-           (list (cons 'smtpmail-smtp-server host)
-                 (cons 'smtpmail-smtp-service (string-to-number port))))
+           (let ((prog (format
+                        "~/mysendmail.sh %s %s %s %s"
+                        name my/location host port)))
+             (cons 'sendmail-program prog)))
           (_ (error "Bad `smtp-spec': %S" smtp-spec)))
       ,@vars))))
 
@@ -137,29 +180,17 @@ This references `mu4e-maildir', so make sure that's set."
        (my/make-mu4e-context
         "dmr"
         "davidmringo@gmail.com"
-        "smtp.gmail.com:587"
-
-        :vars ((sendmail-program . "~/mysendmail.sh")))
+        "smtp.gmail.com:587")
        (my/make-mu4e-context
         "lanl"
         "dringo@lanl.gov"
-        "mail.lanl.gov:25"
-        )
-       ))
-
-
-;; NOTE: Probably need to change mu4e-*-folder vars.
-;;
-;; With how `mu' and `mu4e' work now, it looks like if you have multiple
-;; accounts and maildirs for each (e.g. dmr/inbox and lanl/inbox), jumping to
-;; the "/inbox" in `mu4e' will actually show you everything in both inboxes.
-;; That may be useful, but my expectation is that the "/inbox" is relative to
-;; the `mu4e-maildir' and won't match some other maildir.  Of course, the manual
-;; warns that setting this variable has no effect without restarting `mu4e', so
-;; maybe
+        "mail.lanl.gov:25")))
 
 ;; shortcut
 (mu4e-bookmark-define
  "to:dringo@lanl.gov AND maildir:/inbox"
  "LANL inbox only"
  ?l)
+
+
+(provide 'my-email)

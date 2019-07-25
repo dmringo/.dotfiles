@@ -273,9 +273,9 @@ sexpr."
 (use-package gitignore-mode)
 
 (use-package haskell-mode)
-(use-package intero
-  :after haskell-mode
-  :hook haskell-mode)
+;; (use-package intero
+;;   :after haskell-mode
+;;   :hook haskell-mode)
 
 (use-package company
   :demand
@@ -425,13 +425,14 @@ sexpr."
   :config
   ;; If we're visiting an elisp theme file (usually globbed as *-theme.el) turn
   ;; on rainbow mode
-  (defun enable-rainbows-for-theme ()
-    "Enables `rainbow-mode' if the current file is a theme file.
+  (add-hook
+   'find-file-hook
+   (defun enable-rainbows-for-theme ()
+     "Enables `rainbow-mode' if the current file is a theme file.
 A file is considered a theme file if it matches the regex
 \"-theme.el\".  Meant to be used as a `find-file-hook'"
-    (when (string-match-p "-theme.el" (or buffer-file-name ""))
-      (rainbow-mode 1)))
-  (add-hook 'find-file-hook #'enable-rainbows-for-theme))
+     (when (string-match-p "-theme.el" (or buffer-file-name ""))
+       (rainbow-mode 1)))))
 
 
 (use-package markdown-mode
@@ -605,7 +606,6 @@ FACES should take same form as in `base16-theme-define'."
 ;; Local "packages"
 (use-package my-utils
   :demand
-  :ensure f
   :load-path my/lisp-dir
   :bind (("M-Q" . my/unfill-paragraph)
          ("C-x C-o" . my/other-win))
@@ -615,8 +615,9 @@ FACES should take same form as in `base16-theme-define'."
             (push '("tag" . my/pandoc-include-tag) pandoc-directives)))
 
 ;; Uncomment when ready to use mu4e
-;; (use-package my-email
-;;   :load-path my/lisp-dir)
+(use-package my-email
+  :demand
+  :load-path my/lisp-dir)
 
 
 
