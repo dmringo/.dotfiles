@@ -782,10 +782,12 @@ one is manually specified."
  ("C-h W"                   . woman)
  ([remap eval-expression]   . pp-eval-expression)
  ([remap eval-last-sexp]    . pp-eval-last-sexp)
- ;; Disable `xref-find-definitions' in global map and put it in prog-mode-map instead
+ ;; Disable `xref' stuff in global map and put it in prog-mode-map instead
  ("M-." . nil)
+ ("M-," . nil)
  :map prog-mode-map
  ("M-." . xref-find-definitions)
+ ("M-," . xref-pop-marker-stack)
 
  :map kmacro-keymap ;; default bound to C-x C-k prefix
  
