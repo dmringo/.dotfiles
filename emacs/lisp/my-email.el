@@ -81,11 +81,11 @@
          (cmd (format "iconv %s | pandoc -f %s -t %s"
                       iconv-opts pandoc-ifmt pandoc-ofmt)))
     ;; If nothing has changed, no need to set the mu4e var or refresh the display
-  (unless (equal old-cmd cmd)
-    (setq mu4e-html2text-command cmd)
-    (when-let ((win (get-buffer-window mu4e~view-buffer-name)))
-      (select-window win)
-      (mu4e-view-refresh)))))
+    (unless (equal old-cmd cmd)
+      (setq mu4e-html2text-command cmd)
+      (when-let ((win (get-buffer-window mu4e~view-buffer-name)))
+        (select-window win)
+        (mu4e-view-refresh)))))
 
 (bind-keys :map mu4e-view-mode-map
            ("c" . my/mu4e-set-pandoc-fmt)
@@ -116,26 +116,29 @@
            (:size . 7)))))
 
 
-(add-hook 'mu4e-headers-search-hook
-          (defun my/mu4e-switch-context-on-search (query)
-            "Trys to switch the `mu4e' context intelligently by
+(add-hook
+ 'mu4e-headers-search-hook
+ (defun my/mu4e-switch-context-on-search (query)
+   "Trys to switch the `mu4e' context intelligently by
 checking for \"maildir:\" in a search query.  If the first path
 element of the maildir in the query is not a context, this may
 blow up."
-            (if-let*
-                ((_ (string-match "maildir:\\\"/\\([^/]+\\)/.*\\\"" query))
-                 (ctx (match-string 1 query)))
-                (mu4e-context-switch nil ctx))))
+   (if-let*
+       ((_ (string-match "maildir:\\\"/\\([^/]+\\)/.*\\\"" query))
+        (ctx (match-string 1 query)))
+       (mu4e-context-switch nil ctx))))
 
-(add-hook 'mu4e-compose-mode-hook
-          (defun my/mu4e-setup-compose ()
-            "Setup function for composing email from `mu4e'"
-            (flyspell-mode)))
+(add-hook
+ 'mu4e-compose-mode-hook
+ (defun my/mu4e-setup-compose ()
+   "Setup function for composing email from `mu4e'"
+   (flyspell-mode)))
 
-(add-hook 'mu4e-view-mode-hook
-          (defun my/mu4e-setup-view ()
-            "Setup function for viewing email from `mu4e'"
-            (turn-on-visual-line-mode)))
+(add-hook
+ 'mu4e-view-mode-hook
+ (defun my/mu4e-setup-view ()
+   "Setup function for viewing email from `mu4e'"
+   (turn-on-visual-line-mode)))
 
 ;; There's probably a better way of doing this, rather than a complete redef.
 ;; `defadvice' doesn't seem to work so well though, since it's expecting that
@@ -154,6 +157,55 @@ of contexts"
            (ctx-name (completing-read prompt names))
            (ctx (cdr-safe (assoc ctx-name names))))
       (or ctx (mu4e-error "No such context")))))
+
+
+(defvar my/sendmail-prog "sendmail.sh"
+  "Program to use for `my/sendmail'")
+(defvar my/sendmail-args nil
+  "Arguments to be given to `my/sendmail-prog' before any
+  others")
+
+(defun my/sendmail ()
+  "My custom sendmail function using `my/sendmail-prog'.
+Similar to `message-send-mail-with-sendmail' but simplified for
+use with my msmtp wrapper \"sendmail.sh\". Arguments are solely determined by
+`my/sendmail-args'"
+  (require 'message)
+  (let ((case-fold-search t))
+    (save-restriction
+      (message-narrow-to-headers))
+    ;; Change header-delimiter to be what sendmail expects.
+    (goto-char (point-min))
+    (re-search-forward
+     (concat "^" (regexp-quote mail-header-separator) "\n"))
+    (replace-match "\n")
+
+    (when message-interactive
+      (with-current-buffer errbuf
+        (erase-buffer))))
+  (let* ((default-directory "/")
+         (prog-with-args (cons my/sendmail-prog my/sendmail-args))
+         (proc (make-process
+                :name "my/sendmail process"
+                :buffer "*my/sendmail stdout*"
+                :stderr "*my/sendmail stderr*"
+                :coding message-send-coding-system
+                :command prog-with-args)))
+    (if )
+    (unless (or (null cpr) (and (numberp cpr) (zerop cpr)))
+      (when errbuf
+        (pop-to-buffer errbuf)
+        (setq errbuf nil))
+      (error "Sending...failed with exit value %d" cpr)))
+  (when message-interactive
+    (with-current-buffer errbuf
+      (goto-char (point-min))
+      (while (re-search-forward "\n+ *" nil t)
+        (replace-match "; "))
+      (if (not (zerop (buffer-size)))
+          (error "Sending...failed to %s"
+                 (buffer-string))))))
+
 
 
 
@@ -189,12 +241,12 @@ This references `mu4e-maildir', so make sure that's set."
       (mu4e-get-mail-command      . ,(format "mbsync %s" name))
       ;; split the smtp-spec as host:port.  Anything else is an error
       ,(pcase (split-string smtp-spec ":")
-          (`(,host ,port)
-           (let ((prog (format
-                        "sendmail.sh %s %s %s %s"
-                        name my/location host port)))
-             (cons 'sendmail-program prog)))
-          (_ (error "Bad `smtp-spec': %S" smtp-spec)))
+         (`(,host ,port)
+          (let ((prog (format
+                       "sendmail.sh %s %s %s %s"
+                       name my/location host port)))
+            (cons 'sendmail-program prog)))
+         (_ (error "Bad `smtp-spec': %S" smtp-spec)))
       ,@vars))))
 
 
