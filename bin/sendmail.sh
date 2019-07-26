@@ -28,11 +28,19 @@ shift || usage
 port="$1"
 shift || usage
 
+# This is really only used from Emacs `make-process` and I don't want to deal
+# with handling interactivity.
+ssh_opts="-o PasswordAuthentication=no"
+
 case "$loc" in
-  home ) [ "$ctx" = "lanl" ] && ssh="ssh work-mac" ;;
-  work ) [ "$ctx" != "lanl" ] && ssh="ssh vps" ;;
+  home ) [ "$ctx" = "lanl" ] && ssh="ssh $ssh_opts work-mac" ;;
+  work ) [ "$ctx" != "lanl" ] && ssh="ssh $ssh_opts vps" ;;
   * ) printf "Bad/missing loc arg: %s\\n" "$loc" ;;
 esac
+
+if [ -n "$ssh" ]
+then
+  ssh="$ssh -o PasswordAuthentication=no"
 
 case "$port" in
   25 ) tls=off;;
