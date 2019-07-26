@@ -15,7 +15,16 @@ set -e
 # set -x
 
 # Unless DOT_HOME is set, use dirname of this script
-DOT_HOME=${DOT_HOME:-$(dirname ${(%):-%x})}
+if [[ -z $DOT_HOME ]]
+then
+  # more or less equiv to ${BASH_SOURCE[0]}
+  this_file=${(%):-%x}
+  # get absolute path (a modifier), then dirname (h modifier)
+  DOT_HOME=${this_file:a:h}
+else
+  # always want an absolute path, even if DOT_HOME is set
+  DOT_HOME=${DOT_HOME:a}
+fi
 
 # keep track of the return status of linking operations
 lnStat=0
