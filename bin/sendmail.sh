@@ -11,11 +11,14 @@
 # remaining args are passed to msmtp
 #
 # Example: scriptname lanl home smtp.gmail.com 587
+#
+# --end-usage--
 
 
 usage() {
   local src="${BASH_SOURCE[0]}"
-  sed -n -e "s|scriptname|$src|" -e "s|^#||" -e "2,/Example:/p" "$src"
+  local end_re='/--end-usage--/'
+  sed -n -e "s|scriptname|$src|; s|^#||; 2,\${${end_re}q;p}" "$src"
   exit 1
 }
 
