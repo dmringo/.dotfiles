@@ -298,7 +298,7 @@ sexpr."
 
 (use-package smartparens
   :demand
-  :init (setq sp-base-key-bindings 'sp)
+  :init (setq sp-base-key-bindings 'paredit)
   :hook ((prog-mode . smartparens-mode)
          (prog-mode . show-smartparens-mode)
          (yaml-mode . smartparens-mode))
@@ -527,7 +527,10 @@ A file is considered a theme file if it matches the regex
   :bind (("C-x o" . 'ace-window)))
 
 (use-package hl-todo
-  :hook ((prog-mode . hl-todo-mode)))
+  :hook ((prog-mode . hl-todo-mode))
+  :config
+  (add-to-list 'hl-todo-keyword-faces
+               '("WIP"  . "#d0bf8f")))
 
 (use-package ssh-config-mode)
 (use-package crontab-mode)
