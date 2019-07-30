@@ -91,7 +91,7 @@
            ("c" . my/mu4e-set-pandoc-fmt)
            ("G" . mu4e-view-refresh))
 
-(my/mu4e-set-pandoc-fmt "markdown")
+(my/mu4e-set-pandoc-fmt "plain")
 
 
 
@@ -161,10 +161,60 @@ of contexts"
 
 (defvar my/sendmail-prog "sendmail.sh"
   "Program to use for `my/sendmail'")
+
 (defvar my/sendmail-args nil
   "Arguments to be given to `my/sendmail-prog' before any
   others")
 
+(defvar my/sendmail-debug t
+  "Whether to log debugging output.  If set to a string, it is
+  interpreted as a buffer name to log to.  Otherwise, if non-nil,
+  logging is done with `message'")
+
+(defvar my/sendmail-buf-pfx "my/sendmail"
+  "Buffer name prefix for my/sendmail processes")
+
+(defun my/sendmail-get-buf (proc stream)
+  "Get the name of the buffer for PROC's STREAM
+STREAM must be one of 'stdout  or 'stderr"
+  (or (memq stream '(stdout stderr))
+      (signal 'wrong-type-argument
+              `(memq ,stream (stdout stderr))))
+  (format "*%s (%s) %s*"
+          my/sendmail-buf-pfx (process-id proc) stream))
+(defun my/sendmail-stderr-buf (proc)
+  "Get the name of the stdout buffer for PROC"
+  (format "*%s[%s] stderr*" my/sendmail-buf-pfx (process-id proc)))
+
+
+(defun my/sendmail-sentinel (proc msg)
+  (let* ((status (process-status proc))
+         (proc-pid (process-id proc))
+         (name (process-name proc)))
+    (pcase status
+      ('exit ;; for a process that has exited.
+       (let ((code (process-exit-status proc)))
+         (unless (zerop code)
+           (alert (format "Sendmail exited with code %s\nSee buffers %s and/or %s"
+                          code
+                          (my/sendmail-get-buf proc 'stdout)
+                          (my/sendmail-get-buf proc 'stderr))
+                  :severity 'high))))
+      ('signal ;; for a process that has got a fatal signal.
+       (alert (format "Sendmail process got fatal signal: %s\nSee buffers %s and/or %s"
+                      msg
+                      (my/sendmail-get-buf proc 'stdout)
+                      (my/sendmail-get-buf proc 'stderr))
+              :severity 'high)))
+    (when my/sendmail-debug
+      (let ((log-msg (format "Process %s changed status to %s: %s"
+                          name status msg)))
+        (if (stringp my/sendmail-debug)
+            (with-current-buffer my/sendmail-debug
+              (insert log-msg) (newline))
+          (message log-msg))))))
+
+;; WIP
 (defun my/sendmail ()
   "My custom sendmail function using `my/sendmail-prog'.
 Similar to `message-send-mail-with-sendmail' but simplified for
@@ -183,28 +233,34 @@ use with my msmtp wrapper \"sendmail.sh\". Arguments are solely determined by
     (when message-interactive
       (with-current-buffer errbuf
         (erase-buffer))))
-  (let* ((default-directory "/")
-         (prog-with-args (cons my/sendmail-prog my/sendmail-args))
-         (proc (make-process
-                :name "my/sendmail process"
-                :buffer "*my/sendmail stdout*"
-                :stderr "*my/sendmail stderr*"
-                :coding message-send-coding-system
-                :command prog-with-args)))
-    (if )
-    (unless (or (null cpr) (and (numberp cpr) (zerop cpr)))
-      (when errbuf
-        (pop-to-buffer errbuf)
-        (setq errbuf nil))
-      (error "Sending...failed with exit value %d" cpr)))
-  (when message-interactive
-    (with-current-buffer errbuf
-      (goto-char (point-min))
-      (while (re-search-forward "\n+ *" nil t)
-        (replace-match "; "))
-      (if (not (zerop (buffer-size)))
-          (error "Sending...failed to %s"
-                 (buffer-string))))))
+  (when-let*
+      (;; (default-directory "/")  - Don't know if I need this...
+       (prog-with-args (cons my/sendmail-prog my/sendmail-args))
+       (tmp-out-buf "*sendmail-tmp-out*")
+       (tmp-err-buf "*sendmail-tmp-err*")
+       ;; Even if the command doesn't exist, this still creates a process object
+       ;; (to say nothing about when the command exits immediately)
+       (proc (condition-case err-var
+                 (make-process
+                  :name "my/sendmail process"
+                  :buffer tmp-out-buf
+                  :stderr tmp-err-buff
+                  :coding message-send-coding-system
+                  :command prog-with-args)
+               (error
+                (destructuring-bind (_ . data) err-var
+                  (message "Failed to make sendmail process")
+                  ;; dolist will yield nil and break out of the `when-let'
+                  (dolist (reason data) (message "  %s" reason))))))
+       (proc-pid (process-id proc)))
+    ;; This yields fairly reliably unique buffer names for separate sendmail
+    ;; processes.  I don't imagine there will ever be more than a few such
+    ;; processes running, so this is probably overkill.
+    (with-current-buffer tmp-out-buf (rename-buffer
+                                      (format "*%s: %s*" my/sendmail-stdout-buf proc-pid)))
+    (with-current-buffer tmp-err-buf (rename-buffer
+                                      (format "*%s: %s*" my/sendmail-stderr-buf proc-pid)))
+    (process-send-region proc (point-min) (point-max))))
 
 
 
@@ -239,13 +295,13 @@ This references `mu4e-maildir', so make sure that's set."
       (smtpmail-debug-info        . t)
       (smtpmail-debug-verbose     . t)
       (mu4e-get-mail-command      . ,(format "mbsync %s" name))
+      ;; WIP
+      (my/sendmail-prog           . "smailq")
       ;; split the smtp-spec as host:port.  Anything else is an error
       ,(pcase (split-string smtp-spec ":")
          (`(,host ,port)
-          (let ((prog (format
-                       "sendmail.sh %s %s %s %s"
-                       name my/location host port)))
-            (cons 'sendmail-program prog)))
+            (cons 'my/sendmail-args
+                  (list name my/location host port)))
          (_ (error "Bad `smtp-spec': %S" smtp-spec)))
       ,@vars))))
 
