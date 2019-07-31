@@ -7,6 +7,7 @@
 (require 'mu4e)
 (require 'smtpmail)
 (require 'message)
+(require 'alert)
 
 (use-package mu4e-alert
   :config
@@ -182,12 +183,12 @@ STREAM must be one of 'stdout  or 'stderr"
               `(memq ,stream (stdout stderr))))
   (format "*%s (%s) %s*"
           my/sendmail-buf-pfx (process-id proc) stream))
-(defun my/sendmail-stderr-buf (proc)
-  "Get the name of the stdout buffer for PROC"
-  (format "*%s[%s] stderr*" my/sendmail-buf-pfx (process-id proc)))
-
 
 (defun my/sendmail-sentinel (proc msg)
+  "Sentinel for processed created by `my/sendail'.
+When `my/sendmail-debug' is non-nil, process state changes are
+logged by this function.  On unexpected failure, alerts are
+created to show what buffers my have more information"
   (let* ((status (process-status proc))
          (proc-pid (process-id proc))
          (name (process-name proc)))
@@ -213,6 +214,7 @@ STREAM must be one of 'stdout  or 'stderr"
             (with-current-buffer my/sendmail-debug
               (insert log-msg) (newline))
           (message log-msg))))))
+
 
 ;; WIP
 (defun my/sendmail ()
