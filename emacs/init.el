@@ -526,6 +526,10 @@ A file is considered a theme file if it matches the regex
                       :inherit 'error)
   :bind (("C-x o" . 'ace-window)))
 
+(use-package expand-region
+  :demand
+  :bind (("M-@" . er/expand-region)))
+
 (use-package hl-todo
   :hook ((prog-mode . hl-todo-mode))
   :config
@@ -664,6 +668,7 @@ FACES should take same form as in `base16-theme-define'."
 
 
 ;; Better alignment when using tabby modes
+
 (defadvice align-regexp (around align-regexp-with-spaces activate)
   "Turn off indent-tabs-mode when aligning.
 Poor man's smart-tabs, but maybe more reliable?"
