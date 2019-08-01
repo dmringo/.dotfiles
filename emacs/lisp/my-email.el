@@ -60,6 +60,13 @@
  mu4e~get-mail-password-regexp (concat "^Enter passphrase: $|" mu4e~get-mail-password-regexp)
  )
 
+;; Not a fan of seeing a bunch of bold stuff in the header view. The background
+;; and underline are sufficient to highlight the message at point, and the
+;; foreground is enough for highlighting unread messages.
+(make-face-unbold 'mu4e-header-highlight-face)
+(make-face-unbold 'mu4e-unread-face)
+
+
 (setq old-mu4e-pwd-regex mu4e~get-mail-password-regexp)
 (setq mu4e~get-mail-password-regexp (concat "^Enter passphrase: $\\|" old-mu4e-pwd-regex))
 
