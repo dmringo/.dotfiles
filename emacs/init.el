@@ -908,20 +908,22 @@ one is manually specified."
 
 ;; Font selection
 (require 'dash)
-(-when-let*
-    ((_ (display-graphic-p))
-     (fontlist
-      '(("Office Code Pro" . 11)
-        ("Inconsolata" . 12)
-        ("DejaVu Sans Mono" . 10)))
-     (fontpair (-first
-                (lambda (pr)
-                  (find-font (font-spec :name (car pr))))
-                fontlist))
-     ((name . size) fontpair)
-     (fontstring (format "%s-%s" name size )))
-  (message fontstring)
-  (set-face-attribute 'default nil :font fontstring))
+(funcall
+ (defun my/set-default-fonts ()
+   "Set the default font to one of a few I like"
+   (-when-let*
+       ((_ (display-graphic-p))
+        (fontlist
+         '(("DejaVu Sans Mono" :size 11.0 :weight normal)
+           ("Office Code Pro"  :size 11.0 :weight normal)
+           ("Inconsolata"      :size 12.0 :weight normal)
+           ("Everson Mono"     :size 11.0 :weight bold)))
+        (font-entity (--reduce-from ;; \acc it ->
+                      (or acc
+                          (let ((spec (apply #'font-spec :name it)))
+                            (when (find-font spec) spec)))
+                      nil fontlist)))
+     (set-face-attribute 'default nil :font font-entity))))
 
 
 (require 'auth-source-pass)
