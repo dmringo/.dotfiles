@@ -143,9 +143,7 @@ ordered on the priority.")
   :demand
   :diminish ivy-mode
   :pin melpa
-  :bind  (("C-c C-r" . ivy-resume)
-          :map ivy-minibuffer-map
-          ("C-r" . ivy-previous-line-or-history))
+  :bind  (("C-c C-r" . ivy-resume))
   :config (progn
             (ivy-mode 1)
             (setq ivy-height 20
@@ -191,12 +189,12 @@ sexpr."
   :demand
   :diminish counsel-mode
   :bind (("M-x" . counsel-M-x)
-         ("C-h f" . counsel-describe-function)
          ;; Note: this overrides `Info-goto-emacs-command-node'
          ("C-h F" . counsel-faces)
-         ("C-h v" . counsel-describe-variable)
          ("C-s" . counsel-grep-or-swiper)
-         ("C-c i" . counsel-imenu))
+         ("C-c i" . counsel-imenu)
+         :map ivy-minibuffer-map
+         ("C-r" . counsel-minibuffer-history))
   :config 
   ;; Suggested by Oleh
   (setq counsel-grep-command
@@ -467,7 +465,15 @@ A file is considered a theme file if it matches the regex
 
 
 (use-package helpful
-  :bind ())
+  :demand
+  ;; TODO: bind C-h to a new "help-map"?  Would this shadow "C-h <char>"
+  ;; bindings that don't exist in that map? (seems like not for simple tests ...)
+  :bind
+  (:map help-map
+        ("f"       . helpful-callable)
+        ("v"       . helpful-variable)
+        ("k"       . helpful-key)
+        ("C-<SPC>" . helpful-at-point)))
 
 (use-package prescient
   :demand
