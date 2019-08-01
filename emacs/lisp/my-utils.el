@@ -194,5 +194,19 @@ in the cyle, whereas <O> and <C-S-o> move backwards, as if
      (define-key map (kbd "C-S-o") (lambda () (interactive) (my/other-win -1)))
      map)))
 
+(defmacro my/log-var* (&rest FORMS)
+  "Log the values and literal forms of FORMS to buffer *my/log*
+Useful for printf-style debugging.  Probably buggy itself though..."
+  `(with-current-buffer
+       (get-buffer-create "*my/log*")
+     (save-excursion
+       (goto-char (point-max))
+       ,@(mapcar
+          (lambda (sym)
+            `(insert
+              (format "%s:\n%s\n\n"
+                      ',sym (pp-to-string ,sym))))
+          syms))))
+
 
 (provide 'my-utils)
