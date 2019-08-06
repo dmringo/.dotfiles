@@ -86,13 +86,16 @@
          (pandoc-ofmt (shell-quote-argument fmt))
          ;; needed so pandoc doesn't choke on invalid bytes
          (iconv-opts "-c -t UTF-8")
-         (cmd (format "iconv %s | pandoc -f %s -t %s"
+         ;; Not sure about the number of columns here.  I think a persisent
+         ;; mail-view window configuration would be better...
+         (cmd (format "iconv %s | pandoc -f %s -t %s --wrap=auto --columns=90"
                       iconv-opts pandoc-ifmt pandoc-ofmt)))
     ;; If nothing has changed, no need to set the mu4e var or refresh the display
     (unless (equal old-cmd cmd)
       (setq mu4e-html2text-command cmd)
       (when-let ((win (get-buffer-window mu4e~view-buffer-name)))
         (select-window win)
+        (setq mu4e~view-html-text t)
         (mu4e-view-refresh)))))
 
 (bind-keys :map mu4e-view-mode-map
@@ -237,11 +240,7 @@ use with my msmtp wrapper \"sendmail.sh\". Arguments are solely determined by
     (goto-char (point-min))
     (re-search-forward
      (concat "^" (regexp-quote mail-header-separator) "\n"))
-    (replace-match "\n")
-
-    (when message-interactive
-      (with-current-buffer errbuf
-        (erase-buffer))))
+    (replace-match "\n"))
   (when-let*
       (;; (default-directory "/")  - Don't know if I need this...
        (prog-with-args (cons my/sendmail-prog my/sendmail-args))
@@ -300,7 +299,7 @@ This references `mu4e-maildir', so make sure that's set."
       (mu4e-refile-folder         . ,(f-join "/" name "archive"))
       (smtpmail-queue-dir         . ,(f-join mu4e-maildir name "q"))
       (send-mail-function         . sendmail-send-it)
-      (message-send-mail-function . sendmail-send-it)
+      (message-send-mail-function . my/sendmail)
       (smtpmail-debug-info        . t)
       (smtpmail-debug-verbose     . t)
       (mu4e-get-mail-command      . ,(format "mbsync %s" name))
@@ -310,7 +309,7 @@ This references `mu4e-maildir', so make sure that's set."
       ,(pcase (split-string smtp-spec ":")
          (`(,host ,port)
             (cons 'my/sendmail-args
-                  (list name my/location host port)))
+                  (list name (format "%s" my/location) host port)))
          (_ (error "Bad `smtp-spec': %S" smtp-spec)))
       ,@vars))))
 
