@@ -297,6 +297,9 @@ sexpr."
 (use-package smartparens
   :demand
   :init (setq sp-base-key-bindings 'paredit)
+  :bind (:map smartparens-mode-map
+              ("C-M-k" . sp-kill-sexp)
+              ("C-M-<backspace>" . sp-backward-kill-sexp))
   :hook ((prog-mode . smartparens-mode)
          (prog-mode . show-smartparens-mode)
          (yaml-mode . smartparens-mode))
