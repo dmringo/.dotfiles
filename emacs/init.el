@@ -293,6 +293,7 @@ sexpr."
               ("C-p"   . my/company-prev)))
 
 (use-package pass)
+(use-package vterm)
 
 (use-package smartparens
   :demand
