@@ -429,17 +429,46 @@ sexpr."
 (use-package json-mode :diminish)
 
 (use-package rainbow-mode
-  :config
-  ;; If we're visiting an elisp theme file (usually globbed as *-theme.el) turn
-  ;; on rainbow mode
+  :init
   (add-hook
+   ;; If we're visiting an elisp theme file (usually globbed as *-theme.el) turn
+   ;; on rainbow mode
    'find-file-hook
    (defun enable-rainbows-for-theme ()
      "Enables `rainbow-mode' if the current file is a theme file.
 A file is considered a theme file if it matches the regex
 \"-theme.el\".  Meant to be used as a `find-file-hook'"
      (when (string-match-p "-theme.el" (or buffer-file-name ""))
-       (rainbow-mode 1)))))
+       (rainbow-mode 1))))
+  :config  
+  (add-hook
+   'rainbow-mode-hook
+   (defun my/add-base16-rainbow-highlights ()
+     (font-lock-add-keywords
+      nil
+      '(("\\<:?\\(base0[0-9A-F]\\)\\>"
+         (0  ;; <-- defining face for group 0, i.e. the whole regex
+          (when-let*
+              (;; get a symbol we can use with the plist (e.g. :base04)
+               (match-sym (intern (concat ":" (match-string 1))))
+               (theme (my/get-base16-enabled-theme))
+               (colors (my/get-base16-color-plist theme))
+               (color (plist-get colors match-sym)))
+                 ;; annoying, but I don't want to do this
+                 ;; (alist (ht-to-alist (ht-from-plist colors)))
+                 ;; (str-alist (mapcar (-lambda ((sym . color))
+                 ;;                      (cons (substring (symbol-name sym) 1) color))
+                 ;;                    alist))
+                 ;; (color (cdr (assoc-string  str-alist))))
+            `((:foreground
+               ;; similar to logic in rainbow-mode for lightness
+               ,(if (> 0.5 (caddr (apply #'color-rgb-to-hsl
+                                         (color-name-to-rgb color))))
+                    "white" "black"))
+              (:background ,color)))
+              ;; (rainbow-colorize-by-assoc str-alist)
+              )))
+      t))))
 
 
 (use-package markdown-mode
@@ -572,30 +601,46 @@ A file is considered a theme file if it matches the regex
 ;; theme.
 (defvar after-load-theme-hook nil
   "Hook run after a color theme is loaded using `load-theme'.")
-(defadvice load-theme (after run-after-load-theme-hook activate)
-  "Run `after-load-theme-hook'."
-  (run-hooks 'after-load-theme-hook))
+(advice-add
+ 'load-theme :after
+ (defun run-load-theme-hooks (theme &rest ignored)
+   "Run hooks in `after-load-theme-hook'"
+   (run-hook-with-args 'after-load-theme-hook theme)))
+
 
 ;; Sources for themes I like
 (use-package base16-theme
   :if (display-graphic-p)
   :demand
-  :config
+  :config  
+  (defun my/get-base16-color-plist (theme)
+    (let ((color-var (intern (concat (symbol-name theme) "-colors"))))
+      (if (boundp color-var)
+          (symbol-value color-var)
+        (error "%s is probably not a base16 theme or is not loaded" theme))))
+  (defun my/get-base16-enabled-theme ()
+    "Return the first enabled base16 theme or nil"
+    (interactive)
+    (-find (lambda (theme)
+             (save-match-data
+               (string-match "base16-" (symbol-name theme))))
+           custom-enabled-themes))
   (defun base16-patch-theme (theme faces)
     "Apply changes in FACES to THEME, a `base16-theme'.
-FACES should take same form as in `base16-theme-define'."
-    ;; hacky way to get the color list for the given theme.  Maybe something
-    ;; better exists?
-    (let* ((color-var (intern (concat (symbol-name theme) "-colors")))
-           (colors (if (boundp color-var)
-                       (symbol-value color-var)
-                     (error "%s is probably not a base16 theme" theme))))
-      (dolist (spec faces)
-        ;; prefer set-face-attribute over base16-set-faces because it preserves
-        ;; any existing face attributes
-        (apply
-         'set-face-attribute
-         `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors))))))
+FACES should take same form as in `base16-theme-define'. If THEME
+is nil, the first loaded base16 theme is used (see
+`my/get-base16-enabled-theme'). If no such theme is loaded,
+calling this function is a NOP"
+    (when
+        ;; allow nil arg => get current base16 theme
+        (setq theme (or theme (my/get-base16-enabled-theme)))
+      (let ((colors (my/get-base16-color-plist theme)))
+        (dolist (spec faces)
+          ;; prefer set-face-attribute over base16-set-faces because it preserves
+          ;; any existing face attributes
+          (apply
+           'set-face-attribute
+           `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors)))))))
   (let ((theme 'base16-material))
     (load-theme theme t)
     (require 'org-faces)
@@ -603,6 +648,8 @@ FACES should take same form as in `base16-theme-define'."
      theme
      '((org-todo :background base01)
        (org-done :background base01)
+       (mode-line :background base05 :foreground base03)
+       (mode-line-buffer-id :foreground base01 :weight bold)
        (undo-tree-visualizer-current-face :foreground base00
                                           :background base0B)))))
 
