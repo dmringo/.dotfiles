@@ -209,4 +209,20 @@ Useful for printf-style debugging.  Probably buggy itself though..."
           syms))))
 
 
+(defun my/ssh-agent-refresh ()
+  "set ssh-agent values in the environment"
+  (interactive)
+  (with-temp-buffer
+    (call-process "ssh-agent" nil t)
+    (goto-char (point-min))
+    (re-search-forward "^SSH_AUTH_SOCK=\\([^;]+\\);")
+    (when-let ((sock (match-string 1)))
+      (message "setting SSH_AUTH_SOCK: %s" sock)
+      (setenv "SSH_AUTH_SOCK" sock))
+    (re-search-forward "^SSH_AGENT_PID=\\([0-9]+\\);")
+    (when-let ((pid (match-string 1)))
+      (message "setting SSH_AGENT_PID: %s" pid)
+      (setenv "SSH_AGENT_PID" pid))))
+
+
 (provide 'my-utils)
