@@ -726,48 +726,42 @@ calling this function is a NOP"
 
 ;; Better alignment when using tabby modes
 
-(defadvice align-regexp (around align-regexp-with-spaces activate)
-  "Turn off indent-tabs-mode when aligning.
+(advice-add
+ 'align-regexp
+ :around
+ (defun fix-indent-for-align-rx (origfn &rest args)
+   "Turn off indent-tabs-mode when aligning.
 Poor man's smart-tabs, but maybe more reliable?"
-  (let ((indent-tabs-mode nil))
-    ad-do-it))
+   (let ((indent-tabs-mode nil))
+     (apply origfn args))))
 
 ;; Better buffer handing for {async-,}shell-command
-(defadvice shell-command
-    (after shell-rename-buffer activate)
-  "Preserve shell-command output in a well-named buffer unless
+(advice-add
+ 'shell-command
+ :after
+ (defun shell-rename-buffer (cmd &optional o-buf e-buf)
+   "Preserve shell-command output in a well-named buffer unless
 one is manually specified."
-  (let((cmd    ;; The original command
-        (ad-arg-binding-field (car ad-arg-bindings) 'value))
-       (o-buff ;; the (optional) output buffer
-        (ad-arg-binding-field (cadr ad-arg-bindings) 'value)))
-    ;; if there was an output buffer, we don't want to mess with it
-    (unless o-buff
-      (let* ((async? (string-match "[ \t]*&[ \t]*\\'" cmd))
-             (new-bufname ;; what we'll call the new buffer
-              (format "*%s shell: %s*" (if async? "async" "sync") cmd))          
-             (orig-bufname ;; what the old buffer was calld
-              (if async? "*Async Shell Command*" "*Shell Command Output*")))
-        (with-current-buffer orig-bufname
-          (rename-buffer new-bufname t))))))
-
-(defadvice man
-    (around make-man-pushy activate)
-  "Advice to make `man' reuse the window when called from a
+   (unless o-buff
+     (let* ((async? (string-match "[ \t]*&[ \t]*\\'" cmd))
+            (new-bufname ;; what we'll call the new buffer
+             (format "*%s shell: %s*" (if async? "async" "sync") cmd))          
+            (orig-bufname ;; what the old buffer was calld
+             (if async? "*Async Shell Command*" "*Shell Command Output*")))
+       (with-current-buffer orig-bufname
+         (rename-buffer new-bufname t))))))
+               
+(advice-add
+ 'man
+ :around
+ (defun make-man-pushy (origfn &rest args)
+   "Advice to make `man' reuse the window when called from a
 `Man-mode' buffer"
-  ;; TODO: make this interactive, and based on prefix arg, maybe reuse an
-  ;; existing window. Can find such a window like so:
-  ;; (dolist (win (window-list))
-  ;; (let ((buf (window-buffer win)))
-  ;;   (when buf
-  ;;     (with-current-buffer buf
-  ;;       (when (equal major-mode 'Man-mode)
-  ;;         (message "Found one: %S" win))))))
-  (let ((Man-notify-method
-         (if (equal major-mode 'Man-mode)
-             'pushy
-           Man-notify-method)))
-    ad-do-it))
+   (let ((Man-notify-method
+          (if (equal major-mode 'Man-mode)
+              'pushy
+            Man-notify-method)))
+     (apply origfn args))))
 
 ;; When narrowing to a [de]fun[ction], include preceding comments
 (setq narrow-to-defun-include-comments t)
