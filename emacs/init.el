@@ -959,7 +959,8 @@ one is manually specified."
    (-when-let*
        ((_ (display-graphic-p))
         (fontlist
-         '(("DejaVu Sans Mono" :size 11.0 :weight normal)
+         '(("Hack"             :size 11.0 :weight normal)
+           ("DejaVu Sans Mono" :size 11.0 :weight normal)
            ("Office Code Pro"  :size 11.0 :weight normal)
            ("Inconsolata"      :size 12.0 :weight normal)
            ("Everson Mono"     :size 11.0 :weight bold)))
