@@ -273,11 +273,19 @@ EDITOR=ec-wrapper-nw
 VISUAL=ec-wrapper
 
 # Helps emacs figure out what shell to use for `M-x shell`
-ESHELL="/usr/bin/zsh"
+if cmd_exists zsh
+then
+  SHELL="$(which zsh)"
+elif cmd_exists bash
+then
+  SHELL="$(which zsh)"
+fi
+
+ESHELL="$SHELL"
 
 
 for var in \
-  PATH MANPATH INFOPATH GOPATH EDITOR ESHELL CDPATH ENV \
+  PATH MANPATH INFOPATH GOPATH EDITOR SHELL ESHELL CDPATH ENV \
        XDG_CONFIG_HOME XDG_RUNTIME_DIR XDG_DATA_HOME XDG_CACHE_HOME
 do
   if [ -n "$var" ]
