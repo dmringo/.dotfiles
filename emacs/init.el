@@ -742,7 +742,7 @@ Poor man's smart-tabs, but maybe more reliable?"
  (defun shell-rename-buffer (cmd &optional o-buf e-buf)
    "Preserve shell-command output in a well-named buffer unless
 one is manually specified."
-   (unless o-buff
+   (unless o-buf
      (let* ((async? (string-match "[ \t]*&[ \t]*\\'" cmd))
             (new-bufname ;; what we'll call the new buffer
              (format "*%s shell: %s*" (if async? "async" "sync") cmd))          
@@ -972,8 +972,12 @@ one is manually specified."
      (set-face-attribute 'default nil :font font-entity))))
 
 
+;; don't want plain-text auth storage, so just use gpg-encrypted source
+(setq auth-sources '("~/.authinfo.gpg"))
 (require 'auth-source-pass)
+;; also enable password-store auth source
 (auth-source-pass-enable)
+
 
 ;; from https://emacs.stackexchange.com/a/3157
 (require 'hideshow)
