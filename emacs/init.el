@@ -1,9 +1,36 @@
 ;; -*- lexical-binding: t -*-
 
-(setq gc-cons-threshold (* 100 1024 1024))
-(setq my/hostname (shell-command-to-string "printf %s $(hostname -s)"))
+(defun my/emacs-file-path (file)
+  "Return an absolute path to FILE relative to
+`user-emacs-directory'"
+  (expand-file-name file user-emacs-directory))
 
-(when (version< emacs-version "27") (package-initialize))
+;; This bit stolen/modified from John Wiegley's config:
+;; github.com/jwiegley/dot-emacs
+(defvar file-name-handler-alist-old file-name-handler-alist
+  "Initial file-name-handler-alist at emacs startup")
+(setq
+ package-enable-at-startup  nil
+ file-name-handler-alist    nil
+ message-log-max            (* 16  1024)
+ gc-cons-threshold          (* 256 1024 1024)
+ gc-cons-percentage         0.6
+ auto-window-vscroll        nil)
+(add-hook
+ 'after-init-hook
+ `(lambda ()
+    (setq
+     file-name-handler-alist  file-name-handler-alist-old
+     gc-cons-threshold        (* 80 1024 1024)
+     gc-cons-percentage       0.1)
+    (garbage-collect))
+ t)
+
+
+
+
+(add-to-list 'load-path (my/emacs-file-path "lisp"))
+
 
 ;; Good to have some secrets
 (let ((s-file (expand-file-name "secrets.el" user-emacs-directory)))
