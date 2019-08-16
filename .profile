@@ -304,6 +304,61 @@ then
   export PASSWORD_STORE_GPG_OPTS
 fi
 
+try_source_ssh_agent() {
+  # We could also check to make sure the ssh-agent file actually contains lines
+  # matching what we expect, but that's probably unnecessary.
+  
+  if ! [ -f "$HOME/.ssh-agent" ]
+  then
+    printf "$HOME/.ssh-agent DNE\\n" 
+    return 1
+  fi
+  
+  if ! . "$HOME/.ssh-agent"
+  then
+    printf "unable to source $HOME/.ssh-agent\\n"
+    return 1
+  fi
+
+  if ! [ -S "$SSH_AUTH_SOCK" ]
+  then
+    printf "SSH_AUTH_SOCK=%s is not a socket\\n" "$SSH_AUTH_SOCK"
+    return 1
+  fi
+       
+  if ! ps -p "$SSH_AGENT_PID" | grep -q ssh-agent
+  then
+    printf "SSH_AGENT_PID=%s does not appear to be an ssh-agent\\n" "$SSH_AGENT_PID"
+    return 1
+  fi
+}
+
+# In some Gnome-y setups, the ssh-agent started by the system doesn't seem to
+# work so well. ssh hangs, maybe during communication through the socket?
+# Manually starting an agent will fix this, but I don't want to do that for
+# every new shell I start.  This function will try to setup *one* ssh-agent
+# instance (if it has not done so yet) and record the PID and SOCK vars to a
+# file.  If there is an instance, it will just try to source the file.
+setup_ssh_agent() {
+  
+  # if SETUP var is not set, the ssh-agent file is almost certainly invalid
+  # -f permits forcing a new ssh-agent into existence.
+  # Otherwise, try to source the file and proceed from there
+  if [ -z "$SSH_AGENT_SETUP" ] || [ "$1" = "-f" ] || ! try_source_ssh_agent
+  then
+    ssh-agent > "$HOME/.ssh-agent"
+    if ! try_source_ssh_agent
+    then
+      echo "Unable to setup ssh agent. Not sure why..."
+    else
+      SSH_AGENT_SETUP="$(date -Is)"
+      export SSH_AGENT_SETUP
+    fi
+  fi
+}
+
+setup_ssh_agent
+
 
 # xprofile stuff
 #
