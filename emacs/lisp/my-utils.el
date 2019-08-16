@@ -1,15 +1,6 @@
 ;;; -*- lexical-binding: t -*-
 
-;;; Stolen from https://www.emacswiki.org/emacs/UnfillParagraph
-;;; Stefan Monnier <foo at acm.org>. It is the opposite of fill-paragraph
-(defun my/unfill-paragraph (&optional region)
-  "Takes a multi-line paragraph and makes it into a single line of text."
-  (interactive (progn (barf-if-buffer-read-only) '(t)))
-  (let ((fill-column (point-max))
-        ;; This would override `fill-column' if it's an integer.
-        (emacs-lisp-docstring-fill-column t))
-    (fill-paragraph nil region)))
-
+;; TODO: move this closer to Pandoc config
 (defun my/pandoc-include-lines (_ spec)
   "Meant to be used as an @@-directive in pandoc-mode. The string
 argument SPEC should be of the form \"FILENAME:START[(+|-)END]\".
@@ -91,48 +82,11 @@ This assumes that there is a pair in the variable `pandoc-directives'
       (error (format "bad tag spec: \"%s\"" spec)))))
 
 (defun my/insert-date (&optional timespec)
+  "Insert current date with TIMESPEC or \"%F\" if TIMESPEC is
+nil"
   (interactive)
-  (let ((spec (or timespec  "%b %e, %Y")))
+  (let ((spec (or timespec  "%F")))
     (insert (format-time-string spec))))
-
-(defun my/blame-me (&optional timespec)
-  (interactive)
-  (let* ((time (format-time-string (or timespec  "%b %e, %Y")))
-         (str (format "[%s - %s]" (user-login-name) time)))
-    (insert str)))
-
-(defun my/ansi-term-zsh ()
-  (interactive)
-  (ansi-term "zsh"))
-
-;; Stolen from Emacs Prelude (https://github.com/bbatsov/emacs-prelude)
-;;
-;; TODO: If prefix arg is specified and in a recognized project, copy name
-;; relative to project root
-(defun my/clip-filename ()
-  "Copy the current buffer file name to the clipboard."
-  (interactive)
-  (let ((filename (if (equal major-mode 'dired-mode)
-                      default-directory
-                    (buffer-file-name))))
-    (when filename
-      (kill-new filename)
-      (message "Copied buffer file name '%s' to the clipboard." filename))))
-
-
-;; Handler for 'tel:' links via Google Voice
-(require 'org)
-(defun my/org-gvoice-dial (number)
-  "Set up a call to NUMBER via the Google Voice website.
-This still requires some interaction, signing in to Google if
-necessary and selecting a number to call from."
-  (let ((url
-         (format "https://voice.google.com/u/0/calls?a=nc,%s"
-                 number)))
-    (message "Calling %s via %s" number url)
-    (browse-url url)))
-
-(org-add-link-type "tel" 'my/org-gvoice-dial)
 
 
 (defun my/fill-line (char)
@@ -146,7 +100,6 @@ past the end, no action is taken."
               (n (- end (current-column)))
               (_ (< 0 n)))
     (insert (make-string n char))))
-
 
 (defun my/relativize-path-at-point ()
   "Read a path at the point and convert it to a relative path"
@@ -172,45 +125,18 @@ important ones."
                     (let ((attr (font-get (face-attribute 'default :font) k)))
                       (when (eq k :size) ; adjust only the size
                         (setq attr (+ attr delta)))
-                      (list k attr))) font-keys))
+                      (list k attr)))
+		  font-keys))
          (font (apply #'font-spec (apply #'append attr-pairs))))
     (set-face-attribute 'default nil :font font)))
 
 
-(defun my/other-win (arg)
-  "Like `other-window' but with a conveneient transient map.
-
-Similar to `text-scale-adjust', after initial invocation, <o> and
-<C-o> both repeat `other-window', moving focus to the next window
-in the cyle, whereas <O> and <C-S-o> move backwards, as if
-`other-window' was called with an argument of negative 1."
-  (interactive "p")
-  (other-window arg)
-  (set-transient-map
-   (let ((map (make-sparse-keymap)))
-     (define-key map (kbd "C-o") (lambda () (interactive) (my/other-win 1)))
-     (define-key map (kbd "o")   (lambda () (interactive) (my/other-win 1)))
-     (define-key map (kbd "O")   (lambda () (interactive) (my/other-win -1)))
-     (define-key map (kbd "C-S-o") (lambda () (interactive) (my/other-win -1)))
-     map)))
-
-(defmacro my/log-var* (&rest FORMS)
-  "Log the values and literal forms of FORMS to buffer *my/log*
-Useful for printf-style debugging.  Probably buggy itself though..."
-  `(with-current-buffer
-       (get-buffer-create "*my/log*")
-     (save-excursion
-       (goto-char (point-max))
-       ,@(mapcar
-          (lambda (sym)
-            `(insert
-              (format "%s:\n%s\n\n"
-                      ',sym (pp-to-string ,sym))))
-          syms))))
-
-
 (defun my/ssh-agent-refresh ()
-  "set ssh-agent values in the environment"
+  "Create a new ssh-agent and set the appropriate variables."
+  ;; TODO: try to use the same stuff from .profile?
+  ;;
+  ;; In theory, the .profile logic should ensure the environment is already
+  ;; properly set up for emacs
   (interactive)
   (with-temp-buffer
     (call-process "ssh-agent" nil t)

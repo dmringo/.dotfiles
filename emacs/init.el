@@ -1,12 +1,19 @@
 ;; -*- lexical-binding: t -*-
 
-(defun my/emacs-file-path (file)
+(defun user-emacs-file (&optional file)
   "Return an absolute path to FILE relative to
-`user-emacs-directory'"
+`user-emacs-directory'.  If FILE is nil, return absolute path to
+init.el therein."
+  ;; TODO: Check for ~/.emacs too?
+  ;; NOTE: This may subsumed by changes in 27 release
+  (setq file (or file "init.el"))
   (expand-file-name file user-emacs-directory))
 
-;; This bit stolen/modified from John Wiegley's config:
-;; github.com/jwiegley/dot-emacs
+;; Make sure we've got straight
+(load (user-emacs-file "lisp/get-straight.el"))
+
+;; This bit helps optimize startup time and is stolen+modified from
+;; John Wiegley's config: github.com/jwiegley/dot-emacs
 (defvar file-name-handler-alist-old file-name-handler-alist
   "Initial file-name-handler-alist at emacs startup")
 (setq
@@ -26,70 +33,27 @@
     (garbage-collect))
  t)
 
+;; My elisp is here
+(add-to-list 'load-path (user-emacs-file "lisp"))
+
+;; Get the simple stuff right away
+(require 'my-simple)
+
+;; Also some bananas 
+(require 'my-bananas)
 
 
 
-(add-to-list 'load-path (my/emacs-file-path "lisp"))
 
 
-;; Good to have some secrets
-(let ((s-file (expand-file-name "secrets.el" user-emacs-directory)))
-  (when (file-exists-p s-file)
-    (load s-file)))
-
-(defconst my/lisp-dir
-  (expand-file-name "lisp" user-emacs-directory))
+;; sets :straight t in all use-package decls
+(setq straight-use-package-by-default t)
 
 
-(defmacro setq-doc (var val &optional explanation)
-  "Set VAR to VAL and update the docstring with an EXPLANATION"
-  (declare (doc-string 3))
-  `(unless (equal ,var ,val)
-     (let* ((doc (documentation-property (quote ,var) 'variable-documentation))
-            (newdoc (format "%s\n\n[%s]\nold: %S new: %S\nreason: %s\n"
-                            doc (format-time-string "%c") ,var ,val
-                            (or ,explanation "No reason given"))))
-       (put (quote ,var) 'variable-documentation newdoc))
-     (setq ,var ,val)))
+(straight-use-package 'use-package)
+(straight-use-package 'bind-keys)
+(straight-use-package 'diminish)
 
-
-(defvar my/package-archive-defs
-  '(("melpa-stable" 10  "https://stable.melpa.org/packages/")
-    ("org"          10  "https://orgmode.org/elpa/")
-    ("gnu"          5   "https://elpa.gnu.org/packages/")
-    ("melpa"        1   "https://melpa.org/packages/"))
-  "List holding package archive info.  Each member has the form
-(ARCHIVE-ID URL PRIORITY) for use in the variables
-`package-archives' and `package-archive-priorities'. Order within
-this list has no bearing on priority, but it's nice to keep it
-ordered on the priority.")
-
-(setq package-archives
-      (mapcar
-       (lambda (spec) (cons (car spec) (nth 2 spec)))
-       my/package-archive-defs))
-
-(setq package-archive-priorities
-      (mapcar
-       (lambda (spec) (cons (car spec) (cadr spec)))
-       my/package-archive-defs))
-
-(package-refresh-contents)
-
-(dolist (pkg '(use-package bind-key diminish))
-  (unless (package-installed-p pkg) (package-install pkg)))
-
-;; (progn
-;;    (unless (package-installed-p 'use-package)
-;;      (package-install 'use-package)
-;;      ;; seems to be necessary on emacs27 behind a proxy?
-;;      (sit-for 0.2))
-;;    (unless (package-installed-p 'bind-key)
-;;      (package-install 'bind-key)
-;;      (sit-for 0.2)
-;;    (unless (package-installed-p 'diminish)
-;;      (package-install 'diminish)
-;;      (sit-for 0.2))))
 
 (setq
  ;; get more info from use-package - good for newbs like me
@@ -106,7 +70,7 @@ ordered on the priority.")
  ;; local packages, I need to specify `:ensure f`
  use-package-always-ensure t)
 
-;; suggested by jwiegly
+;; suggested by jwiegley
 (eval-when-compile
   (require 'use-package))
 (require 'diminish) ;; if you use :diminish (I do)
@@ -178,37 +142,36 @@ ordered on the priority.")
                   ivy-use-selectable-prompt t
                   ivy-initial-inputs-alist 'nil
                   ivy-use-virtual-buffers t)))
-(use-package ivy-hydra)
 
-(use-package origami
-  :config
-  (defun my/elisp-parser (create)
-    "Origami parser for any top-level elisp sexpr.
-This is follows the `origami-lisp-parser' style pretty closely
-but isn't based on a \"def<something>\" regex.  Rather, it folds
-everything that isn't the first line of a multi-line top-level
-sexpr."
-  (lambda (content)
-    (with-temp-buffer
-      (insert content)
-      (goto-char (point-min))
-      (beginning-of-defun -1)
-      (let (beg end offset acc)
-        (while (< (point) (point-max))
-          (setq beg (point))
-          (setq offset (- (point-at-eol) (point)))
-          (end-of-defun)
-          (backward-char)      ;move point to one after the last paren
-          (setq end (1- (point))) ;don't include the last paren in the fold
-          (message "beg:%s end:%s off:%s" beg end offset)
-          (when (and (> offset 0) (> end (+ beg offset)))
-            (setq acc (cons (funcall create beg end offset nil) acc)))
-          (beginning-of-defun -1))
-        (reverse acc)))))
-  (add-to-list 'origami-parser-alist
-               '(emacs-lisp-mode . my/elisp-parser))
-  :bind (:map origami-mode-map
-              ("M-<tab>" . origami-toggle-node)))
+;; (use-package origami
+;;   :config
+;;   (defun my/elisp-parser (create)
+;;     "Origami parser for any top-level elisp sexpr.
+;; This is follows the `origami-lisp-parser' style pretty closely
+;; but isn't based on a \"def<something>\" regex.  Rather, it folds
+;; everything that isn't the first line of a multi-line top-level
+;; sexpr."
+;;   (lambda (content)
+;;     (with-temp-buffer
+;;       (insert content)
+;;       (goto-char (point-min))
+;;       (beginning-of-defun -1)
+;;       (let (beg end offset acc)
+;;         (while (< (point) (point-max))
+;;           (setq beg (point))
+;;           (setq offset (- (point-at-eol) (point)))
+;;           (end-of-defun)
+;;           (backward-char)      ;move point to one after the last paren
+;;           (setq end (1- (point))) ;don't include the last paren in the fold
+;;           (message "beg:%s end:%s off:%s" beg end offset)
+;;           (when (and (> offset 0) (> end (+ beg offset)))
+;;             (setq acc (cons (funcall create beg end offset nil) acc)))
+;;           (beginning-of-defun -1))
+;;         (reverse acc)))))
+;;   (add-to-list 'origami-parser-alist
+;;                '(emacs-lisp-mode . my/elisp-parser))
+;;   :bind (:map origami-mode-map
+;;               ("M-<tab>" . origami-toggle-node)))
 
 (use-package swiper
   :demand)
@@ -233,36 +196,34 @@ sexpr."
 
 (use-package counsel-projectile)
 
-(use-package org
-  :ensure org-plus-contrib
-  :config
-  (progn
-    (setq ;; latexmk is a little more consistent than pdflatex
-          org-latex-pdf-process (list "latexmk -f -pdf %f"))
-    ;; make #+NAME easy-template
-    (add-to-list 'org-structure-template-alist
-                 '("n" . "name"))
-    (add-to-list 'org-structure-template-alist
-                 '("ct" . "clocktable"))))
+;; (use-package org
+;;   :ensure org-plus-contrib
+;;   :config
+;;   (progn
+;;     (setq ;; latexmk is a little more consistent than pdflatex
+;;           org-latex-pdf-process (list "latexmk -f -pdf %f"))
+;;     ;; make #+NAME easy-template
+;;     (add-to-list 'org-structure-template-alist
+;;                  '("n" . "name"))
+;;     (add-to-list 'org-structure-template-alist
+;;                  '("ct" . "clocktable"))))
 
-(use-package ox-gfm)
-(use-package ox-pandoc
-  :pin melpa) 
+;; (use-package ox-gfm)
+;; (use-package ox-pandoc
+;;   :pin melpa) 
 
 ;; asynchronous execution of src blocks in org via babel
-(use-package ob-async)
+;; (use-package ob-async)
 
-(defun my/org-babel-load-langs ()
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((python     . t)
-     (ditaa      . t)
-     (emacs-lisp . t)
-     (shell      . t))))
+;; (defun my/org-babel-load-langs ()
+;;   (org-babel-do-load-languages
+;;    'org-babel-load-languages
+;;    '((python     . t)
+;;      (ditaa      . t)
+;;      (emacs-lisp . t)
+;;      (shell      . t))))
 
-(add-hook 'after-init-hook 'my/org-babel-load-langs)
-
-(use-package hyperbole)
+;; (add-hook 'after-init-hook 'my/org-babel-load-langs)
 
 ;; Undo-tree is great - enable it globally and remove it from the modeline
 ;; (since it should always be active)
@@ -273,15 +234,13 @@ sexpr."
 
 (use-package transient
   ;; keep transient in sync with magit on melpa
-  :pin melpa
   :config (transient-bind-q-to-quit))
 
-(use-package pinentry
-  :init
-  (setq epa-pinentry-mode 'loopback))
+;; (use-package pinentry
+;;   :init
+;;   (setq epa-pinentry-mode 'loopback))
 
 (use-package magit
-  :pin melpa
   :demand
   :bind
   (("M-G"     . magit-status)
@@ -297,12 +256,12 @@ sexpr."
 
 ;; link to Magit buffers in Org-mode
 ;; TODO: customize how export works for these links
-(use-package orgit
-  :after (magit org))
+;; (use-package orgit
+;;   :after (magit org))
 
 (use-package gitignore-mode)
 
-(use-package haskell-mode)
+;; (use-package haskell-mode)
 ;; (use-package intero
 ;;   :after haskell-mode
 ;;   :hook haskell-mode)
@@ -354,7 +313,7 @@ sexpr."
   :hook prog-mode
   :diminish )
 
-(use-package writeroom-mode)
+;; (use-package writeroom-mode)
 
 (use-package pdf-tools
   :if (display-graphic-p)
@@ -367,8 +326,6 @@ sexpr."
 (use-package google-this
   :bind-keymap ("C-c g" . google-this-mode-submap))
 
-(use-package zeal-at-point
-  :bind (("C-c z" . zeal-at-point)))
 
 (use-package lsp-mode
   :demand
@@ -398,7 +355,6 @@ sexpr."
 (use-package ccls
   :after lsp
   ;; Definitely need lsp for ccls to work
-  :pin melpa
   :config
   (require 'json)
   (setq ccls-initialization-options
@@ -437,9 +393,6 @@ sexpr."
 (add-hook 'c++-mode-hook #'my/maybe-enable-c++-lsp-server)
 (add-hook 'c++-mode-hook #'hs-minor-mode)
 
-(use-package google-c-style
-  :config (c-add-style "Google" google-c-style))
-
 (use-package cmake-mode)
 
 (use-package js2-mode
@@ -455,47 +408,7 @@ sexpr."
 
 (use-package json-mode :diminish)
 
-(use-package rainbow-mode
-  :init
-  (add-hook
-   ;; If we're visiting an elisp theme file (usually globbed as *-theme.el) turn
-   ;; on rainbow mode
-   'find-file-hook
-   (defun enable-rainbows-for-theme ()
-     "Enables `rainbow-mode' if the current file is a theme file.
-A file is considered a theme file if it matches the regex
-\"-theme.el\".  Meant to be used as a `find-file-hook'"
-     (when (string-match-p "-theme.el" (or buffer-file-name ""))
-       (rainbow-mode 1))))
-  :config  
-  (add-hook
-   'rainbow-mode-hook
-   (defun my/add-base16-rainbow-highlights ()
-     (font-lock-add-keywords
-      nil
-      '(("\\<:?\\(base0[0-9A-F]\\)\\>"
-         (0  ;; <-- defining face for group 0, i.e. the whole regex
-          (when-let*
-              (;; get a symbol we can use with the plist (e.g. :base04)
-               (match-sym (intern (concat ":" (match-string 1))))
-               (theme (my/get-base16-enabled-theme))
-               (colors (my/get-base16-color-plist theme))
-               (color (plist-get colors match-sym)))
-                 ;; annoying, but I don't want to do this
-                 ;; (alist (ht-to-alist (ht-from-plist colors)))
-                 ;; (str-alist (mapcar (-lambda ((sym . color))
-                 ;;                      (cons (substring (symbol-name sym) 1) color))
-                 ;;                    alist))
-                 ;; (color (cdr (assoc-string  str-alist))))
-            `((:foreground
-               ;; similar to logic in rainbow-mode for lightness
-               ,(if (> 0.5 (caddr (apply #'color-rgb-to-hsl
-                                         (color-name-to-rgb color))))
-                    "white" "black"))
-              (:background ,color)))
-              ;; (rainbow-colorize-by-assoc str-alist)
-              )))
-      t))))
+
 
 
 (use-package markdown-mode
@@ -511,23 +424,14 @@ A file is considered a theme file if it matches the regex
 
 (use-package pandoc-mode :diminish)
 
-(use-package keyfreq
-  :config
-  (keyfreq-mode 1)
-  (keyfreq-autosave-mode 1)
-  (setq keyfreq-file (expand-file-name ".emacs.keyfreq" user-emacs-directory)))
-
 (use-package tablist
   :config
   (add-hook 'tabulated-list-mode-hook 'tablist-minor-mode)
   :bind (:map tablist-minor-mode-map
               ("U" . nil)))
 
-
 (use-package helpful
   :demand
-  ;; TODO: bind C-h to a new "help-map"?  Would this shadow "C-h <char>"
-  ;; bindings that don't exist in that map? (seems like not for simple tests ...)
   :bind
   (:map help-map
         ("f"       . helpful-callable)
@@ -561,8 +465,6 @@ A file is considered a theme file if it matches the regex
 
 ;; Protocol buffer support
 (use-package protobuf-mode)
-
-(use-package easy-kill-extras)
 
 (use-package editorconfig
   :diminish
@@ -632,9 +534,6 @@ A file is considered a theme file if it matches the regex
 ;; SICP as a texinfo document
 (use-package sicp)
 
-(use-package zop-to-char
-  :bind (("M-z" . zop-to-char)))
-
 (use-package which-key
   :demand
   :config
@@ -699,6 +598,42 @@ calling this function is a NOP"
        (undo-tree-visualizer-current-face :foreground base00
                                           :background base0B)))))
 
+(use-package rainbow-mode
+  :init
+  (add-hook
+   ;; If we're visiting an elisp theme file (usually globbed as *-theme.el) turn
+   ;; on rainbow mode
+   'find-file-hook
+   (defun enable-rainbows-for-theme ()
+     "Enables `rainbow-mode' if the current file is a theme file.
+A file is considered a theme file if it matches the regex
+\"-theme.el\".  Meant to be used as a `find-file-hook'"
+     (when (string-match-p "-theme.el" (or buffer-file-name ""))
+       (rainbow-mode 1))))
+  :config  
+  (add-hook
+   'rainbow-mode-hook
+   (defun my/add-base16-rainbow-highlights ()
+     (font-lock-add-keywords
+      nil
+      '(("\\<:?\\(base0[0-9A-F]\\)\\>"
+         (0  ;; <-- defining face for group 0, i.e. the whole regex
+          (when-let*
+              (;; get a symbol we can use with the plist (e.g. :base04)
+               (match-sym (intern (concat ":" (match-string 1))))
+               (theme (my/get-base16-enabled-theme))
+               (colors (my/get-base16-color-plist theme))
+               (color (plist-get colors match-sym)))
+            `((:foreground
+               ;; similar to logic in rainbow-mode for lightness
+               ,(if (> 0.5 (caddr (apply #'color-rgb-to-hsl
+                                         (color-name-to-rgb color))))
+                    "white" "black"))
+              (:background ,color)))
+              ;; (rainbow-colorize-by-assoc str-alist)
+              )))
+      t))))
+
 ;; When in a terminal, prefer the simple builtin tsdh-dark theme over base16 (at
 ;; least until I figure out how to make base16 themes look decent in the
 ;; terminal)
@@ -724,20 +659,20 @@ calling this function is a NOP"
 
 
 ;; Local "packages"
-(use-package my-utils
-  :demand
-  :load-path my/lisp-dir
-  :bind (("M-Q" . my/unfill-paragraph)
-         ("C-x C-o" . my/other-win))
-  :config (progn 
-            (require 'pandoc-mode)
-            (push '("lines" . my/pandoc-include-lines) pandoc-directives)
-            (push '("tag" . my/pandoc-include-tag) pandoc-directives)))
+;; (use-package my-utils
+;;   :demand
+;;   :load-path my/lisp-dir
+;;   :bind (("M-Q" . my/unfill-paragraph)
+;;          ("C-x C-o" . my/other-win))
+;;   :config (progn 
+;;             (require 'pandoc-mode)
+;;             (push '("lines" . my/pandoc-include-lines) pandoc-directives)
+;;             (push '("tag" . my/pandoc-include-tag) pandoc-directives)))
 
 ;; Uncomment when ready to use mu4e
-(use-package my-email
-  :demand
-  :load-path my/lisp-dir)
+;; (use-package my-email
+;;   :demand
+;;   :load-path my/lisp-dir)
 
 
 
@@ -745,7 +680,7 @@ calling this function is a NOP"
 
 
 ;; If there's an llvm-ish folder in the load path
-(require 'cl)
+(require 'cl-lib)
 (when (cl-member-if (lambda (path)
                    (and (file-directory-p path)
                         (string-match "llvm" path)))
@@ -771,7 +706,6 @@ calling this function is a NOP"
 
 
 ;; Better alignment when using tabby modes
-
 (advice-add
  'align-regexp
  :around
@@ -809,28 +743,6 @@ one is manually specified."
             Man-notify-method)))
      (apply origfn args))))
 
-;; When narrowing to a [de]fun[ction], include preceding comments
-(setq narrow-to-defun-include-comments t)
-
-;; Always move to help window after opening (easier to close)
-(setq help-window-select t)
-
-;; Prefer horizontal (i.e. [L] | [R]) splits, without making stupidly narrow
-;; windows
-(setq split-height-threshold nil
-      split-width-threshold 120)
-
-;; Always include some path context in buffer names
-(setq uniquify-min-dir-content 3)
-
-;; Don't prompt when reverting PDFs
-(add-to-list 'revert-without-query ".*\\.pdf")
-
-;; Do not ping known domains when finding file at point
-(setq ffap-machine-p-known "reject")
-
-;; Don't ask about following links to source-controlled files -- just do it
-(setq vc-follow-symlinks t)
 
 ;; Tramp should use SSH by default (it's usually faster than SCP).
 (setq tramp-default-method "ssh")
@@ -878,8 +790,6 @@ one is manually specified."
 
  ;; Get into eshell quicker
  ("C-S-t"                   . eshell)
- ;; Get into ansi-term quicker
- ("M-T"                     . my/ansi-term-zsh)
 
  ("C-M-}"                   . enlarge-window-horizontally)
  ("C-M-{"                   . shrink-window-horizontally)
@@ -941,27 +851,6 @@ one is manually specified."
      'mode the_mode)))
 
 
-;; Be Lazy, prefer Y or N to Yes or No
-(fset 'yes-or-no-p 'y-or-n-p)
-
-;; Bars suck
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(when (display-graphic-p)
-  (scroll-bar-mode -1)
-  ;; Don't really like big fringes much either
-  (set-fringe-mode '(0 . 0)))
-
-
-;; disable bell and screen flashing
-(defun my/do-nothing () nil)
-(setq ring-bell-function 'my/do-nothing)
-
-;; Make paste over selection *replace* the selection
-(delete-selection-mode)
-
-;; Column numbers are good
-(column-number-mode)
 
 ;; Set scratch buffer custom message and make it an elisp buffer
 (setq initial-scratch-message
@@ -969,18 +858,6 @@ one is manually specified."
 ;; --------------- Emacs Lisp Scratch buffer --------------- ;;"
       initial-major-mode 'emacs-lisp-mode)
 
-;; Basic indentation rules
-(setq-default indent-tabs-mode nil
-              tab-width 2)
-
-;; use 80 cols as a reasonable line length limit
-(setq-default fill-column 80)
-
-;; I like boxes
-(setq cursor-type 'box)
-
-;; use text-mode in new buffers by default
-(setq-default major-mode 'text-mode)
 
 ;; Whitespace
 (setq whitespace-style '(face tabs lines-tail empty trailing))
@@ -988,14 +865,6 @@ one is manually specified."
 ;; Make `man' open pages in the other window and switch to that buffer
 (setq Man-notify-method 'aggressive)
 
-
-;; make scrolling less jarring
-(setq
- ;; This makes scrolls only move a given fraction of the window at a time
- scroll-up-aggressively 0.1
- scroll-down-aggressively 0.1
- ;; This sets the margin at which scrolling will happen when the point enters it
- scroll-margin 10)
 
 ;; Font selection
 (require 'dash)
@@ -1044,17 +913,9 @@ one is manually specified."
 ;; optional key bindings, easier than hs defaults
 (define-key nxml-mode-map (kbd "C-c h") 'hs-toggle-hiding)
 
-
 ;; make Proced auto-update
 (setq proced-auto-update-flag t)
 
-;; Don't like the startup screen
-(setq inhibit-startup-screen t)
-
-;; Normally disabled things that I don't want warnings about
-(put 'downcase-region 'disabled nil) ; C-x C-l
-(put 'upcase-region 'disabled nil); C-x C-u
-(put 'narrow-to-region 'disabled nil) ; C-x n n
 
 ;; Make C look the way I want it to
 (setq c-default-style "linux"
@@ -1066,20 +927,7 @@ one is manually specified."
 (add-to-list 'auto-mode-alist '("\\.F\\'" . f90-mode))
 
 
-;; Backup policy
-(setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
-(setq delete-old-versions -1)
-(setq version-control t)
-(setq vc-make-backup-files t)
-(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
 
-;; Help emacs print Unicode stuff?
-(setq ps-multibyte-buffer :bdf-font-except-latin)
-(setq bdf-directory-list "/usr/share/emacs/fonts/bdf")
 
-;; Keep Custom elsewhere
-(defconst my-custom-file (expand-file-name "lisp/my-custom.el" "~/.emacs.d"))
-(setq custom-file my-custom-file)
-(load custom-file)
 
 

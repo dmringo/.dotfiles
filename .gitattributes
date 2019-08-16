@@ -1,5 +1,6 @@
-secrets.*               filter=git-crypt diff=git-crypt
-emacs/lisp/my-custom.el filter=git-crypt diff=git-crypt
-*.key                   filter=git-crypt diff=git-crypt
-ssh/config              filter=git-crypt diff=git-crypt
-mbsync/work.conf        filter=git-crypt diff=git-crypt
+secrets.*                 filter=git-crypt diff=git-crypt
+emacs/lisp/my-bananas.el  filter=git-crypt diff=git-crypt
+emacs/lisp/my-custom.el   filter=git-crypt diff=git-crypt
+*.key                     filter=git-crypt diff=git-crypt
+ssh/config                filter=git-crypt diff=git-crypt
+mbsync/work.conf          filter=git-crypt diff=git-crypt
