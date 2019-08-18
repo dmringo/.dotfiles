@@ -51,7 +51,7 @@ init.el therein."
 
 
 (straight-use-package 'use-package)
-(straight-use-package 'bind-keys)
+(straight-use-package 'bind-key)
 (straight-use-package 'diminish)
 
 
@@ -68,7 +68,8 @@ init.el therein."
  ;; This ensures that packages are pulled from package archives whenever they
  ;; aren't already present somewhere in the load path.  This means that, for
  ;; local packages, I need to specify `:ensure f`
- use-package-always-ensure t)
+ ;; use-package-always-ensure t
+ )
 
 ;; suggested by jwiegley
 (eval-when-compile
@@ -77,6 +78,7 @@ init.el therein."
 (require 'bind-key) ;; if you use any :bind variant (I do)
 
 (use-package auto-compile
+  ;; :straight t
   :config (auto-compile-on-load-mode))
 
 ;; Do this early, in case other packages want something in my $PATH at
@@ -133,7 +135,7 @@ init.el therein."
 (use-package ivy
   :demand
   :diminish ivy-mode
-  :pin melpa
+  ;; :pin melpa
   :bind  (("C-c C-r" . ivy-resume))
   :config (progn
             (ivy-mode 1)
@@ -248,7 +250,7 @@ init.el therein."
    :map magit-mode-map
    ("<tab>"   . magit-section-cycle))
   :config
-  (pinentry-start)
+  ;; (pinentry-start)
   ;; This prevents Magit from trying to intelligently restore a window
   ;; configuration - useful when you tend to do any amount of window changing
   ;; while magit buffers are visible
@@ -329,7 +331,7 @@ init.el therein."
 
 (use-package lsp-mode
   :demand
-  :pin melpa
+  ;; :pin melpa
   :config
   (setq lsp-prefer-flymake nil
         lsp-keep-workspace-alive nil
@@ -339,14 +341,14 @@ init.el therein."
 
 (use-package company-lsp
   :after lsp-mode
-  :pin melpa
+  ;; :pin melpa
   ;; snippets don't seem to work too well.  At least, I can't figure out how to
   ;; expand them properly
   :config (setq company-lsp-enable-snippet t))
 
 (use-package lsp-ui
   :after lsp-mode
-  :pin melpa
+  ;; :pin melpa
   :config
   (setq lsp-ui-doc-position 'at-point
         lsp-ui-sideline-enable nil))
@@ -484,7 +486,7 @@ init.el therein."
   :config (setq docker-tramp-use-names t))
 
 (use-package ace-window
-  :pin melpa
+  ;; :pin melpa
   :init
   (setq aw-keys '(?a ?s ?d ?f ?j ?k ?l))
   :config
