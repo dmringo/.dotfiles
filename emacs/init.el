@@ -25,13 +25,15 @@ init.el therein."
  auto-window-vscroll        nil)
 (add-hook
  'after-init-hook
- `(lambda ()
-    (setq
-     file-name-handler-alist  file-name-handler-alist-old
-     gc-cons-threshold        (* 80 1024 1024)
-     gc-cons-percentage       0.1)
-    (garbage-collect))
+ (defun my/restore-after-init()
+   (interactive)
+   (setq
+    file-name-handler-alist  file-name-handler-alist-old
+    gc-cons-threshold        (* 80 1024 1024)
+    gc-cons-percentage       0.1)
+   (garbage-collect))
  t)
+
 
 ;; My elisp is here
 (add-to-list 'load-path (user-emacs-file "lisp"))
@@ -41,9 +43,6 @@ init.el therein."
 
 ;; Also some bananas 
 (require 'my-bananas)
-
-
-
 
 
 ;; sets :straight t in all use-package decls
@@ -63,13 +62,7 @@ init.el therein."
  ;; :demand those packages that I want loaded all the time.  This makes sense
  ;; for someone like me who tends to install too many packages for niche uses
  ;; (e.g. ssh-config-mode)
- use-package-always-defer  t
-
- ;; This ensures that packages are pulled from package archives whenever they
- ;; aren't already present somewhere in the load path.  This means that, for
- ;; local packages, I need to specify `:ensure f`
- ;; use-package-always-ensure t
- )
+ use-package-always-defer  t)
 
 ;; suggested by jwiegley
 (eval-when-compile
@@ -645,11 +638,32 @@ A file is considered a theme file if it matches the regex
 
 ;; Info-mode
 (use-package info
+  :bind (:map Info-mode-map
+              ("j" . scroll-up-line)
+              ("k" . scroll-down-line))
   :config
   ;; the default is `fixed-pitch-serif', which is bad by default for me in most
   ;; cases.  Probably could be fixed with fc-*, but this is simpler
   (set-face-attribute
-   'Info-quoted nil :inherit 'font-lock-constant-face))
+   'Info-quoted nil :inherit 'font-lock-constant-face)
+  (advice-add
+   'Info-goto-node :after
+   (defun my/set-info-paging-keys (node &rest ignored)
+     "Set \"n\" and \"p\" keys appropriate for full-manual vs
+     single-node view in Info."
+     ;; "*" node is special, telling info to show the full manual at once
+     (if (string-equal node "*")
+         (progn
+           ;; Info uses ^_ (File separator / INFORMATION SEPARATOR ONE) to
+           ;; delimit nodes. Since `forward-page' and `backward-page' don't
+           ;; really have much use in the normal single-node view, there's no
+           ;; need to restore the page delimiter to its normal FORM FEED regex
+           ;; locally.
+           (setq-local page-delimiter "^\^_")
+           (local-set-key (kbd "n") #'forward-page)
+           (local-set-key (kbd "p") #'backward-page))
+       (local-set-key (kbd "n") #'Info-next)
+       (local-set-key (kbd "p") #'Info-prev)))))
 
 ;; Remember files with recentf
 (use-package recentf
