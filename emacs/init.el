@@ -638,32 +638,46 @@ A file is considered a theme file if it matches the regex
 
 ;; Info-mode
 (use-package info
+  :init
+  (defun my/info-next ()
+    "Behave as `Info-next' when viewing single node in a manual
+or as `forward-page' when viewing the whole manual (as after
+invoking \"g *\")"
+    (interactive)
+    ;; checking if buffer is narrowed is the most reliable way of detecting how
+    ;; the info buffer is viewing its manual
+    (if (buffer-narrowed-p)
+        (Info-next)
+      (forward-page)))
+  (defun my/info-prev ()
+    "Behave as `Info-prev' when viewing single node in a manual
+or as `backward-page' when viewing the whole manual (as after
+invoking \"g *\")"
+    (interactive)
+    ;; checking if buffer is narrowed is the most reliable way of detecting how
+    ;; the info buffer is viewing its manual
+    (if (buffer-narrowed-p)
+        (Info-prev)
+      (backward-page)))
   :bind (:map Info-mode-map
               ("j" . scroll-up-line)
-              ("k" . scroll-down-line))
+              ("k" . scroll-down-line)
+              ("n" . my/info-next)
+              ("p" . my/info-prev))
   :config
   ;; the default is `fixed-pitch-serif', which is bad by default for me in most
   ;; cases.  Probably could be fixed with fc-*, but this is simpler
   (set-face-attribute
    'Info-quoted nil :inherit 'font-lock-constant-face)
-  (advice-add
-   'Info-goto-node :after
-   (defun my/set-info-paging-keys (node &rest ignored)
-     "Set \"n\" and \"p\" keys appropriate for full-manual vs
-     single-node view in Info."
-     ;; "*" node is special, telling info to show the full manual at once
-     (if (string-equal node "*")
-         (progn
-           ;; Info uses ^_ (File separator / INFORMATION SEPARATOR ONE) to
-           ;; delimit nodes. Since `forward-page' and `backward-page' don't
-           ;; really have much use in the normal single-node view, there's no
-           ;; need to restore the page delimiter to its normal FORM FEED regex
-           ;; locally.
-           (setq-local page-delimiter "^\^_")
-           (local-set-key (kbd "n") #'forward-page)
-           (local-set-key (kbd "p") #'backward-page))
-       (local-set-key (kbd "n") #'Info-next)
-       (local-set-key (kbd "p") #'Info-prev)))))
+  (add-hook
+   'Info-mode-hook
+   (defun my/set-info-page-delim ()
+     "Set `page-delimiter' locally for `Info-mode' to ASCII FS"
+     ;; Info uses ^_ (File separator / INFORMATION SEPARATOR ONE) to delimit
+     ;; nodes. Since `forward-page' and `backward-page' don't really have much
+     ;; use in the normal single-node view, there's no need to restore the page
+     ;; delimiter to its normal FORM FEED regex locally.
+     (setq-local page-delimiter "^\^_"))))
 
 ;; Remember files with recentf
 (use-package recentf
