@@ -88,6 +88,12 @@ Useful for printf-style debugging.  Probably buggy itself though..."
 ;; Column numbers are good
 (column-number-mode)
 
+;; use View-mode in read-only buffers
+(setq view-read-only t)
+(with-eval-after-load 'view
+  (define-key view-mode-map (kbd "j") #'scroll-up-line)
+  (define-key view-mode-map (kbd "k") #'scroll-down-line))
+
 
 ;; When narrowing to a [de]fun[ction], include preceding comments
 (setq narrow-to-defun-include-comments t)
@@ -102,6 +108,15 @@ Useful for printf-style debugging.  Probably buggy itself though..."
 
 ;; Always include some path context in buffer names
 (setq uniquify-min-dir-content 3)
+
+;; make Dired buffers have "Dired: " prefix for easier filtering while switching
+;; buffers
+(add-hook
+ 'dired-after-readin-hook
+ (defun my/rename-dired-buffer ()
+   (let ((bname (buffer-name (current-buffer))))
+     (unless (string-match "^Dired: " bname)
+       (rename-buffer (concat "Dired: " bname))))))
 
 ;; Don't prompt when reverting PDFs
 (add-to-list 'revert-without-query ".*\\.pdf")
@@ -130,18 +145,22 @@ Useful for printf-style debugging.  Probably buggy itself though..."
 
 
 ;; make scrolling less jarring
-(setq
- ;; This makes scrolls only move a given fraction of the window at a time
- scroll-up-aggressively    0.1
- scroll-down-aggressively  0.1
+(setq-default
+ ;; This makes scrolls only move a given fraction of the window at a time.  0.0
+ ;; specifically means scroll just one line.
+ scroll-up-aggressively    0.0
+ scroll-down-aggressively  0.0
  ;; This sets the margin at which scrolling will happen when the point enters it
  scroll-margin             10)
 
 ;; Enable some commands that I use. Normally these are disabled and
 ;; will generate a warning on use
-(put 'downcase-region 'disabled nil) ; C-x C-l
-(put 'upcase-region 'disabled nil); C-x C-u
-(put 'narrow-to-region 'disabled nil) ; C-x n n
+(put 'downcase-region           'disabled nil) ;; "C-x C-l" in global map
+(put 'upcase-region             'disabled nil) ;; "C-x C-u" in global map
+(put 'narrow-to-region          'disabled nil) ;; "C-x n n" in global map
+(put 'dired-find-alternate-file 'disabled nil) ;; "a" in dired map
+
+
 
 ;; Don't like the startup screen
 (setq inhibit-startup-screen t)
@@ -164,6 +183,23 @@ Useful for printf-style debugging.  Probably buggy itself though..."
  ;; should uniquify the file name using the directory part of the
  ;; filename
  auto-save-file-name-transforms  '((".*" "~/.emacs.d/auto-save/" t)))
+
+;; simulate the emacs source tree .dir-locals file for any elisp under the
+;; default emacs install root
+;; TODO: use `data-directory' to get this dynamically?
+(dir-locals-set-directory-class "/usr/local/share/emacs" 'emacs)
+(dir-locals-set-class-variables
+ 'emacs
+ '((nil . ((tab-width . 8)
+           (sentence-end-double-space . t)
+           (fill-column . 70)
+           (bug-reference-url-format . "https://debbugs.gnu.org/%s")))
+   (emacs-lisp-mode . ((indent-tabs-mode . nil)
+                       (electric-quote-comment . nil)
+                       (electric-quote-string . nil)
+	                     (mode . bug-reference-prog)))
+   (outline-mode . ((mode . bug-reference)))))
+
 
 
 ;; Keep things changed by Customize in a separate file.  It really
