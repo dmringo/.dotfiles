@@ -1,3 +1,5 @@
+# zshrc - sourced by all interactive sessions
+
 # Checking for dumb terminals - makes Tramp work when editing remote files
 [[ $TERM == "dumb" ]] && unsetopt zle && PS1='$ ' && return;
 
@@ -42,8 +44,8 @@ compinit
 # End of lines added by compinstall
 # Lines configured by zsh-newuser-install
 HISTFILE="${XDG_DATA_HOME:-$HOME/.local/share}"/zsh/history
-HISTSIZE=10000
-SAVEHIST=10000
+HISTSIZE=50000
+SAVEHIST=50000
 setopt appendhistory autocd extendedglob nomatch notify incappendhistory
 unsetopt beep
 bindkey -e
@@ -120,9 +122,6 @@ do
 done
 
 
-
-
-
 # Haskell stack
 if cmd_exists stack
 then
@@ -163,6 +162,8 @@ then
   fi
 fi
 
+# Try to detect if we're using GNU coreutils so we know what extra options are
+# valid
 case "$(ls --version 2>/dev/null | head -n 1)" in
   *GNU*)
     extopts=" --color --group-directories-first"
@@ -182,6 +183,58 @@ alias ll="ls -lhA $extopts"
 # rather than zshenv.
 SPACK_SRC="$HOME/spack/share/spack/setup-env.sh"
 [[ -f "$SPACK_SRC" ]] && . "$SPACK_SRC"
+
+# ** less configuration
+
+# i = ignore case unless any cap letters appear in search
+# R = output raw ANSI color escape sequences for terminal to deal with
+# M = long prompt (show line numbers and percentage)
+LESS="iRM"
+export LESS
+
+# *** man wrapper with less termcap vars set for color
+man() {
+  # color ref:
+  # 00 -> clear all
+  # 01 -> brighter
+  # 02 -> fainter
+  # 22 -> normal (not bright/faint)
+  # 3x -> foreground
+  # 4x -> background
+  # x0 -> Black
+  # x1 -> Red
+  # x2 -> Green
+  # x3 -> Yellow
+  # x4 -> Blue
+  # x5 -> Magenta
+  # x6 -> Cyan
+  # x7 -> White
+
+  #
+  # These variables could be set in the global environment too, but I'm not sure I
+  # want that.
+
+  # The variable defs below map as follows
+  # This follows the mappings used in the grml zsh setup
+  # See https://wiki.archlinux.org/index.php/Color_output_in_console#less
+  # and https://git.grml.org/?p=grml-etc-core.git
+
+  # _mb: start bold          => bright, fg:red
+  # _md: start blink         => bright, fg:cyan
+  # _me: end   bold/blink    => clear all
+  # _so: start reverse video => bright, bg:blue, fg:yellow
+  # _se: end   reverse video => clear all
+  # _us: start underline     => bright, fg:green
+  # _ue: end   underline     => clear all
+  env LESS_TERMCAP_mb="\033[01;31m"    \
+      LESS_TERMCAP_md="\033[01;36m"    \
+      LESS_TERMCAP_me="\033[00m"       \
+      LESS_TERMCAP_so="\033[01;44;33m" \
+      LESS_TERMCAP_se="\033[00m"       \
+      LESS_TERMCAP_us="\033[01;32m"    \
+      LESS_TERMCAP_ue="\033[00m"       \
+      man "$@"
+}
 
 # Source a local rc file (for interactive use)
 [[ -f $ZDOTDIR/localrc.zsh ]] && . $ZDOTDIR/localrc.zsh
