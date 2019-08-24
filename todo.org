@@ -1,0 +1,61 @@
+* Emacs
+
+** TODO Make =straight.el= get the right =org-mode=
+
+I know this is doable, I just need to read up on the docs
+
+
+* ZSH
+
+** TODO Separate interactive/non-interactive behavior 
+
+This is really for all shells I care to support (just =zsh= and =sh= now, but
+likely =bash= in the future). Ideally, there should be some shared configuration
+between these, since they have similar syntax. The notes at the top of
+=.profile= talk a bit about the sourcing rules for each of these shells when
+interactive (or not) and when login (or not).
+
+I've made some attempt to separate the interactive and non-interactive
+configuration (e.g. =LESS= is currently only exported in =zsh/.zshrc=) and to
+share across shells (e.g. =zsh/.zshenv= sources =.profile=) but it's not
+perfect.
+
+
+** TODO Organize it all
+
+=zsh= config isn't terrible at the moment, but it could be better.  There are a
+couple options for making it more readable:
+
+*** Separate code into files and source from root(s)
+
+I could have =zsh/less-setup.zsh=, =zsh/util.zsh=, etc. that I source from
+=zsh/{.zshrc}=.  This is neat-ish, but if there are dependencies between the
+files, I have to track them manually. I'm also not a huge fan of navigating many
+files while in one mental context.
+
+
+*** Delineate regions in files with outline-style comments
+
+Keep related configuration as close as possible in a file and provide comment
+headers to identify the regions.
+
+#+BEGIN_SRC sh
+# ** LESS configuration
+LESS=iRM
+export LESS
+# ...
+#+END_SRC
+
+This makes it easy to jump around to sections and in Emacs, =outline-minor-mode=
+will allow folding of these sections.
+
+
+*** Org-mode literate config
+
+Similar to outline comments, but use Org-mode's tangling facilities to generate
+the files.  This would likely mean =install.zsh= would invoke emacs to create
+some (all?) files rather than symlinking.  This does not necessarily exclude the
+idea of having multiple files (either tangling to many or using =#+include=
+directives within Org) but I don't know that it would be of much benefit
+
+
