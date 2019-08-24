@@ -186,8 +186,7 @@ Useful for printf-style debugging.  Probably buggy itself though..."
 
 ;; simulate the emacs source tree .dir-locals file for any elisp under the
 ;; default emacs install root
-;; TODO: use `data-directory' to get this dynamically?
-(dir-locals-set-directory-class "/usr/local/share/emacs" 'emacs)
+;; NOTE: have to set class variable *before* setting directory class
 (dir-locals-set-class-variables
  'emacs
  '((nil . ((tab-width . 8)
@@ -199,6 +198,8 @@ Useful for printf-style debugging.  Probably buggy itself though..."
                        (electric-quote-string . nil)
 	                     (mode . bug-reference-prog)))
    (outline-mode . ((mode . bug-reference)))))
+;; TODO: use `data-directory' to get this dynamically?
+(dir-locals-set-directory-class "/usr/local/share/emacs" 'emacs)
 
 
 
