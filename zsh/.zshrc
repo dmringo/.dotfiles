@@ -181,8 +181,14 @@ alias ll="ls -lhA $extopts"
 # needs to cooperate with at least one common setup where the system MODULEPATH
 # is only set if it's not already set, and comes from the system zprofile,
 # rather than zshenv.
-SPACK_SRC="$HOME/spack/share/spack/setup-env.sh"
-[[ -f "$SPACK_SRC" ]] && . "$SPACK_SRC"
+_spack_base="$HOME/spack"
+if [[ -d "${_spack_base}-$(uname -i)" ]]
+then
+  spack_base="${_spack_base}-$(uname -i)"
+fi
+
+_spack_src="${_spack_base}/share/spack/setup-env.sh"
+[[ -f "$_spack_src" ]] && . "$_spack_src"
 
 # ** less configuration
 

@@ -131,7 +131,6 @@ prepend PATH "$HOME/.local/bin"
 # properly, of course.
 
 
-
 # Some systems can manage their own local binary directories.  Since the
 # contents of theses tend to fluctuate between my computers, I don't symlink
 # them (mostly because I'd forget to do so frequently enough to be a point of
@@ -140,11 +139,27 @@ prepend PATH "$HOME/.local/bin"
 prepend PATH "$GOPATH/bin"  # GO managed bins
 prepend PATH "$HOME/.cabal/bin" # Cabal-managed bins
 
+
+# Arch-specific local binaries (useful on shared filesystems across multiple
+# architectures).  Should take precedence over just about any other PATH
+# component
+if [ -d "$HOME/local-$(uname -i)/bin" ]
+then
+  prepend PATH "$HOME/local-$(uname -i)/bin"
+fi
+
+
 # I almost always use Conda for managing python-y projects, but only the minimal
 # distribution. Recent versions encourage you to source their init script and
 # activate the base environment, but I only want `conda` available by default. I
 # can always activate the base environment as necessary.
 _conda_base="$HOME/miniconda3"
+
+# Similar idea to arch-specific binary dir above
+if [ -d "${_conda_base}-$(uname -i)" ]
+then
+  _conda_base="${_conda_base}-$(uname -i)"
+fi
 
 if [ -d "$_conda_base" ]
 then
@@ -171,9 +186,7 @@ then
     PATH=$(printenv PATH | tr : \\n | grep -v $(brew --prefix)/bin | tr \\n :)
     export PATH
   }
-
 fi
-
 
 sys_type="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
