@@ -164,6 +164,11 @@ tested with `member'"
 ;; use text-mode in new buffers by default
 (setq-default major-mode 'text-mode)
 
+;; Enable recursive minibuffers (useful e.g. when using something like
+;; `counsel-yank-pop' to insert something from far back in the kill ring at a
+;; minibuffer prompt)
+(setq enable-recursive-minibuffers t)
+
 
 ;; make scrolling less jarring
 (setq-default
