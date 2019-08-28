@@ -247,7 +247,8 @@ init.el therein."
   ;; This prevents Magit from trying to intelligently restore a window
   ;; configuration - useful when you tend to do any amount of window changing
   ;; while magit buffers are visible
-  (setq magit-bury-buffer-function 'magit-mode-quit-window))
+  (setq magit-bury-buffer-function 'magit-mode-quit-window
+        magit-clone-default-directory "~/src/"))
 
 ;; link to Magit buffers in Org-mode
 ;; TODO: customize how export works for these links
