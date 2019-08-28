@@ -481,31 +481,35 @@ init.el therein."
 (use-package ace-window
   ;; :pin melpa
   :init
-  (setq aw-keys '(?a ?s ?d ?f ?j ?k ?l))
+  (setq
+   aw-keys '(?a ?s ?d ?f ?j ?k ?l)
+
+   ;; Necessary rebind since I use the default (z) in the dispatch alist
+   aw-make-frame-char ?W
+
+   ;; This alist is close to the default - just a few tweaks to avoid collision
+   ;; with `aw-keys' and for personal preferences.  I could `setf' with
+   ;; `alist-get' here, but that makes it less clear what's bound, and might
+   ;; break if the defaults change.
+   aw-dispatch-alist
+   '((?x aw-delete-window                "Delete Window")
+     (?m aw-swap-window                  "Swap Windows")
+     (?M aw-move-window                  "Move Window")
+     (?c aw-copy-window                  "Copy Window")
+     (?b aw-switch-buffer-in-window      "Select Buffer") ;; me
+     (?n aw-flip-window                  "Select Previous Window")
+     (?u aw-switch-buffer-other-window   "Switch Buffer Other Window")
+     (?e aw-execute-command-other-window "Execute Command Other Window")
+     (?S aw-split-window-fair            "Split Window DWIM") ;; me
+     (?v aw-split-window-vert            "Split Window Vertically")
+     (?z aw-split-window-horz            "Split Window Horizontally") ;; me
+     (?o delete-other-windows            "Delete Other Windows")
+     (?? aw-show-dispatch-help           "Show this help menu")))
   :config
   (set-face-attribute 'aw-leading-char-face nil
                       :height 5.0
                       :foreground 'unspecified
                       :inherit 'error)
-
-  ;; This is close to the default - just a few tweaks to avoid collision with
-  ;; `aw-keys' and for personal preferences.  I could `setf' with `alist-get'
-  ;; here, but that makes it less clear what's bound, and might break if the
-  ;; defaults change.
-  (setq aw-dispatch-alist
-        '((?x aw-delete-window                "Delete Window")
-          (?m aw-swap-window                  "Swap Windows")
-          (?M aw-move-window                  "Move Window")
-          (?c aw-copy-window                  "Copy Window")
-          (?b aw-switch-buffer-in-window      "Select Buffer") ;; me
-          (?n aw-flip-window                  "Select Previous Window")
-          (?u aw-switch-buffer-other-window   "Switch Buffer Other Window")
-          (?e aw-execute-command-other-window "Execute Command Other Window")
-          (?S aw-split-window-fair            "Split Window DWIM") ;; me
-          (?v aw-split-window-vert            "Split Window Vertically")
-          (?z aw-split-window-horz            "Split Window Horizontally") ;; me
-          (?o delete-other-windows            "Delete Other Windows")
-          (?? aw-show-dispatch-help           "Show this help menu")))
   :bind (("C-x o" . 'ace-window)))
 
 (use-package expand-region
