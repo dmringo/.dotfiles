@@ -198,47 +198,59 @@ _spack_src="${_spack_base}/share/spack/setup-env.sh"
 LESS="iRM"
 export LESS
 
-# *** man wrapper with less termcap vars set for color
+# *** man wrapper with less termcap vars set for color.
+#
+# This relies on undocumented debugging variables that less(1) reads from the
+# environment, but given how often they're used now, I suspect this capability
+# won't ever be removed.
 man() {
-  # color ref:
-  # 00 -> clear all
-  # 01 -> brighter
-  # 02 -> fainter
-  # 22 -> normal (not bright/faint)
-  # 3x -> foreground
-  # 4x -> background
-  # x0 -> Black
-  # x1 -> Red
-  # x2 -> Green
-  # x3 -> Yellow
-  # x4 -> Blue
-  # x5 -> Magenta
-  # x6 -> Cyan
-  # x7 -> White
-
-  #
   # These variables could be set in the global environment too, but I'm not sure I
   # want that.
 
-  # The variable defs below map as follows
   # This follows the mappings used in the grml zsh setup
   # See https://wiki.archlinux.org/index.php/Color_output_in_console#less
   # and https://git.grml.org/?p=grml-etc-core.git
+  # and https://unix.stackexchange.com/questions/119/colors-in-man-pages
+  # and man 5 terminfo
+  #
+  # It's not clear exactly how many of these termcap codes will actually show up
+  # in a manpage, but this covers a bunch of them.  Set LESS_TERMCAP_DEBUG=1 to
+  # show the termcap codes instead of using the values below.
+  #
+  # setaf and setab use color codes as described in the terminfo manpage,
+  # duplicated here for reference:
+  #
+  # Color     #define           Value    RGB
+  # black     COLOR_BLACK       0        0, 0, 0
+  # red       COLOR_RED         1        max,0,0
+  # green     COLOR_GREEN       2        0,max,0
+  # yellow    COLOR_YELLOW      3        max,max,0
+  # blue      COLOR_BLUE        4        0,0,max
+  # magenta   COLOR_MAGENTA     5        max,0,max
+  # cyan      COLOR_CYAN        6        0,max,max
+  # white     COLOR_WHITE       7        max,max,max
 
-  # _mb: start bold          => bright, fg:red
-  # _md: start blink         => bright, fg:cyan
+  # _mb: start bold          => bold, fg:red
+  # _md: start blink         => bold, fg:cyan
   # _me: end   bold/blink    => clear all
-  # _so: start reverse video => bright, bg:blue, fg:yellow
+  # _so: start reverse video => bold, bg:blue, fg:yellow
   # _se: end   reverse video => clear all
-  # _us: start underline     => bright, fg:green
+  # _us: start underline     => bold, fg:green
   # _ue: end   underline     => clear all
-  env LESS_TERMCAP_mb="\033[01;31m"    \
-      LESS_TERMCAP_md="\033[01;36m"    \
-      LESS_TERMCAP_me="\033[00m"       \
-      LESS_TERMCAP_so="\033[01;44;33m" \
-      LESS_TERMCAP_se="\033[00m"       \
-      LESS_TERMCAP_us="\033[01;32m"    \
-      LESS_TERMCAP_ue="\033[00m"       \
+  # _mr: reverse             => reverse
+  # _mh: dim                 => dim
+  #
+  # GROFF_NO_SGR is for Konsole and Gnome-terminal
+  env LESS_TERMCAP_mb="$(tput bold; tput setaf 1)"               \
+      LESS_TERMCAP_md="$(tput bold; tput setaf 6)"               \
+      LESS_TERMCAP_me="$(tput sgr0)"                             \
+      LESS_TERMCAP_so="$(tput bold; tput setaf 0; tput setab 6)" \
+      LESS_TERMCAP_se="$(tput sgr0)"                             \
+      LESS_TERMCAP_us="$(tput bold; tput setaf 2)"               \
+      LESS_TERMCAP_ue="$(tput sgr0)"                             \
+      LESS_TERMCAP_mr="$(tput rev)"                              \
+      LESS_TERMCAP_mh="$(tput dim)"                              \
+      GROFF_NO_SGR=1                                             \
       man "$@"
 }
 
