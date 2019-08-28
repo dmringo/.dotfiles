@@ -4,7 +4,7 @@
 ;; from straight.el Manual:
 (defvar bootstrap-version)
 (let ((bootstrap-file
-       (user-emacs-file "straight/repos/straight.el/bootstrap.el"))
+       (locate-user-emacs-file "straight/repos/straight.el/bootstrap.el"))
       (bootstrap-version 5))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer

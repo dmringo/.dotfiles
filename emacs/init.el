@@ -1,16 +1,9 @@
 ;; -*- lexical-binding: t -*-
 
-(defun user-emacs-file (&optional file)
-  "Return an absolute path to FILE relative to
-`user-emacs-directory'.  If FILE is nil, return absolute path to
-init.el therein."
-  ;; TODO: Check for ~/.emacs too?
-  ;; NOTE: This may subsumed by changes in 27 release
-  (setq file (or file "init.el"))
-  (expand-file-name file user-emacs-directory))
+
 
 ;; Make sure we've got straight
-(load (user-emacs-file "lisp/get-straight.el"))
+(load (locate-user-emacs-file "lisp/get-straight.el"))
 
 ;; This bit helps optimize startup time and is stolen+modified from
 ;; John Wiegley's config: github.com/jwiegley/dot-emacs
@@ -36,7 +29,7 @@ init.el therein."
 
 
 ;; My elisp is here
-(add-to-list 'load-path (user-emacs-file "lisp"))
+(add-to-list 'load-path (locate-user-emacs-file "lisp"))
 
 ;; Get the simple stuff right away
 (require 'my-simple)

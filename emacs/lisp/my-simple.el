@@ -195,7 +195,7 @@ tested with `member'"
 (setq
  ;; Put backups matching first CAR regex at CDR. I like them all in
  ;; one place.
- backup-directory-alist          `((".*" . ,(user-emacs-file "backups")))
+ backup-directory-alist          `((".*" . ,(locate-user-emacs-file "backups")))
  ;; Anything non-nil and non-t means don't do any deletion of old
  ;; versions.
  delete-old-versions             -1
@@ -208,7 +208,7 @@ tested with `member'"
  ;; `backup-directory-alist'.  Third list element means that auto-save
  ;; should uniquify the file name using the directory part of the
  ;; filename
- auto-save-file-name-transforms  '((".*" "~/.emacs.d/auto-save/" t)))
+ auto-save-file-name-transforms  `((".*" ,(locate-user-emacs-file "auto-save") t)))
 
 ;; simulate the emacs source tree .dir-locals file for any elisp under the
 ;; default emacs install root
@@ -231,7 +231,7 @@ tested with `member'"
 
 ;; Keep things changed by Customize in a separate file.  It really
 ;; shouldn't be much these days
-(defconst my-custom-file (user-emacs-file "lisp/my-custom.el"))
+(defconst my-custom-file (locate-user-emacs-file "lisp/my-custom.el"))
 (setq custom-file my-custom-file)
 ;; Load the custom file
 (when (file-readable-p custom-file) (load custom-file))
