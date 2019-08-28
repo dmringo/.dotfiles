@@ -26,6 +26,9 @@ else
   DOT_HOME=${DOT_HOME:a}
 fi
 
+_log "using $DOT_HOME as base location of '.dotfiles' repo"
+
+
 # keep track of the return status of linking operations
 lnStat=0
 
@@ -87,15 +90,39 @@ _ln(){
 }
 
 
-_log "using $DOT_HOME as base location of '.dotfiles' repo"
+
+ln_config() {
+  _ln "$DOT_HOME/$1" "${XDG_CONFIG_HOME:-$HOME/.config}/$1"
+}
+
+# special function to check where emacs should be installed
+ln_emacs() {
+  # figure out if we're using an XDG-aware emacs
+  local dir="$(emacs -q --batch --eval '(princ user-emacs-directory)')"
+
+  print "emacs: d=$dir"
+  # this is a sufficient test, since a non-XDG-aware emacs will always be
+  # something like ".emacs.d"
+  if [[ "$dir" =~ "/emacs/\$" ]]
+  then
+    ln_config emacs
+  else
+    # convenient, but not necessary
+    _ln $DOT_HOME/emacs/init.el        $HOME/.emacs
+    _ln $DOT_HOME/emacs                $HOME/.emacs.d
+  fi
+}
+
+
+ln_emacs
+
+
+
 
 # only need zshenv, since other Zsh startup things are under ZDOTDIR, which will
 # always be $XDG_CONFIG_HOME/zsh
 _ln $DOT_HOME/zsh/.zshenv        $HOME/.zshenv
 
- # convenient, but not necessary
-_ln $DOT_HOME/emacs/init.el        $HOME/.emacs
-_ln $DOT_HOME/emacs                $HOME/.emacs.d
 # ssh requires that only the owner have write access to .ssh/config
 _ln $DOT_HOME/ssh/config           $HOME/.ssh/config && chmod 640 $DOT_HOME/ssh/config
 _ln $DOT_HOME/.profile             $HOME/.profile
@@ -105,9 +132,8 @@ _ln $DOT_HOME/gnupg/gpg-agent.conf $HOME/.gnupg/gpg-agent.conf
 _ln $DOT_HOME/gnupg/gpg.conf       $HOME/.gnupg/gpg.conf
 
 
-ln_config() {
-  _ln "$DOT_HOME/$1" "${XDG_CONFIG_HOME:-$HOME/.config}/$1"
-}
+
+
 
 ln_config i3
 ln_config i3status
