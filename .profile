@@ -54,6 +54,9 @@
 # sourced with {ba,z,da,}sh without issue and should be idempotent w.r.t. the
 # environment (variables, functions, etc.).
 
+# set some reasonable default perms on new files
+umask u=rwx,g=r,o=
+
 
 # Check if a command (binary or shell function/builtin) is available.
 # This is, as far as I can tell, the most portable way of doing this.
