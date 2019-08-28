@@ -63,6 +63,27 @@ Useful for printf-style debugging.  Probably buggy itself though..."
                       ',sym (pp-to-string ,sym))))
           syms))))
 
+(defvar my/kill-with-query-bufs
+  '("*scratch*")
+  "List of buffer names that merit an additional query before being killed")
+
+(add-to-list
+ 'kill-buffer-query-functions
+ (defun my/kill-buf-query ()
+   "Function to check if a buffer should *really* be killed.
+Only buffers with names matching one in `my/kill-with-query-bufs'
+cause an interactive query, all others are ignored. Membership is
+tested with `member'"
+   (let ((cb (current-buffer)))
+     (or (not (member (buffer-name cb)
+                      my/kill-with-query-bufs))
+         (yes-or-no-p
+          (format
+           ;; elisp repr is fine here - makes it extra clear we're talking about a
+           ;; buffer
+           "Do you really want to kill %S? " cb))))))
+
+
 
 ;; ** Key bindings
 (global-set-key (kbd "M-Q") #'my/unfill-paragraph)
