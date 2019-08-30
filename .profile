@@ -396,13 +396,4 @@ then
   then
     xrdb -merge "$xres"
   fi
-
-  # TODO: This is not a great check -- what's better?
-  if [ "$(hostname -s)" = "frootmig" ]
-  then
-    # necessary when using nvidia driver on frootmig. Should check for nvidia,
-    # probably, but I haven't switched in a while
-    xrandr --setprovideroutputsource modesetting NVIDIA-0
-    xrandr --auto
-  fi
 fi
