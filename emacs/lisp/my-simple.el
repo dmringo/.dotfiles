@@ -63,6 +63,19 @@ Useful for printf-style debugging.  Probably buggy itself though..."
                       ',sym (pp-to-string ,sym))))
           syms))))
 
+(defvar my/emacs-init-file
+  (file-truename (locate-user-emacs-file "init.el"))
+  "Real path to my init.el file")
+
+(defun my/visit-emacs-init-file ()
+  "Visit `my/emacs-init-file' or pop to the buffer already
+visiting it"
+  (interactive)
+  (or (pop-to-buffer
+       (get-file-buffer my/emacs-init-file))
+      (find-file my/emacs-init-file)))
+
+
 (defvar my/kill-with-query-bufs
   '("*scratch*")
   "List of buffer names that merit an additional query before being killed")
