@@ -7,8 +7,8 @@
 (require 'mu4e)
 (require 'smtpmail)
 (require 'message)
-(require 'alert)
 
+(use-package alert)
 (use-package mu4e-alert
   :config
   (mu4e-alert-set-default-style 'log)
@@ -99,6 +99,9 @@
         (mu4e-view-refresh)))))
 
 (bind-keys :map mu4e-view-mode-map
+           ("j" . scroll-up-line) ;; overrides `mu4e~headers-jump-to-maildir'
+           ("k" . scroll-down-line) ;; overrides `mu4e-view-save-url'
+           ("K" . mu4e-view-save-url)
            ("c" . my/mu4e-set-pandoc-fmt)
            ("G" . mu4e-view-refresh))
 
