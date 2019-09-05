@@ -803,10 +803,6 @@ one is manually specified."
 
  ;; More convenient than M-DEL (DEL == backspace)
  ("M-D"                     . backward-kill-word)
- 
- ;; Slightly quicker Kill this buffer
- ("C-x k"                   . kill-this-buffer)
-
  ("C-x C-b"                 . ibuffer)
 
  ;; I'm always aligning things
@@ -819,18 +815,9 @@ one is manually specified."
  ;; Get into eshell quicker
  ("C-S-t"                   . eshell)
 
- ("C-M-}"                   . enlarge-window-horizontally)
- ("C-M-{"                   . shrink-window-horizontally)
- ("C-h M"                   . man)
- ("C-h W"                   . woman)
+ 
  ([remap eval-expression]   . pp-eval-expression)
  ([remap eval-last-sexp]    . pp-eval-last-sexp)
- ;; Disable `xref' stuff in global map and put it in prog-mode-map instead
- ("M-." . nil)
- ("M-," . nil)
- :map prog-mode-map
- ("M-." . xref-find-definitions)
- ("M-," . xref-pop-marker-stack)
 
  :map kmacro-keymap ;; default bound to C-x C-k prefix
  

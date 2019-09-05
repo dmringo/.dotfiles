@@ -92,16 +92,47 @@ tested with `member'"
                       my/kill-with-query-bufs))
          (yes-or-no-p
           (format
-           ;; elisp repr is fine here - makes it extra clear we're talking about a
-           ;; buffer
+           ;; elisp repr is fine here - makes it extra clear we're talking about
+           ;; a buffer
            "Do you really want to kill %S? " cb))))))
 
 
 
 ;; ** Key bindings
-(global-set-key (kbd "M-Q") #'my/unfill-paragraph)
-(global-set-key (kbd "C-x C-o") #'my/other-win)
 
+(let ((spec nil)
+      (map (current-global-map))
+      (bindings
+       '(("M-Q"     . my/unfill-paragraph)
+         ("C-x C-o" . my/other-win)
+         ("C-M-}"   . enlarge-window-horizontally)
+         ("C-M-{"   . shrink-window-horizontally)
+         ;; Slightly quicker Kill this buffer
+         ("C-x k"   . kill-this-buffer)
+         :map help-map
+         ("M"       . man)
+         ("W"       . woman)
+         ;; Not really a "help" function, but it's similarly introspective
+         ("E"       . my/visit-emacs-init-file)
+          ;; Disable `xref' stuff in global map and put it in prog-mode-map
+          ;; instead
+         ("M-."     . nil)
+         ("M-,"     . nil)
+         :map prog-mode-map
+         ("M-."     . xref-find-definitions)
+         ("M-,"     . xref-pop-marker-stack))))
+  (while bindings
+    (setq spec (pop bindings))
+    (pcase spec
+      (:map
+       (setq map (symbol-value (pop bindings))))
+      (`(,key . ,def)
+       (define-key map (kbd key) (symbol-function def))))))
+
+
+
+(let ((l '("foo" bar :baz qux)))
+  (plist-get l :map))
 
 ;; ** Misc Customizations
 
