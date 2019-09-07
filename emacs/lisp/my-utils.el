@@ -112,23 +112,7 @@ past the end, no action is taken."
       (delete-region beg end)
       (insert (file-relative-name path)))))
 
-(defun my/frame-font-resize (delta)
-  "Resize the current frame's font size by DELTA points.
-DELTA is taken as the numeric prefix arg or from the prompt if no
-prefix arg is given. This changes the attributes (removing some)
-on the underlying font object, but seems to preserve the
-important ones."
-  (interactive "NResize font by how much? ")
-  (let* ((font-keys '(:family :weight :slant :width :size))
-         (attr-pairs
-          (mapcar (lambda (k)
-                    (let ((attr (font-get (face-attribute 'default :font) k)))
-                      (when (eq k :size) ; adjust only the size
-                        (setq attr (+ attr delta)))
-                      (list k attr)))
-		  font-keys))
-         (font (apply #'font-spec (apply #'append attr-pairs))))
-    (set-face-attribute 'default nil :font font)))
+
 
 
 (defun my/ssh-agent-refresh ()
