@@ -122,36 +122,34 @@ tested with `member'"
 (let ((spec nil)
       (map (current-global-map))
       (bindings
-       '(("M-Q"     . my/unfill-paragraph)
-         ("C-x C-o" . my/other-win)
-         ("C-M-}"   . enlarge-window-horizontally)
-         ("C-M-{"   . shrink-window-horizontally)
+       `(("M-Q"     . ,#'my/unfill-paragraph)
+         ("C-x C-o" . ,#'my/other-win)
+         ("C-M-}"   . ,#'enlarge-window-horizontally)
+         ("C-M-{"   . ,#'shrink-window-horizontally)
          ;; Slightly quicker Kill this buffer
-         ("C-x k"   . kill-this-buffer)
-         :map help-map
-         ("M"       . man)
-         ("W"       . woman)
+         ("C-x k"   . ,#'kill-this-buffer)
+         ;; Disable `xref' stuff in global map and put it in prog-mode-map
+         ;; instead
+         ("M-.") ;; nil
+         ("M-,") ;; nil
+
+         :map ,prog-mode-map
+         ("M-."     . ,#'xref-find-definitions)
+         ("M-,"     . ,#'xref-pop-marker-stack)
+
+         :map ,help-map
+         ("M"       . ,#'man)
+         ("W"       . ,#'woman)
          ;; Not really a "help" function, but it's similarly introspective
-         ("E"       . my/visit-emacs-init-file)
-          ;; Disable `xref' stuff in global map and put it in prog-mode-map
-          ;; instead
-         ("M-."     . nil)
-         ("M-,"     . nil)
-         :map prog-mode-map
-         ("M-."     . xref-find-definitions)
-         ("M-,"     . xref-pop-marker-stack))))
+         ("E"       . ,#'my/visit-emacs-init-file))))
   (while bindings
     (setq spec (pop bindings))
     (pcase spec
       (:map
-       (setq map (symbol-value (pop bindings))))
+       (setq map (pop bindings)))
       (`(,key . ,def)
-       (define-key map (kbd key) (symbol-function def))))))
+       (define-key map (kbd key) def)))))
 
-
-
-(let ((l '("foo" bar :baz qux)))
-  (plist-get l :map))
 
 ;; ** Misc Customizations
 
