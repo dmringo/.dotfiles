@@ -171,7 +171,8 @@ tested with `member'"
 (column-number-mode)
 
 ;; use View-mode in read-only buffers
-(setq view-read-only t)
+;; TODO: use view mode for only some read-only buffers using
+;; `read-only-mode-hook' (setq view-read-only t)
 (with-eval-after-load 'view
   (define-key view-mode-map (kbd "j") #'scroll-up-line)
   (define-key view-mode-map (kbd "k") #'scroll-down-line))
