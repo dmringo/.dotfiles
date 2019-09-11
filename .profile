@@ -146,9 +146,9 @@ prepend PATH "$HOME/.cabal/bin" # Cabal-managed bins
 # Arch-specific local binaries (useful on shared filesystems across multiple
 # architectures).  Should take precedence over just about any other PATH
 # component
-if [ -d "$HOME/local-$(uname -i)/bin" ]
+if [ -d "$HOME/local-$(uname -m)/bin" ]
 then
-  prepend PATH "$HOME/local-$(uname -i)/bin"
+  prepend PATH "$HOME/local-$(uname -m)/bin"
 fi
 
 
@@ -159,9 +159,9 @@ fi
 _conda_base="$HOME/miniconda3"
 
 # Similar idea to arch-specific binary dir above
-if [ -d "${_conda_base}-$(uname -i)" ]
+if [ -d "${_conda_base}-$(uname -m)" ]
 then
-  _conda_base="${_conda_base}-$(uname -i)"
+  _conda_base="${_conda_base}-$(uname -m)"
 fi
 
 if [ -d "$_conda_base" ]
