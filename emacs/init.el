@@ -548,14 +548,32 @@
 
 ;; Sources for themes I like
 (use-package base16-theme
-  :if (display-graphic-p)
   :demand
-  :config  
+  :config
+  (defcustom my/base16-inhibit-patch nil
+    "If nil, base16 themes will be patched on switch.
+Patches are made in the `after-load-theme-hook', and are
+determined by the variable `my/base16-patchset'")
+
+  (defcustom my/base16-patchset
+    '((org-todo :background base01)
+      (org-done :background base01)
+      ;; Make mode line more prominent to highlight active window
+      (mode-line :background base05 :foreground base03)
+      (mode-line-buffer-id :foreground base01 :weight bold)
+      ;; Make header line distinguishable from modeline
+      (header-line :background base03)
+      (undo-tree-visualizer-current-face :foreground base00
+                                         :background base0B))
+    "List of face specs to be passed to `base16-patch-theme'
+    whenever a base16 theme is loaded")
+
   (defun my/get-base16-color-plist (theme)
     (let ((color-var (intern (concat (symbol-name theme) "-colors"))))
       (if (boundp color-var)
           (symbol-value color-var)
         (error "%s is probably not a base16 theme or is not loaded" theme))))
+
   (defun my/get-base16-enabled-theme ()
     "Return the first enabled base16 theme or nil"
     (interactive)
@@ -563,6 +581,7 @@
              (save-match-data
                (string-match "base16-" (symbol-name theme))))
            custom-enabled-themes))
+
   (defun base16-patch-theme (theme faces)
     "Apply changes in FACES to THEME, a `base16-theme'.
 FACES should take same form as in `base16-theme-define'. If THEME
@@ -579,17 +598,21 @@ calling this function is a NOP"
           (apply
            'set-face-attribute
            `(,(car spec) nil ,@(base16-transform-spec (cdr spec) colors)))))))
-  (let ((theme 'base16-material))
-    (load-theme theme t)
+
+  ;; add the hook to patch base16 themes on load
+  (add-hook
+   'after-load-theme-hook
+   (defun patch-loaded-base16-theme (theme)
+     (message "loaded %S" theme)
+     (when  (and (string-match "^base16-" (symbol-name theme))
+                 (not my/base16-inhibit-patch))
+       (message "patched %S" theme)
+       (base16-patch-theme theme my/base16-patchset))))
+
+  ;; Actually load a theme
+  (let ((theme 'base16-default-dark))
     (require 'org-faces)
-    (base16-patch-theme
-     theme
-     '((org-todo :background base01)
-       (org-done :background base01)
-       (mode-line :background base05 :foreground base03)
-       (mode-line-buffer-id :foreground base01 :weight bold)
-       (undo-tree-visualizer-current-face :foreground base00
-                                          :background base0B)))))
+    (load-theme theme t)))
 
 (use-package rainbow-mode
   :init
