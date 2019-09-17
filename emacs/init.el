@@ -564,7 +564,10 @@ determined by the variable `my/base16-patchset'")
       ;; Make header line distinguishable from modeline
       (header-line :background base03)
       (undo-tree-visualizer-current-face :foreground base00
-                                         :background base0B))
+                                         :background base0B)
+      ;; Prefer something slightly more prominent for window borders
+      ;; NOTE: does not effect unused `window-divider-mode'
+      (vertical-border :foreground base0A))
     "List of face specs to be passed to `base16-patch-theme'
     whenever a base16 theme is loaded")
 
