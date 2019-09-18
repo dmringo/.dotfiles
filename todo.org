@@ -4,6 +4,12 @@
 
 I know this is doable, I just need to read up on the docs
 
+** Make base16 theme perusal a little nicer
+
+It should be easy to quickly rifle through themes.  Current cycling (in
+=my/base16-next-theme=) is OK, but always restarts at beginning of list in new
+sessions.  It might be nice to have an =ivy= interface that loads the theme
+under the cursor? Or maybe a tablist or iBuffer-ish interface?
 
 * ZSH
 

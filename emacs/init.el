@@ -548,8 +548,26 @@
 
 ;; Sources for themes I like
 (use-package base16-theme
+  :init (setq base16-theme-256-color-source 'colors)
   :demand
   :config
+  (setq my/base16-last-theme-idx -1)
+  (setq my/base16-all-themes
+        (progn
+          (require 'dash)
+          (--filter (string-match-p "^base16" (symbol-name it))
+                    (custom-available-themes))))
+  (defun my/base16-next-theme ()
+    "Cycle through base16 themes"
+    (interactive)
+    (setq my/base16-last-theme-idx
+          (if (or (< my/base16-last-theme-idx 0)
+                  (>= my/base16-last-theme-idx (1- (length my/base16-all-themes))))
+              0
+            (1+ my/base16-last-theme-idx)))
+    (mapc #'disable-theme custom-enabled-themes)
+    (load-theme (nth my/base16-last-theme-idx my/base16-all-themes) t))
+  
   (defcustom my/base16-inhibit-patch nil
     "If nil, base16 themes will be patched on switch.
 Patches are made in the `after-load-theme-hook', and are
