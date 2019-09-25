@@ -1,0 +1,76 @@
+# -*- mode: sh; sh-shell: zsh -*-
+
+# dmr prompt theme
+# Based on the builtin clint theme
+
+prompt_dmr_help () {
+  cat <<'EOF'
+
+  prompt clint [<color1> [<color2> [<color3> [<color4> [<color5>]]]]]
+
+  defaults are red, cyan, green, yellow, and white, respectively.
+
+EOF
+}
+
+prompt_clint_setup () {
+  local -a prompt_colors
+  local -A delims
+  local p_date p_tty p_plat p_ver p_userpwd p_apm p_shlvlhist p_rc p_end p_win
+
+  autoload -Uz vcs_info
+
+  prompt_colors[1]=${1:-${${SSH_CLIENT+'yellow'}:-'red'}}
+  prompt_colors[2]=${2:-'cyan'}
+  prompt_colors[3]=${3:-'green'}
+  prompt_colors[4]=${4:-'yellow'}
+  prompt_colors[5]=${5:-'white'}
+
+  delims['\[']="%F{$prompt_colors[1]}["
+  delims['\]']="%F{$prompt_colors[1]}]"
+  delims['<']="%F{$prompt_colors[1]}<"
+  delims['>']="%F{$prompt_colors[1]}>"
+  delims['\(']="%F{$prompt_colors[1]}("
+  delims['\)']="%F{$prompt_colors[1]})"
+
+  p_date="$delims['\[']%F{$prompt_colors[2]}%D{%a %y/%m/%d %R %Z}$delims['\]']"
+  p_tty="$delims['\[']%F{$prompt_colors[3]}%l$delims['\]']"
+  p_plat="$delims['\[']%F{$prompt_colors[2]}${MACHTYPE}/${OSTYPE}/$(uname -r)$delims['\]']"
+  p_ver="$delims['\[']%F{$prompt_colors[2]}${ZSH_VERSION}$delims['\]']"
+
+  [[ -n "$WINDOW" ]] && p_win="$delims['\(']%F{$prompt_colors[4]}$WINDOW$delims['\)']"
+
+  p_userpwd="$delims['<']%F{$prompt_colors[3]}%n@%m$p_win%F{$prompt_colors[5]}:%F{$prompt_colors[4]}%~$delims['>']"
+  local p_vcs="%(2v.%U%2v%u.)"
+
+  p_shlvlhist="%fzsh%(2L./$SHLVL.) %B%h%b "
+  p_rc="%(?..[%?%1v] )"
+  p_end="%f%B%#%b "
+
+  typeset -ga zle_highlight
+  zle_highlight[(r)default:*]=default:$prompt_colors[2]
+
+  prompt="$p_date$p_tty$p_plat$p_ver
+$p_userpwd
+$p_shlvlhist$p_rc$p_vcs$p_end"
+  PS2='%(4_.\.)%3_> %E'
+
+  add-zsh-hook precmd prompt_clint_precmd
+}
+
+prompt_clint_precmd () {
+  setopt noxtrace noksharrays localoptions
+  local exitstatus=$?
+  local git_dir git_ref
+
+  psvar=()
+  [[ $exitstatus -ge 128 ]] && psvar[1]=" $signals[$exitstatus-127]" ||
+	psvar[1]=""
+
+  [[ -o interactive ]] && jobs -l
+
+  vcs_info
+  [[ -n $vcs_info_msg_0_ ]] && psvar[2]="$vcs_info_msg_0_"
+}
+
+prompt_clint_setup "$@"
