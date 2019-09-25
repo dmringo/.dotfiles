@@ -395,6 +395,8 @@
   :init
   (add-to-list 'auto-mode-alist '("[Cc]omponents\\/.*\\.js\\'" . rjsx-mode)))
 
+(use-package nim-mode)
+
 (use-package json-mode :diminish)
 
 
