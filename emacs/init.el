@@ -90,18 +90,9 @@
 
 (use-package rg
   :demand
-  :bind (:map rg-mode-map
-              ;; unbind nav conventions that I like
-              ;; TODO: consider rebinding the history commands
-              ("C-f") ("C-b") ("C-n") ("C-p")
-              ;; moves cursor only
-              ("n" . rg-next-file)
-              ("p" . rg-prev-file)
-              ;; moves cursor and navigates to point in relevant file
-              ("M-n" . next-error-no-select)
-              ("M-p" . previous-error-no-select))
   :config
   (rg-enable-default-bindings)
+  (rg-enable-menu)
   (setq
    ;; Show the full command in the *rg* buffer
    rg-hide-command nil
@@ -116,7 +107,18 @@
                 t (error "%s isn't a file or directory :(" path)))
           (pat (rg-read-pattern nil))
           (files (rg-read-files)))
-      (rg-run pat files dir))))
+      (rg-run pat files dir)))
+  (rg-define-search rg-)
+  :bind (:map rg-mode-map
+              ;; unbind nav conventions that I like
+              ;; TODO: consider rebinding the history commands
+              ("C-f") ("C-b") ("C-n") ("C-p")
+              ;; moves cursor only
+              ("n" . rg-next-file)
+              ("p" . rg-prev-file)
+              ;; moves cursor and navigates to point in relevant file
+              ("M-n" . next-error-no-select)
+              ("M-p" . previous-error-no-select)))
 
 (use-package ivy
   :demand
@@ -130,6 +132,8 @@
                   ivy-use-selectable-prompt t
                   ivy-initial-inputs-alist 'nil
                   ivy-use-virtual-buffers t)))
+
+(use-package ivy-hydra)
 
 ;; (use-package origami
 ;;   :config
