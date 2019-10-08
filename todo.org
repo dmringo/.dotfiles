@@ -4,12 +4,20 @@
 
 I know this is doable, I just need to read up on the docs
 
-** Make base16 theme perusal a little nicer
+** TODO Make base16 theme perusal a little nicer
 
 It should be easy to quickly rifle through themes.  Current cycling (in
 =my/base16-next-theme=) is OK, but always restarts at beginning of list in new
 sessions.  It might be nice to have an =ivy= interface that loads the theme
 under the cursor? Or maybe a tablist or iBuffer-ish interface?
+
+** TODO reenable directory-first sorting for counsel-find-file
+
+A consequence of using =prescient.el= is that sorting is wholly governed by the
+"frecency" that =precient= tracks.  This means that the directory-first sorting
+exhibited by counsel-find-file is lost. I'll have to do some reading about
+customizing Ivy to get this done.  This is probably a good candidate for
+upstreaming to =prescient.el=.
 
 * ZSH
 
@@ -65,3 +73,11 @@ idea of having multiple files (either tangling to many or using =#+include=
 directives within Org) but I don't know that it would be of much benefit
 
 
+** TODO Write custom prompt
+
+Built-in prompts are basically good, but I miss the "time of last command"
+feature from Spaceship.  Shouldn't be too hard to base my own prompt on Clint
+(or similar) and add the functionality I want.
+
+- Builtin prompts are usually found at
+  =/usr/share/zsh/<version>/functions/prompt_<name>_setup=
