@@ -688,6 +688,9 @@ A file is considered a theme file if it matches the regex
 ;; Info-mode
 (use-package info
   :init
+  (defvar my/info-scroll-margin 25
+    "Least number of lines must be visible before a scroll causes
+    navigation to the next Info node")
   (defun my/info-next ()
     "Behave as `Info-next' when viewing single node in a manual
 or as `forward-page' when viewing the whole manual (as after
@@ -708,9 +711,29 @@ invoking \"g *\")"
     (if (buffer-narrowed-p)
         (Info-prev)
       (backward-page)))
+  ;; functions like scroll-{up,down}-line but will move to next/prev info page
+  ;; if the last line of the buffer is within `my/info-scroll-margin' of the
+  ;; window start or the window start line is the same as the buffer start line
+  ;; respectively
+  (defun my/info-scroll-down-line ()
+    (interactive)
+    (if (= 1 (line-number-at-pos (window-start)))
+        (Info-last-preorder)
+      (scroll-down-line)))
+  (defun my/info-scroll-up-line ()
+    (interactive)
+    (let* (;; The *real* last line appears to be off by two, due to how a line
+           ;; with character 0x1F (INFO SEP 1) is treated for line numbering
+           ;; purposes
+           (last-line (- (line-number-at-pos (window-end)) 2))
+           (lim (+ (line-number-at-pos (window-start)) my/info-scroll-margin)))
+      (if (<= last-line lim)
+          (or (Info-no-error (Info-goto-node (Info-extract-menu-counting 1)))
+              (Info-next-preorder))
+        (scroll-up-line))))
   :bind (:map Info-mode-map
-              ("j" . scroll-up-line)
-              ("k" . scroll-down-line)
+              ("j" . my/info-scroll-up-line)
+              ("k" . my/info-scroll-down-line)
               ("n" . my/info-next)
               ("p" . my/info-prev))
   :config
@@ -991,9 +1014,4 @@ one is manually specified."
 
 ;; default to modern fortran mode
 (add-to-list 'auto-mode-alist '("\\.F\\'" . f90-mode))
-
-
-
-
-
 
