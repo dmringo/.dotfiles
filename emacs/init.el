@@ -871,10 +871,12 @@ one is manually specified."
 
 ;; Personal global keybindings
 (bind-keys
- :map global-map
- ("M-["                     . previous-buffer)
- ("M-]"                     . next-buffer)
-
+ ;; :map global-map
+ ;; TODO: remap these or only use them when (display-graphic-p)
+ ;; They do not play well with terminals.
+ ;; ("M-["                     . previous-buffer)
+ ;; ("M-]"                     . next-buffer)
+ 
  ;; More convenient than M-DEL (DEL == backspace)
  ("M-D"                     . backward-kill-word)
  ("C-x C-b"                 . ibuffer)
