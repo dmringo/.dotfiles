@@ -251,7 +251,10 @@ tested with `member'"
  scroll-up-aggressively    0.0
  scroll-down-aggressively  0.0
  ;; This sets the margin at which scrolling will happen when the point enters it
- scroll-margin             10)
+ scroll-margin             10
+ ;; Keep this many lines of context when invoking `scroll-up' or `scroll-down'.
+ ;; (It would be nice if this could be a fraction of the visible lines)
+ next-screen-context-lines 20)
 
 ;; Enable some commands that I use. Normally these are disabled and
 ;; will generate a warning on use
