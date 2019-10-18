@@ -223,6 +223,9 @@ tested with `member'"
 ;; I like boxes
 (setq cursor-type 'box)
 
+;; I don't like the button faces in Customize menus
+(setq custom-raised-buttons nil)
+
 ;; use text-mode in new buffers by default
 (setq-default major-mode 'text-mode)
 
