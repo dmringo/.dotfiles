@@ -231,6 +231,15 @@ tested with `member'"
 ;; minibuffer prompt)
 (setq enable-recursive-minibuffers t)
 
+;; keep file-relative line numbers in narrowed buffers
+(when
+    ;; `display-line-numbers' was introduced in 26.1. This check isn't strictly
+    ;; necessary, but no need to introduce new bindings in earlier versions when
+    ;; they won't be used for anything.
+    (fboundp 'display-line-numbers-mode)
+  (setq display-line-numbers t
+        display-line-numbers-widen t))
+
 
 ;; make scrolling less jarring
 (setq-default
