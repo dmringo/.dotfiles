@@ -254,6 +254,9 @@
 
 (use-package gitignore-mode)
 
+(use-package clojure-mode)
+(use-package cider)
+
 ;; (use-package haskell-mode)
 ;; (use-package intero
 ;;   :after haskell-mode
