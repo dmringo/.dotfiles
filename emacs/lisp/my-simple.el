@@ -150,6 +150,9 @@ tested with `member'"
       (`(,key . ,def)
        (define-key map (kbd key) def)))))
 
+;; Override awkward "C-c ^" default binding
+(setq smerge-command-prefix "C-c m")
+
 
 ;; ** Misc Customizations
 
