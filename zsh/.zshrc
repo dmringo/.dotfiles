@@ -91,9 +91,10 @@ export GPG_TTY="$(tty)"
 
 #--------- prompt setup
 
-autoload -U promptinit && promptinit
-# spaceship is 3rd party, all others are bundled with Zsh
-my_prompts=(spaceship clint elite adam bart)
+autoload -Uz promptinit && promptinit
+# spaceship and grml (https://grml.org/zsh/) are 3rd party. All others are
+# bundled with recent zsh
+my_prompts=(spaceship grml-large grml clint elite adam bart)
 sys_prompts=($(prompt -l | sed -n 2p))
 
 for p in $my_prompts
@@ -255,4 +256,7 @@ man() {
 }
 
 # Source a local rc file (for interactive use)
-[[ -f $ZDOTDIR/localrc.zsh ]] && . $ZDOTDIR/localrc.zsh
+if [[ -f $ZDOTDIR/localrc.zsh ]]
+then
+  . $ZDOTDIR/localrc.zsh
+fi
