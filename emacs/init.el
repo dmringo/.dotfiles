@@ -1,7 +1,6 @@
 ;; -*- lexical-binding: t -*-
 
 
-
 ;; Make sure we've got straight
 (load (locate-user-emacs-file "lisp/get-straight.el"))
 
@@ -33,10 +32,6 @@
 
 ;; Get the simple stuff right away
 (require 'my-simple)
-
-;; Also some bananas 
-(require 'my-bananas)
-
 
 ;; sets :straight t in all use-package decls
 (setq straight-use-package-by-default t)
@@ -125,13 +120,21 @@
   :diminish ivy-mode
   ;; :pin melpa
   :bind  (("C-c C-r" . ivy-resume))
-  :config (progn
-            (ivy-mode 1)
-            (setq ivy-height 20
-                  ivy-on-del-error-function 'nil
-                  ivy-use-selectable-prompt t
-                  ivy-initial-inputs-alist 'nil
-                  ivy-use-virtual-buffers t)))
+  :config 
+  (ivy-mode 1)
+  (setq ivy-height 20
+        ivy-on-del-error-function 'nil
+        ivy-use-selectable-prompt t
+        ivy-initial-inputs-alist 'nil
+        ivy-use-virtual-buffers t)
+  ;; (when (boundp 'set-message-function)
+  ;;   ;; emacs@485b423e8f introduced some changes to how messages are set and
+  ;;   ;; cleared in the minibuffer. By default, `set-message-function' is
+  ;;   ;; `set-minibuffer-message', but this messes with how `ivy-dispatching-done'
+  ;;   ;; displays the set of dispatch options.  Setting the variable to nil
+  ;;   ;; restores the old behavior.
+  ;;   (setq set-message-function nil))
+  )
 
 (use-package ivy-hydra)
 
@@ -188,34 +191,34 @@
 
 (use-package counsel-projectile)
 
-;; (use-package org
-;;   :ensure org-plus-contrib
-;;   :config
-;;   (progn
-;;     (setq ;; latexmk is a little more consistent than pdflatex
-;;           org-latex-pdf-process (list "latexmk -f -pdf %f"))
-;;     ;; make #+NAME easy-template
-;;     (add-to-list 'org-structure-template-alist
-;;                  '("n" . "name"))
-;;     (add-to-list 'org-structure-template-alist
-;;                  '("ct" . "clocktable"))))
+(use-package org
+  :ensure org-plus-contrib
+  :config
+  (progn
+    (setq ;; latexmk is a little more consistent than pdflatex
+          org-latex-pdf-process (list "latexmk -f -pdf %f"))
+    ;; make #+NAME easy-template
+    (add-to-list 'org-structure-template-alist
+                 '("n" . "name"))
+    (add-to-list 'org-structure-template-alist
+                 '("ct" . "clocktable"))))
 
-;; (use-package ox-gfm)
-;; (use-package ox-pandoc
-;;   :pin melpa) 
+(use-package ox-gfm)
+(use-package ox-pandoc)
+
 
 ;; asynchronous execution of src blocks in org via babel
-;; (use-package ob-async)
+(use-package ob-async)
 
-;; (defun my/org-babel-load-langs ()
-;;   (org-babel-do-load-languages
-;;    'org-babel-load-languages
-;;    '((python     . t)
-;;      (ditaa      . t)
-;;      (emacs-lisp . t)
-;;      (shell      . t))))
+(defun my/org-babel-load-langs ()
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python     . t)
+     (ditaa      . t)
+     (emacs-lisp . t)
+     (shell      . t))))
 
-;; (add-hook 'after-init-hook 'my/org-babel-load-langs)
+(add-hook 'after-init-hook 'my/org-babel-load-langs)
 
 ;; Undo-tree is great - enable it globally and remove it from the modeline
 ;; (since it should always be active)
@@ -406,10 +409,8 @@
 
 (use-package json-mode :diminish)
 
-
-
-
 (use-package markdown-mode
+  :custom (markdown-asymmetric-header t "prefer just one set of #s")
   :hook ((markdown-mode . pandoc-mode)
          (markdown-mode . smartparens-mode))
   :config
@@ -420,7 +421,8 @@
 
 (use-package edit-indirect)
 
-(use-package pandoc-mode :diminish)
+(use-package pandoc-mode
+  :diminish)
 
 (use-package tablist
   :config
@@ -968,11 +970,11 @@ one is manually specified."
    (-when-let*
        ((_ (display-graphic-p))
         (fontlist
-         '(("Hack"             :size 11.0 :weight normal)
-           ("DejaVu Sans Mono" :size 11.0 :weight normal)
-           ("Office Code Pro"  :size 11.0 :weight normal)
-           ("Inconsolata"      :size 12.0 :weight normal)
-           ("Everson Mono"     :size 11.0 :weight bold)))
+         '(("Hack"             :size 14 :weight normal)
+           ("DejaVu Sans Mono" :size 14 :weight normal)
+           ("Inconsolata"      :size 15 :weight normal)
+           ("Office Code Pro"  :size 14 :weight normal)
+           ("Everson Mono"     :size 14 :weight bold)))
         (font-entity (--reduce-from ;; \acc it ->
                       (or acc
                           (let ((spec (apply #'font-spec :name it)))
