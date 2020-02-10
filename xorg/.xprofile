@@ -1,41 +1,34 @@
 #!/bin/sh
 
-# set a better keyboard repeat delay and rate - 200ms delay before repeat, 100
-# repetitions per second. Note: the delay is pretty accurate, I think, but the
-# number of repetitions is nowhere near 100.  It's just the value that produces
-# a good rate for me
-xset r rate 200 100
-
-# Make the capslock key an extra control key
-setxkbmap -option ctrl:nocaps
-
-
-# if we've got autorandr, we're probably using it
-# TODO: "probably" is not a great solution
-command -v autorandr 2>&1 > /dev/null && autorandr -c
-
-#!/bin/sh
-
-# xrandr --setprovideroutputsource modesetting NVIDIA-0
-# xrandr --auto
-
-xres="$HOME/.Xresources"
-
-if [ -f "$xres" ]
+if [ -z "$MY_XPROF_SRCD" ]
 then
-  xrdb -merge "$xres"
-fi
+  MY_XPROF_SRCD=yes
+  export MY_XPROF_SRCD
 
-if [ "$(hostname -s)" = "frootmig" ]
-then
-  # necessary when using nvidia driver on frootmig. Should check for nvidia,
-  # probably, but I haven't switched in a while
-  xrandr --setprovideroutputsource modesetting NVIDIA-0
-  xrandr --auto
-fi
+  # set a better keyboard repeat delay and rate - 200ms delay before repeat, 100
+  # repetitions per second. Note: the delay is pretty accurate, I think, but the
+  # number of repetitions is often not quite 100.  It's just the value that
+  # produces a good rate for me
+  xset r rate 200 100
 
-profile="$HOME/.profile"
-if [ -f "$profile" ]
-then
-  . "$profile"
+  # Make the capslock key an extra control key
+  setxkbmap -option ctrl:nocaps
+
+
+  # if we've got autorandr, we're probably using it
+  # TODO: "probably" is not a great solution
+  command -v autorandr 2>&1 > /dev/null && autorandr -c
+
+  xres="$HOME/.Xresources"
+
+  if [ -f "$xres" ]
+  then
+    xrdb -merge "$xres"
+  fi
+
+  profile="$HOME/.profile"
+  if [ -f "$profile" ] && [ -z "MY_PROF_SRCD" ]
+  then
+    . "$profile"
+  fi
 fi

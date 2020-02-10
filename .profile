@@ -364,36 +364,16 @@ setup_ssh_agent() {
 
 setup_ssh_agent
 
-
 # xprofile stuff
 #
 # It seems like xprofile is not consistently sourced by common display managers
 # or desktop sessions, but .profile is still pretty well respected.
-
-# TODO: maybe check for wayland too? `xset` and `setxkbmap` seems to work with
-# Gnome on Wayland, but `autorandr` almost certainly won't do much.
-if [ "$XDG_SESSION_TYPE" = x11 ]
+xprof="$HOME/.xprofile"
+if [ -n "$XDG_SESSION_TYPE" ] && [ -z "$MY_XPROF_SRCD" ] && [ -f "$xprof" ]
 then
 
-  # set a better keyboard repeat delay and rate - 200ms delay before repeat, 100
-  # repetitions per second. Note: the delay is pretty accurate, I think, but the
-  # number of repetitions is nowhere near 100.  It's just the value that
-  # produces a good rate for me
-  xset r rate 200 100
-
-  # Make the capslock key an extra control key
-  setxkbmap -option ctrl:nocaps
-
-
-  # if we've got autorandr, we're probably using it
-  # TODO: "probably" is not a great solution
-  command -v autorandr 2>&1 > /dev/null && autorandr -c
-
-
-  xres="$HOME/.Xresources"
-
-  if [ -f "$xres" ]
-  then
-    xrdb -merge "$xres"
-  fi
+#  . "$xprof"
 fi
+
+MY_PROF_SRCD=yes
+export MY_PROF_SRCD
