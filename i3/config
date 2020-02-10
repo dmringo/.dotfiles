@@ -284,8 +284,8 @@ set $base0F #FF5370
 
 bar {
     status_command i3status
-    wheel_up_cmd nop  
-    wheel_down_cmd nop
+    bindsym button4 nop  
+    bindsym button5 nop
     tray_output primary
 
     colors {
