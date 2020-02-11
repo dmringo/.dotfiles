@@ -133,40 +133,9 @@
     ;; `set-minibuffer-message', but this messes with how `ivy-dispatching-done'
     ;; displays the set of dispatch options.  Setting the variable to nil
     ;; restores the old behavior.
-    (setq set-message-function nil))
-  )
+    (setq set-message-function nil)))
 
 (use-package ivy-hydra)
-
-;; (use-package origami
-;;   :config
-;;   (defun my/elisp-parser (create)
-;;     "Origami parser for any top-level elisp sexpr.
-;; This is follows the `origami-lisp-parser' style pretty closely
-;; but isn't based on a \"def<something>\" regex.  Rather, it folds
-;; everything that isn't the first line of a multi-line top-level
-;; sexpr."
-;;   (lambda (content)
-;;     (with-temp-buffer
-;;       (insert content)
-;;       (goto-char (point-min))
-;;       (beginning-of-defun -1)
-;;       (let (beg end offset acc)
-;;         (while (< (point) (point-max))
-;;           (setq beg (point))
-;;           (setq offset (- (point-at-eol) (point)))
-;;           (end-of-defun)
-;;           (backward-char)      ;move point to one after the last paren
-;;           (setq end (1- (point))) ;don't include the last paren in the fold
-;;           (message "beg:%s end:%s off:%s" beg end offset)
-;;           (when (and (> offset 0) (> end (+ beg offset)))
-;;             (setq acc (cons (funcall create beg end offset nil) acc)))
-;;           (beginning-of-defun -1))
-;;         (reverse acc)))))
-;;   (add-to-list 'origami-parser-alist
-;;                '(emacs-lisp-mode . my/elisp-parser))
-;;   :bind (:map origami-mode-map
-;;               ("M-<tab>" . origami-toggle-node)))
 
 (use-package swiper
   :demand)
