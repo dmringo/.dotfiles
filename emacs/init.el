@@ -127,13 +127,13 @@
         ivy-use-selectable-prompt t
         ivy-initial-inputs-alist 'nil
         ivy-use-virtual-buffers t)
-  ;; (when (boundp 'set-message-function)
-  ;;   ;; emacs@485b423e8f introduced some changes to how messages are set and
-  ;;   ;; cleared in the minibuffer. By default, `set-message-function' is
-  ;;   ;; `set-minibuffer-message', but this messes with how `ivy-dispatching-done'
-  ;;   ;; displays the set of dispatch options.  Setting the variable to nil
-  ;;   ;; restores the old behavior.
-  ;;   (setq set-message-function nil))
+  (when (boundp 'set-message-function)
+    ;; emacs@485b423e8f introduced some changes to how messages are set and
+    ;; cleared in the minibuffer. By default, `set-message-function' is
+    ;; `set-minibuffer-message', but this messes with how `ivy-dispatching-done'
+    ;; displays the set of dispatch options.  Setting the variable to nil
+    ;; restores the old behavior.
+    (setq set-message-function nil))
   )
 
 (use-package ivy-hydra)
