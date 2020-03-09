@@ -1,9 +1,8 @@
 rofi.modi:             window,windowcd,run,ssh,drun,combi,keys,pdf>:rofi-pdf
 rofi.combi-modi:       drun,pdf>,window
-rofi.show-icons:       True
 rofi.matching:         normal
 rofi.disable-history:  False
-rofi.columns:          3
+rofi.columns:          2
 rofi.display-window:   win>
 rofi.display-windowcd: wincd>
 rofi.display-run:      run>
