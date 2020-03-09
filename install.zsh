@@ -14,6 +14,10 @@ set -e
 # uncomment for trace
 # set -x
 
+_log(){
+  print "$@"
+}
+
 # Unless DOT_HOME is set, use dirname of this script
 if [[ -z $DOT_HOME ]]
 then
@@ -32,9 +36,6 @@ _log "using $DOT_HOME as base location of '.dotfiles' repo"
 # keep track of the return status of linking operations
 lnStat=0
 
-_log(){
-  print "$@"
-}
 
 # Check if directory path exists.  Create it if it doesn't
 maybe_mkdir(){
