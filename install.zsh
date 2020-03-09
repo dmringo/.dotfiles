@@ -129,6 +129,7 @@ _ln $DOT_HOME/ssh/config           $HOME/.ssh/config && chmod 640 $DOT_HOME/ssh/
 _ln $DOT_HOME/.profile             $HOME/.profile
 _ln $DOT_HOME/xorg/.xprofile       $HOME/.xprofile
 _ln $DOT_HOME/xorg/.Xresources     $HOME/.Xresources
+_ln $DOT_HOME/xorg/.xinitrc        $HOME/.xinitrc
 _ln $DOT_HOME/gnupg/gpg-agent.conf $HOME/.gnupg/gpg-agent.conf
 _ln $DOT_HOME/gnupg/gpg.conf       $HOME/.gnupg/gpg.conf
 
