@@ -320,60 +320,13 @@ then
   export PASSWORD_STORE_GPG_OPTS
 fi
 
-
-# In some Gnome-y setups, the ssh-agent started by the system doesn't seem to
-# work so well. ssh hangs, maybe during communication through the socket?
-# Manually starting an agent will fix this, but I don't want to do that for
-# every new shell I start.  This function will try to setup *one* ssh-agent
-# instance (if it has not done so yet) and record the PID and SOCK vars to a
-# file.  If there is an instance, it will just try to source the file.
-setup_ssh_agent() {
-
-  local sock="$XDG_RUNTIME_DIR/ssh-agent/sock"
-  local env="$XDG_RUNTIME_DIR/ssh-agent/env"
-  local cmd="ssh-agent -a $sock"
-
-  # first try sourcing env file if it exists and see if the exported PID is
-  # alive and matches the command we expect
-  if { [ -f "$env" ] \
-         && . "$env" \
-         && ps -oargs -p "$SSH_AGENT_PID" | grep -qe "$cmd"; }  > /dev/null
-  then
-    # >&2 printf "ssh-agent(%s) active and env setup successfully\\n" "$SSH_AGENT_PID"
-  else
-    # >&2 printf "valid ssh-agent not detected, setting one up now\\n"
-
-    # make sure directory exists
-    mkdir -p "$(dirname "$sock")"
-
-    # NOTE: if there actually *is* a valid agent, but we somehow missed it, this
-    # will break ssh in other sessions that rely on that agent's existence.
-    #
-    # kill old sock so a new on can be made.
-    [ -e "$sock" ] && rm -f "$sock"
-
-    # start the agent and source the resulting file
-    ssh-agent -a "$sock" > "$env"
-    if ! . "$env" > /dev/null
-    then
-      # Who knows what may cause this to be reached
-      echo "Unable to setup ssh agent. Not sure why..."
-    fi
-  fi
-}
-
-setup_ssh_agent
-
 # xprofile stuff
 #
 # It seems like xprofile is not consistently sourced by common display managers
-# or desktop sessions, but .profile is still pretty well respected.
+# or desktop sessions, but .profile is still pretty well respected.  See note in
+# .xprofile
 xprof="$HOME/.xprofile"
-if [ -n "$XDG_SESSION_TYPE" ] && [ -z "$MY_XPROF_SRCD" ] && [ -f "$xprof" ]
+if [ -n "$XDG_SESSION_TYPE" ] && [ -z "$FROM_XPROFILE" ] && [ -f "$xprof" ]
 then
-
-#  . "$xprof"
+  FROM_PROFILE=yes . "$xprof"
 fi
-
-MY_PROF_SRCD=yes
-export MY_PROF_SRCD

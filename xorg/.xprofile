@@ -1,34 +1,36 @@
 #!/bin/sh
 
-if [ -z "$MY_XPROF_SRCD" ]
+
+# set a better keyboard repeat delay and rate - 200ms delay before repeat, 100
+# repetitions per second. Note: the delay is pretty accurate, I think, but the
+# number of repetitions is often not quite 100.  It's just the value that
+# produces a good rate for me
+xset r rate 200 100
+
+# Make the capslock key an extra control key
+setxkbmap -option ctrl:nocaps
+
+
+# if we've got autorandr, we're probably using it
+# TODO: "probably" is not a great solution
+command -v autorandr 2>&1 > /dev/null && autorandr -c
+
+xres="$HOME/.Xresources"
+
+if [ -f "$xres" ]
 then
-  MY_XPROF_SRCD=yes
-  export MY_XPROF_SRCD
+  xrdb -merge "$xres"
+fi
 
-  # set a better keyboard repeat delay and rate - 200ms delay before repeat, 100
-  # repetitions per second. Note: the delay is pretty accurate, I think, but the
-  # number of repetitions is often not quite 100.  It's just the value that
-  # produces a good rate for me
-  xset r rate 200 100
+# I'm pretty sure I had a good reason to source ~/.profile from here at some
+# point, but I don't know what it is anymore.  At any rate, due to perceived
+# inconsistencies in the sourcing of this file and .profile (and the ordering
+# thereof), I source each from the other. The env vars FROM_PROFILE and
+# FROM_XPROFILE prevent infinite mutual recursion.
+profile="$HOME/.profile"
+if [ -f "$profile" ] && [ -z "FROM_PROFILE" ]
+then
 
-  # Make the capslock key an extra control key
-  setxkbmap -option ctrl:nocaps
 
-
-  # if we've got autorandr, we're probably using it
-  # TODO: "probably" is not a great solution
-  command -v autorandr 2>&1 > /dev/null && autorandr -c
-
-  xres="$HOME/.Xresources"
-
-  if [ -f "$xres" ]
-  then
-    xrdb -merge "$xres"
-  fi
-
-  profile="$HOME/.profile"
-  if [ -f "$profile" ] && [ -z "MY_PROF_SRCD" ]
-  then
-    . "$profile"
-  fi
+  FROM_XPROFILE=yes . "$profile"
 fi
