@@ -93,7 +93,9 @@ export GPG_TTY="$(tty)"
 
 autoload -Uz promptinit && promptinit
 # spaceship and grml (https://grml.org/zsh/) are 3rd party. All others are
-# bundled with recent zsh
+# bundled with recent zsh.
+# grml config can be installed on Arch systems via pacman, but others may have
+# to retrieve it manually at http://git.grml.org/f/grml-etc-core/etc/zsh/zshrc
 my_prompts=(spaceship grml-large grml clint elite adam bart)
 sys_prompts=($(prompt -l | sed -n 2p))
 
