@@ -319,6 +319,15 @@
   (setq lsp-ui-doc-position 'at-point
         lsp-ui-sideline-enable nil))
 
+;; Dart + Flutter config
+(use-package dart-mode)
+(use-package lsp-dart 
+  :hook (dart-mode . lsp))
+
+(use-package rust-mode
+  :hook (rust-mode . lsp))
+
+
 ;; C++ stuff
 (use-package ccls
   :after lsp
