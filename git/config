@@ -33,3 +33,5 @@
 	user = dmringo
 [core]
 	fileMode = true
+[include]
+  path = bug.gitconfig

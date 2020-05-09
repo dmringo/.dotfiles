@@ -1,0 +1,4 @@
+# This is what I use as a per-machine git-bug configuration. Since it stores API
+# keys for interacting with remotes (github, gitlab), I don't want it kept in
+# this repo
+bug.gitconfig
