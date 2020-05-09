@@ -224,7 +224,8 @@
 ;; (use-package orgit
 ;;   :after (magit org))
 
-(use-package gitignore-mode)
+;; Comes with gitignore, gitconfig, gitattributes
+(use-package git-modes)
 
 (use-package clojure-mode)
 (use-package cider)
