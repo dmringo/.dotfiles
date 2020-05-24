@@ -267,7 +267,6 @@ tested with `member'"
 (put 'dired-find-alternate-file 'disabled nil) ;; "a" in dired map
 
 
-
 ;; Don't like the startup screen
 (setq inhibit-startup-screen t)
 
@@ -306,15 +305,6 @@ tested with `member'"
    (outline-mode . ((mode . bug-reference)))))
 ;; TODO: use `data-directory' to get this dynamically?
 (dir-locals-set-directory-class "/usr/local/share/emacs" 'emacs)
-
-
-
-;; Keep things changed by Customize in a separate file.  It really
-;; shouldn't be much these days
-(defconst my-custom-file (locate-user-emacs-file "lisp/my-custom.el"))
-(setq custom-file my-custom-file)
-;; Load the custom file
-(when (file-readable-p custom-file) (load custom-file))
 
 
 (provide 'my-simple)
