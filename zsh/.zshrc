@@ -179,6 +179,11 @@ esac
 alias l="ls -lh $extopts"
 alias la="ls -lha $extopts"
 alias ll="ls -lhA $extopts"
+if [[ "$TERM" = "xterm-kitty" ]]
+then
+  alias icat='kitty +kitten icat'
+  compdef _path_files icat
+fi
 
 # If spack is around, we do a similar dance as we did for conda. This really
 # needs to cooperate with at least one common setup where the system MODULEPATH
