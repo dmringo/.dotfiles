@@ -8,6 +8,7 @@
 ;; John Wiegley's config: github.com/jwiegley/dot-emacs
 (defvar file-name-handler-alist-old file-name-handler-alist
   "Initial file-name-handler-alist at emacs startup")
+
 (setq
  package-enable-at-startup  nil
  file-name-handler-alist    nil
@@ -15,6 +16,7 @@
  gc-cons-threshold          (* 256 1024 1024)
  gc-cons-percentage         0.6
  auto-window-vscroll        nil)
+
 (add-hook
  'after-init-hook
  (defun my/restore-after-init()
@@ -152,7 +154,10 @@
   :config 
   ;; Suggested by Oleh
   (setq counsel-grep-command
-        "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
+        "rg -i -M 120 --no-heading --line-number --color never '%s' %s"
+        ;; seems to be a fine limit in my use. The bigger I can get away with,
+        ;; the better: line numbers are messed up when external grep is used
+        counsel-grep-swiper-limit 2000000)
   (ivy-add-actions 'counsel-find-file
                    '(("v" projectile-vc "VC Status")
                      ("s" my/rg-counsel-action "ripgrep")))
