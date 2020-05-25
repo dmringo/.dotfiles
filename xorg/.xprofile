@@ -12,8 +12,14 @@ setxkbmap -option ctrl:nocaps
 
 
 # if we've got autorandr, we're probably using it
-# TODO: "probably" is not a great solution
-command -v autorandr 2>&1 > /dev/null && autorandr -c
+# autorandr usually comes with a desktop file for XDG autostart, so this is only
+# really required when using a WM/DE that doesn't handle those (notably, i3,
+# even when started via SDDM or similar).
+if command -v autorandr > /dev/null 2>&1 && [ -z "$(autorandr --current)" ]
+then
+  # load default config and suppress noise
+  autorandr -c > /dev/null 2>&1
+fi
 
 xres="$HOME/.Xresources"
 
