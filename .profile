@@ -336,7 +336,7 @@ fi
 # or desktop sessions, but .profile is still pretty well respected.  See note in
 # .xprofile
 xprof="$HOME/.xprofile"
-if [ -n "$XDG_SESSION_TYPE" ] && [ -z "$FROM_XPROFILE" ] && [ -f "$xprof" ]
+if [ "$XDG_SESSION_TYPE" = "x11" ] && [ -z "$FROM_XPROFILE" ] && [ -f "$xprof" ]
 then
   FROM_PROFILE=yes . "$xprof"
 fi
