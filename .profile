@@ -96,23 +96,33 @@ shell_type() {
 _shell="$(shell_type)"
 
 
-# set these for convenience, but the paths are all the defaults*
-# Rationale
+# Set XDG dirs for convenience, but the paths are all the defaults.
+# Rationale:
 #  1. There are a programs that use the XDG defaults but don't read env vars
 #  2. In some cases, it's difficult to ensure these are set when a program
 #     starts (dunst, started by dbus is a good example)
+#
+# NOTE: It's almost certainly a bad idea to set XDG_RUNTIME_DIR manually. It
+#   does not have a default value, instead getting one from PAM (it's commonly
+#   /run/user/$UID). When I was setting it manually (to something other than the
+#   PAM default), I ran into problems with pulseaudio, where it would start with
+#   XDG_RUNTIME_DIR as the PAM value, but when I logged on, anything that tried
+#   to connect to the would fail, because it would use *my* value to look for
+#   pulseaudio stuff (likely the UNIX socket to connect to).
+#   See also: https://freedesktop.org/wiki/Software/xdg-user-dirs/
+#
+#   It's possible that this will bite me if I'm on a system where these are set
+#   to non-standard values prior to any kind of sourcing of this file (say a
+#   shared system).
 XDG_CONFIG_HOME="$HOME/.config"
 XDG_DATA_HOME="$HOME/.local/share"
 XDG_CACHE_HOME="$HOME/.cache"
-# No default for the RUNTIME_DIR, so keep it under an existing prefix
-XDG_RUNTIME_DIR="$HOME/.local/run"
+
 
 # make sure we actually have these directories
 mkdir -p \
       "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
 
-# These permissions are required for the runtime dir to be used
-chmod 0700 "$XDG_RUNTIME_DIR"
 
 # See notes at head of file
 ENV="${XDG_CONFIG_HOME}/sh/env"
