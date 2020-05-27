@@ -1,17 +1,21 @@
-;; -*- lexical-binding: t -*-
-;;
-;; This file is meant for customization of basic features in Emacs
-;; that apply across many modes or globally as well as some simple
-;; utility functions.  Ideally, it can be used in an emacs -q session
-;; if I've broken some other part of my config
+;;; my-simple.el --- Summary -*- lexical-binding: t -*-
 
+;;; Commentary:
+;;
+;; This file is meant for customization of basic features in Emacs that apply
+;; across many modes or globally as well as some simple utility functions.
+;; Ideally, it can be used in an `emacs -q` session if I've broken some other
+;; part of my config
+
+;;; Code:
 
 ;; ** Defuns
 
 ;; Stolen from https://www.emacswiki.org/emacs/UnfillParagraph
 ;; The opposite of fill-paragraph.
 (defun my/unfill-paragraph (&optional region)
-  "Takes a multi-line paragraph and makes it into a single line of text."
+  "Convert a multi-line REGION to a single line of text.
+Should be roughly the inverse of `fill-paragraph'"
   (interactive (progn (barf-if-buffer-read-only) '(t)))
   (let ((fill-column (point-max))
         ;; This would override `fill-column' if it's an integer.
@@ -67,9 +71,8 @@ in the cyle, whereas <O> and <C-S-o> move backwards, as if
      (define-key map (kbd "C-S-o") (lambda () (interactive) (my/other-win -1)))
      map)))
 
-(require 'pp)
-(defmacro my/log-var* (&rest FORMS)
-  "Log the values and literal forms of FORMS to buffer *my/log*
+(defmacro my/log-var* (&rest forms)
+  "Log the values and literal forms of FORMS to buffer *my/log*.
 Useful for printf-style debugging.  Probably buggy itself though..."
   `(with-current-buffer
        (get-buffer-create "*my/log*")
@@ -80,15 +83,14 @@ Useful for printf-style debugging.  Probably buggy itself though..."
             `(insert
               (format "%s:\n%s\n\n"
                       ',sym (pp-to-string ,sym))))
-          syms))))
+          forms))))
 
 (defvar my/emacs-init-file
   (file-truename (locate-user-emacs-file "init.el"))
-  "Real path to my init.el file")
+  "Real path to my init.el file.")
 
 (defun my/visit-emacs-init-file ()
-  "Visit `my/emacs-init-file' or pop to the buffer already
-visiting it"
+  "Visit `my/emacs-init-file' or pop to the buffer already visiting it."
   (interactive)
   (or (pop-to-buffer
        (get-file-buffer my/emacs-init-file))
@@ -97,7 +99,7 @@ visiting it"
 
 (defvar my/kill-with-query-bufs
   '("*scratch*")
-  "List of buffer names that merit an additional query before being killed")
+  "List of buffer names that merit an additional query before being killed.")
 
 (add-to-list
  'kill-buffer-query-functions
