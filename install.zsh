@@ -135,8 +135,7 @@ _ln $DOT_HOME/gnupg/gpg.conf       $HOME/.gnupg/gpg.conf
 
 
 
-
-
+ln_config doom
 ln_config i3
 ln_config i3status
 ln_config dunst
