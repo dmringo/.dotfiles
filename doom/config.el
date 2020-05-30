@@ -1,7 +1,7 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
 ;; Place your private configuration here! Remember, you do not need to run 'doom
-;; sync' after modifying this file!
+n;; sync' after modifying this file!
 
 (defun my/obfuscate (str)
   "obfuscate STR as a string appropriate for inclusion in a public"
@@ -26,7 +26,7 @@
 (setq! user-full-name "David Ringo"
        user-mail-address
        ;; overly complicated obfuscation for bots
-       (deobfuscate13
+       (my/deobfuscate
         (concat
          "\x71\x6e\x69\x76\x71\x7a\x65"
          "\x76\x61\x74\x62\x40\x74\x7a"
@@ -80,5 +80,10 @@
 ;; I like to kill buffers indiscriminately, without delay
 (map! :g "C-x k" 'kill-this-buffer)
 
-(after! projectile
+(after! (:and counsel-projectile projectile)
+  (counsel-projectile-modify-action
+   'counsel-projectile-switch-project-action
+   '((move counsel-projectile-switch-project-action-vc 1)
+     (setkey counsel-projectile-switch-project-action-vc "o")
+     (setkey counsel-projectile-switch-project-action " ")))
   (setq! projectile-switch-project-action 'projectile-vc))
