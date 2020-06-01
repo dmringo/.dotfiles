@@ -48,4 +48,3 @@
 
 (package! pandoc-mode)
 (package! protobuf-mode)
-(package! vterm)
