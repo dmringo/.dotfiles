@@ -87,3 +87,19 @@
      (setkey counsel-projectile-switch-project-action-vc "o")
      (setkey counsel-projectile-switch-project-action " ")))
   (setq! projectile-switch-project-action 'projectile-vc))
+
+;; Better buffer handing for {async-,}shell-command
+(advice-add
+ 'shell-command
+ :after
+ (defun shell-rename-buffer (cmd &optional o-buf e-buf)
+   "Preserve shell-command output in a well-named buffer unless
+one is manually specified."
+   (unless o-buf
+     (let* ((async? (string-match "[ \t]*&[ \t]*\\'" cmd))
+            (new-bufname ;; what we'll call the new buffer
+             (format "*%s shell: %s*" (if async? "async" "sync") cmd))
+            (orig-bufname ;; what the old buffer was calld
+             (if async? "*Async Shell Command*" "*Shell Command Output*")))
+       (with-current-buffer orig-bufname
+         (rename-buffer new-bufname t))))))
