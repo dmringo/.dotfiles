@@ -48,3 +48,4 @@
 
 (package! pandoc-mode)
 (package! protobuf-mode)
+(package! dhall-mode)
