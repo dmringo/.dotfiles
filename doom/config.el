@@ -88,6 +88,10 @@
      (setkey counsel-projectile-switch-project-action " ")))
   (setq! projectile-switch-project-action 'projectile-vc))
 
+
+(setq! haskell-process-type 'stack-ghci)
+
+
 ;; Better buffer handing for {async-,}shell-command
 (advice-add
  'shell-command
