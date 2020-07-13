@@ -49,3 +49,5 @@
 (package! pandoc-mode)
 (package! protobuf-mode)
 (package! dhall-mode)
+(package! deadgrep)
+(package! clang-format)
