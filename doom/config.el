@@ -77,9 +77,14 @@
 ;; Good delay while I'm getting used to doom's keybindings
 (setq which-key-idle-delay 0.2)
 
-;; I like to kill buffers indiscriminately, without delay
-(map! :g "C-x k" 'kill-this-buffer)
 
+(map!
+ ;; I like to kill buffers indiscriminately, without delay
+ "C-x k" #'kill-this-buffer
+ ;; Don't really like the default isearch
+ "C-s"   #'swiper)
+
+;; TODO: Find proper way to make "vc" the default action for switch proj
 (after! (:and counsel-projectile projectile)
   (counsel-projectile-modify-action
    'counsel-projectile-switch-project-action
