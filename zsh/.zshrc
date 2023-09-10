@@ -99,31 +99,34 @@ autoload -Uz promptinit && promptinit
 my_prompts=(spaceship grml-large grml clint elite adam bart)
 sys_prompts=($(prompt -l | sed -n 2p))
 
-for p in $my_prompts
-do
-  # (r)$p in the subscript says "give me the value of the element that matches
-  # the pattern $p"
-  found_prompt=${sys_prompts[(r)$p]}
-  if [[ -n $found_prompt ]]
-  then
-    # TODO: There's a better way to do this for sure
-    case $found_prompt in
-      spaceship )
-        SPACESHIP_DIR_TRUNC_PREFIX="…/"
-        SPACESHIP_DIR_TRUNC_REPO="false"
-        SPACESHIP_CONDA_PREFIX="["
-        SPACESHIP_CONDA_SUFFIX="]"
-        SPACESHIP_CONDA_SYMBOL=""
-        SPACESHIP_PROMPT_ORDER=(dir user host git conda exec_time
-                                line_sep exit_code char)
-        ;;
-    esac
+if cmd_exists starship; then
+  eval "$(starship init zsh)"
+else
+  for p in $my_prompts
+  do
+    # (r)$p in the subscript says "give me the value of the element that matches
+    # the pattern $p"
+    found_prompt=${sys_prompts[(r)$p]}
+    if [[ -n $found_prompt ]]
+    then
+      # TODO: There's a better way to do this for sure
+      case $found_prompt in
+        spaceship )
+          SPACESHIP_DIR_TRUNC_PREFIX="…/"
+          SPACESHIP_DIR_TRUNC_REPO="false"
+          SPACESHIP_CONDA_PREFIX="["
+          SPACESHIP_CONDA_SUFFIX="]"
+          SPACESHIP_CONDA_SYMBOL=""
+          SPACESHIP_PROMPT_ORDER=(dir user host git conda exec_time
+                                  line_sep exit_code char)
+          ;;
+      esac
 
-    prompt $p
-    break
-  fi
-done
-
+      prompt $p
+      break
+    fi
+  done
+fi
 
 # Haskell stack
 if cmd_exists stack
