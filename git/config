@@ -2,8 +2,6 @@
 	email = davidmringo@gmail.com
 	name = David Ringo
 	signingKey = 22B1634D
-[commit]
-	gpgsign = true
 [alias]
   # print the root directory of this repository
 	root = rev-parse --show-toplevel
