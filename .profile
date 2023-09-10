@@ -121,7 +121,7 @@ XDG_CACHE_HOME="$HOME/.cache"
 
 # make sure we actually have these directories
 mkdir -p \
-      "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+      "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME"
 
 
 # See notes at head of file
