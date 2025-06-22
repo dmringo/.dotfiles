@@ -191,7 +191,7 @@ fi
 
 
 # if I have linuxbrew around, I'm probably using it for something
-_lbrew="$HOME/.linuxbrew/bin"
+_lbrew="/home/linuxbrew/.linuxbrew/Homebrew/bin"
 if [ -d "$_lbrew" ]
 then
   prepend PATH "$_lbrew"
