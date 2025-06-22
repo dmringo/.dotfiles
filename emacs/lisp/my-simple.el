@@ -129,7 +129,7 @@ tested with `member'"
          ("C-M-}"   . ,#'enlarge-window-horizontally)
          ("C-M-{"   . ,#'shrink-window-horizontally)
          ;; Slightly quicker Kill this buffer
-         ("C-x k"   . ,#'kill-this-buffer)
+         ("C-x k"   . ,#'kill-current-buffer)
          ;; Disable `xref' stuff in global map and put it in prog-mode-map
          ;; instead
          ("M-.") ;; nil

@@ -124,7 +124,7 @@ Should be roughly the inverse of `fill-paragraph'"
 
 (map!
  ;; I like to kill buffers indiscriminately, without delay
- "C-x k" #'kill-this-buffer
+ "C-x k" #'kill-current-buffer
  ;; Don't really like the default isearch
  "C-s"   #'swiper-isearch
  ;; Bind `my/unfill-paragraph' similar to `fill-paragraph'
