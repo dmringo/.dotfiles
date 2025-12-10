@@ -33,3 +33,7 @@
 	fileMode = true
 [include]
   path = bug.gitconfig
+[init]
+	defaultBranch = main
+[push]
+	autoSetupRemote = true
