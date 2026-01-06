@@ -183,3 +183,46 @@
   (save-place-limit 400))
 
 
+;; ** Theme(s)
+
+;; Excellent minimal themes by Nicolas Rougier
+(use-package nano-theme
+  :ensure t
+  :config (nano-dark))
+
+;; in emacs 29.1 (and maybe later?) built-in transient is too old for
+;; MELPA-installed magit
+(setq package-install-upgrade-built-in t)
+(use-package transient
+  :ensure t)
+
+(use-package magit
+  :ensure t)
+
+;; ** Term
+
+(use-package eat)
+
+;; ** LSP
+
+(use-package eglot
+  :ensure nil
+  :commands (eglot-ensure
+             eglot-rename
+             eglot-format-buffer))
+
+;; ** Lang-specific
+
+(use-package markdown-mode
+  :commands (gfm-mode
+             gfm-view-mode
+             markdown-mode
+             markdown-view-mode)
+  :mode (("\\.markdown\\'" . markdown-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("README\\.md\\'" . gfm-mode))
+  :bind
+  (:map markdown-mode-map
+        ("C-c C-e" . markdown-do)))
+
+
