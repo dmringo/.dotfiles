@@ -127,11 +127,6 @@ mkdir -p \
 # See notes at head of file
 ENV="${XDG_CONFIG_HOME}/sh/env"
 
-if [ -f "$HOME/.localenv" ]
-then
-  . "$HOME/.localenv"
-fi
-
 
 # Try to keep $HOME cleanish, keep Go-managed stuff out of sight
 GOPATH="$HOME/.local/go"
@@ -388,4 +383,9 @@ xprof="$HOME/.xprofile"
 if [ "$XDG_SESSION_TYPE" = "x11" ] && [ -z "$FROM_XPROFILE" ] && [ -f "$xprof" ]
 then
   FROM_PROFILE=yes . "$xprof"
+fi
+
+if [ -f "$HOME/.localenv" ]
+then
+  . "$HOME/.localenv"
 fi
