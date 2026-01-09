@@ -182,6 +182,9 @@ esac
 alias l="ls -lh $extopts"
 alias la="ls -lha $extopts"
 alias ll="ls -lhA $extopts"
+alias md=mkdir
+function mcd() { mkdir -p $1 && cd $1 }
+
 if [[ "$TERM" = "xterm-kitty" ]]
 then
   alias icat='kitty +kitten icat'
