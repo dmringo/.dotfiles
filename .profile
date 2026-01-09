@@ -139,9 +139,10 @@ GOPATH="$HOME/.local/go"
 # This is sometimes missing, but important for homebrew (on macOS, at least)
 prepend PATH "/usr/local/bin"
 
-# My local bin directory. *Most* of my local binaries will either reside here,
+# My local bin directories. *Most* of my local binaries will either reside here,
 # or be symlinked here.
 prepend PATH "$HOME/.local/bin"
+prepend PATH "$HOME/bin"
 # Note: It's not really clear how much I should worry about symlinking
 # built-from-source packages manually, in particular, those that may make
 # assumptions about the (relative) locations of dependencies (e.g. python
