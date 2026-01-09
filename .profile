@@ -195,6 +195,49 @@ then
   export WORKON_HOME
 fi
 
+# If I believe my past self, ssh-agent started by the login manager or desktop session might not be
+# "reliable". It also might not be started in WSL. I could make a service, but this is simpler, and
+# good enough.
+# This function will try to setup *one* ssh-agent instance (if it has not done so
+# yet) and record the PID and SOCK vars to a file.  If there is an instance, it will just try to
+# source the file.
+setup_ssh_agent() {
+
+  local sock="$XDG_RUNTIME_DIR/ssh-agent/sock"
+  local env="$XDG_RUNTIME_DIR/ssh-agent/env"
+  local cmd="ssh-agent -a $sock"
+
+  # first try sourcing env file if it exists and see if the exported PID is
+  # alive and matches the command we expect
+  if { [ -f "$env" ] \
+         && . "$env" \
+         && ps -oargs -p "$SSH_AGENT_PID" | grep -qe "$cmd"; }  > /dev/null
+  then
+    # >&2 printf "ssh-agent(%s) active and env setup successfully\\n" "$SSH_AGENT_PID"
+  else
+    # >&2 printf "valid ssh-agent not detected, setting one up now\\n"
+
+    # make sure directory exists
+    mkdir -p "$(dirname "$sock")"
+
+    # NOTE: if there actually *is* a valid agent, but we somehow missed it, this
+    # will break ssh in other sessions that rely on that agent's existence.
+    # kill old sock so a new on can be made.
+    [ -e "$sock" ] && rm -f "$sock"
+
+    # start the agent and source the resulting file
+    ssh-agent -a "$sock" -s > "$env"
+    if ! . "$env" > /dev/null
+    then
+      # Who knows what may cause this to be reached
+      echo "Unable to setup ssh agent. Not sure why..."
+    fi
+  fi
+  # finally, add the keys I care about:
+  ssh-add -q $HOME/.ssh/*ed25519
+}
+
+setup_ssh_agent
 
 # if I have linuxbrew around, I'm probably using it for something
 _lbrew="/home/linuxbrew/.linuxbrew/bin"
