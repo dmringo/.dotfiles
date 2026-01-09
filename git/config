@@ -9,8 +9,6 @@
   # print the topmost git directory (e.g. when you've got submodules upon
   # submodules and want the top-level repo dir)
 	rroot = !"a=\"$(git rev-parse --git-dir)\";  test \"$a\" = \".git\" && pwd || printf %s\\\\n \"${a%/.git*}\";"
-
-  hub-clone = !"github-clone"
 [color]
 	status = auto
 	ui = auto
@@ -34,3 +32,8 @@
 	defaultBranch = main
 [push]
 	autoSetupRemote = true
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
