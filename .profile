@@ -385,6 +385,11 @@ then
   FROM_PROFILE=yes . "$xprof"
 fi
 
+if [ -f "$HOME/.local/bin/env" ]
+then
+  . "$HOME/.local/bin/env"
+fi
+
 if [ -f "$HOME/.localenv" ]
 then
   . "$HOME/.localenv"
