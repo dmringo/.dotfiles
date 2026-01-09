@@ -1,7 +1,7 @@
-[user]
-	email = davidmringo@gmail.com
-	name = David Ringo
-	signingKey = 22B1634D
+[include]
+	# I have different global user configs for different hosts, so include a host-specific user
+	# config here. Using a relative path since it should be adjacent to this file
+	path = .gitconfig-host
 [alias]
   # print the root directory of this repository
 	root = rev-parse --show-toplevel
