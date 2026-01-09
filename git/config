@@ -1,19 +1,19 @@
 [include]
-	# I have different global user configs for different hosts, so include a host-specific user
-	# config here. Using a relative path since it should be adjacent to this file
-	path = .gitconfig-host
+    # I have different global user configs for different hosts, so include a host-specific user
+    # config here. Using a relative path since it should be adjacent to this file
+    path = .gitconfig-host
 [alias]
-  # print the root directory of this repository
-	root = rev-parse --show-toplevel
+    # print the root directory of this repository
+    root = rev-parse --show-toplevel
 
-  # print the topmost git directory (e.g. when you've got submodules upon
-  # submodules and want the top-level repo dir)
-	rroot = !"a=\"$(git rev-parse --git-dir)\";  test \"$a\" = \".git\" && pwd || printf %s\\\\n \"${a%/.git*}\";"
+    # print the topmost git directory (e.g. when you've got submodules upon
+    # submodules and want the top-level repo dir)
+    rroot = !"a=\"$(git rev-parse --git-dir)\";  test \"$a\" = \".git\" && pwd || printf %s\\\\n \"${a%/.git*}\";"
 [color]
-	status = auto
-	ui = auto
+    status = auto
+    ui = auto
 [diff "gpg"]
-	textconv = gpg --no-tty --decrypt
+    textconv = gpg --no-tty --decrypt
 
 # Modified from advice at https://ryuslash.org/tag/git.html
 #
@@ -21,19 +21,19 @@
 # be useful, need to also use gitattributes to set diff=lisp for some file
 # patterns, e.g. *.el diff=lisp
 [diff "lisp"]
-  xfuncname = "^\\([^ ]+.*$"
+    xfuncname = "^\\([^ ]+.*$"
 [github]
-	user = dmringo
+    user = dmringo
 [core]
-	fileMode = true
+    fileMode = true
 [include]
-  path = bug.gitconfig
+    path = bug.gitconfig
 [init]
-	defaultBranch = main
+    defaultBranch = main
 [push]
-	autoSetupRemote = true
+    autoSetupRemote = true
 [filter "lfs"]
-	required = true
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
+    required = true
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
