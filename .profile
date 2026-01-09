@@ -348,7 +348,7 @@ then
   SHELL="$(which zsh)"
 elif cmd_exists bash
 then
-  SHELL="$(which zsh)"
+  SHELL="$(which bash)"
 fi
 
 ESHELL="$SHELL"
