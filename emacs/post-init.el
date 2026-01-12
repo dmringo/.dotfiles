@@ -223,8 +223,25 @@
 
 ;; Excellent minimal themes by Nicolas Rougier
 (use-package nano-theme
+  :ensure t)
+
+;; Great set of themes from the doom emacs project
+(use-package doom-themes
   :ensure t
-  :config (nano-dark))
+  :custom
+  ;; Global settings (defaults)
+  (doom-themes-enable-bold t)   ; if nil, bold is universally disabled
+  (doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  ;; load theme as a `window-setup-hook'. Otherwise some faces don't seem to get
+  ;; applied properly. Might be related to minimal-emacs code?
+  :hook (window-setup . (lambda () (load-theme 'doom-gruvbox t)))
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
+
+
+;; ** Misc
 
 ;; in emacs 29.1 (and maybe later?) built-in transient is too old for
 ;; MELPA-installed magit
