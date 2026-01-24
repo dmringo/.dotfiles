@@ -304,3 +304,7 @@
 
 (use-package emacs
   :ensure nil)
+
+(add-hook 'window-setup-hook
+          (lambda ()
+            (load-theme 'doom-gruvbox t)))
