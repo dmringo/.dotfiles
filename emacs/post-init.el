@@ -276,7 +276,16 @@
   :ensure nil
   :commands (eglot-ensure
              eglot-rename
-             eglot-format-buffer))
+             eglot-format-buffer)
+  :config
+  ;; `rass` is installed separately (cargo or other) and multiplexes multiple
+  ;; LSP servers. As of this writing, it defaults to using ruff and
+  ;; basedpyright, both of which are great for python formatting, linting,
+  ;; completion, etc.
+  ;; TODO: fallbacks?
+  (add-to-list 'eglot-server-programs
+               '(python-base-mode . ("rass" "python")))
+  :hook (python-mode . eglot-ensure))
 
 ;; ** Lang-specific
 
