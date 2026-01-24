@@ -302,3 +302,5 @@
         ("C-c C-e" . markdown-do)))
 
 
+(use-package emacs
+  :ensure nil)
