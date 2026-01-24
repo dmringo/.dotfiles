@@ -3,6 +3,10 @@
   :ensure t
   :config (vertico-mode))
 
+(use-package marginalia
+  :ensure t
+  :config (marginalia-mode))
+
 ;; TODO: review this. It's a straight copy from https://github.com/minad/consult
 ;; Example configuration for Consult
 (use-package consult
