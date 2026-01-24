@@ -263,6 +263,9 @@
 (use-package vundo
   :ensure t)
 
+(use-package deadgrep
+  :ensure t)
+
 ;; ** Term
 
 (use-package eat)
