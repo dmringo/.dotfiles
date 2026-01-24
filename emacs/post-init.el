@@ -260,6 +260,9 @@
   :ensure t
   :config (which-key-mode))
 
+(use-package vundo
+  :ensure t)
+
 ;; ** Term
 
 (use-package eat)
