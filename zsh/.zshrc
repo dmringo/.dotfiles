@@ -99,7 +99,9 @@ autoload -Uz promptinit && promptinit
 my_prompts=(spaceship grml-large grml clint elite adam bart)
 sys_prompts=($(prompt -l | sed -n 2p))
 
-if cmd_exists starship; then
+if cmd_exists oh-my-posh; then
+  eval "$(oh-my-posh init -c ~/.dotfiles/oh-my-posh/omp.yml zsh)"
+elif cmd_exists starship; then
   eval "$(starship init zsh)"
 else
   for p in $my_prompts
@@ -182,6 +184,9 @@ esac
 alias l="ls -lh $extopts"
 alias la="ls -lha $extopts"
 alias ll="ls -lhA $extopts"
+alias md=mkdir
+function mcd() { mkdir -p $1 && cd $1 }
+
 if [[ "$TERM" = "xterm-kitty" ]]
 then
   alias icat='kitty +kitten icat'

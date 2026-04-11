@@ -54,9 +54,9 @@
 # sourced with {ba,z,da,}sh without issue and should be idempotent w.r.t. the
 # environment (variables, functions, etc.).
 
-# set some reasonable default perms on new files
-umask u=rwx,g=r,o=
-
+# Same as 022 - usually the default anyway, but good to be explicit.
+# While it may be tempting to be more restricctive, it can lead to non-obvious breakage
+u=rwx,g=rx,o=rx
 
 # Check if a command (binary or shell function/builtin) is available.
 # This is, as far as I can tell, the most portable way of doing this.
@@ -134,9 +134,10 @@ GOPATH="$HOME/.local/go"
 # This is sometimes missing, but important for homebrew (on macOS, at least)
 prepend PATH "/usr/local/bin"
 
-# My local bin directory. *Most* of my local binaries will either reside here,
+# My local bin directories. *Most* of my local binaries will either reside here,
 # or be symlinked here.
 prepend PATH "$HOME/.local/bin"
+prepend PATH "$HOME/bin"
 # Note: It's not really clear how much I should worry about symlinking
 # built-from-source packages manually, in particular, those that may make
 # assumptions about the (relative) locations of dependencies (e.g. python
@@ -189,6 +190,49 @@ then
   export WORKON_HOME
 fi
 
+# If I believe my past self, ssh-agent started by the login manager or desktop session might not be
+# "reliable". It also might not be started in WSL. I could make a service, but this is simpler, and
+# good enough.
+# This function will try to setup *one* ssh-agent instance (if it has not done so
+# yet) and record the PID and SOCK vars to a file.  If there is an instance, it will just try to
+# source the file.
+setup_ssh_agent() {
+
+  local sock="$XDG_RUNTIME_DIR/ssh-agent/sock"
+  local env="$XDG_RUNTIME_DIR/ssh-agent/env"
+  local cmd="ssh-agent -a $sock"
+
+  # first try sourcing env file if it exists and see if the exported PID is
+  # alive and matches the command we expect
+  if { [ -f "$env" ] \
+         && . "$env" \
+         && ps -oargs -p "$SSH_AGENT_PID" | grep -qe "$cmd"; }  > /dev/null
+  then
+    # >&2 printf "ssh-agent(%s) active and env setup successfully\\n" "$SSH_AGENT_PID"
+  else
+    # >&2 printf "valid ssh-agent not detected, setting one up now\\n"
+
+    # make sure directory exists
+    mkdir -p "$(dirname "$sock")"
+
+    # NOTE: if there actually *is* a valid agent, but we somehow missed it, this
+    # will break ssh in other sessions that rely on that agent's existence.
+    # kill old sock so a new on can be made.
+    [ -e "$sock" ] && rm -f "$sock"
+
+    # start the agent and source the resulting file
+    ssh-agent -a "$sock" -s > "$env"
+    if ! . "$env" > /dev/null
+    then
+      # Who knows what may cause this to be reached
+      echo "Unable to setup ssh agent. Not sure why..."
+    fi
+  fi
+  # finally, add the keys I care about:
+  ssh-add -q $HOME/.ssh/*ed25519
+}
+
+setup_ssh_agent
 
 # if I have linuxbrew around, I'm probably using it for something
 _lbrew="/home/linuxbrew/.linuxbrew/bin"
@@ -304,14 +348,14 @@ then
   SHELL="$(which zsh)"
 elif cmd_exists bash
 then
-  SHELL="$(which zsh)"
+  SHELL="$(which bash)"
 fi
 
 ESHELL="$SHELL"
 
 
 for var in \
-  PATH MANPATH INFOPATH GOPATH EDITOR SHELL ESHELL CDPATH ENV \
+  PATH MANPATH INFOPATH GOPATH EDITOR VISUAL SHELL ESHELL CDPATH ENV \
        XDG_CONFIG_HOME XDG_RUNTIME_DIR XDG_DATA_HOME XDG_CACHE_HOME
 do
   if [ -n "$var" ]
@@ -339,4 +383,14 @@ xprof="$HOME/.xprofile"
 if [ "$XDG_SESSION_TYPE" = "x11" ] && [ -z "$FROM_XPROFILE" ] && [ -f "$xprof" ]
 then
   FROM_PROFILE=yes . "$xprof"
+fi
+
+if [ -f "$HOME/.local/bin/env" ]
+then
+  . "$HOME/.local/bin/env"
+fi
+
+if [ -f "$HOME/.localenv" ]
+then
+  . "$HOME/.localenv"
 fi

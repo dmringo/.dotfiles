@@ -1,3 +1,4 @@
 local*.zsh
 .chpwd-recent-dirs
 .zcompdump
+.zcompcache
