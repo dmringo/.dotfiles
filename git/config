@@ -37,3 +37,10 @@
     clean = git-lfs clean -- %f
     smudge = git-lfs smudge -- %f
     process = git-lfs filter-process
+[pretty]
+	oned = %Cblue%h%Creset - %<(50,mtrunc)%s %Cgreen(%ch) %C(bold blue)<%aE>%Creset %C(auto)%d%Creset
+	onel = %Cblue%h%Creset - %s %Cgreen(%ch) %C(bold blue)<%aE>%Creset
+	onelh = %Cblue%H%Creset - %s
+	med = %C(yellow)commit: %H%n%C(green)Author: %aN%n%C(cyan)Date:   %ad%n    %s%n
+	shorthash = %h
+	longhash = %H
