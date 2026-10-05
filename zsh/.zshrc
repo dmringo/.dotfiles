@@ -153,6 +153,12 @@ fi
 # if we have direnv, get its hook setup
 cmd_exists direnv && eval "$(direnv hook zsh)"
 
+# atuin for shell history
+if cmd_exists atuin
+then
+  eval "$(atuin init zsh --disable-up-arrow)"
+fi
+
 if cmd_exists docker
 then
   alias dkr='docker'
