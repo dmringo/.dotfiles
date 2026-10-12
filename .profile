@@ -208,7 +208,14 @@ then
   ssh-add -l >/dev/null 2>&1
   case $? in
     0|1) ;;
-    *) eval "$(ssh-agent -s)" >/dev/null ;;
+    *)
+      # Starting an agent can fail in restricted environments even when the
+      # socket directory looks writable, so only evaluate its environment on
+      # success and keep startup noise out of non-interactive shells.
+      _ssh_agent_env="$(ssh-agent -s 2>/dev/null)" \
+        && eval "$_ssh_agent_env" >/dev/null
+      unset _ssh_agent_env
+      ;;
   esac
 fi
 
