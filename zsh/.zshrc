@@ -176,20 +176,29 @@ then
   fi
 fi
 
-# Try to detect if we're using GNU coreutils so we know what extra options are
-# valid
-case "$(ls --version 2>/dev/null | head -n 1)" in
-  *GNU*)
-    extopts=" --color --group-directories-first"
-    ;;
-  *)
-    extopts=""
-    ;;
-esac
+if cmd_exists exa
+then
+  alias l="exa -lh --color --group-directories-first"
+  # for exa, -a twice is like -a for GNU ls
+  alias la="exa -lhaa --color --group-directories-first"
+  alias ll="exa -lhA --color --group-directories-first"
+else
+  # Try to detect if we're using GNU coreutils so we know what extra options are
+  # valid
+  case "$(ls --version 2>/dev/null | head -n 1)" in
+    *GNU*)
+      extopts=" --color --group-directories-first"
+      ;;
+    *)
+      extopts=""
+      ;;
+  esac
 
-alias l="ls -lh $extopts"
-alias la="ls -lha $extopts"
-alias ll="ls -lhA $extopts"
+  alias l="ls -lh $extopts"
+  alias la="ls -lha $extopts"
+  alias ll="ls -lhA $extopts"
+fi
+
 alias md=mkdir
 function mcd() { mkdir -p $1 && cd $1 }
 
