@@ -5,69 +5,71 @@
 # 4. .git/config (repository-specific)
 #
 # If ~/.gitconfig is present, `--global` always refers to it, otherwise it refers to the path in 2.
+# `git config set ...` always indents with tabs
+# This is important to remember when editing config files manually, as mixing spaces and tabs can lead to unexpected behavior.  
 #
 # everything in *this* file (.config/git/config) is meant to be shared in some way. To get
 # host/platform-specific settings, use a separate file (e.g. config-host) and include it
 # here. Relative paths are relative to the file being read (*not* CWD or the repository)
 [include]
-  path = config-host
+	path = config-host
 [include]
-  path = config-os
+	path = config-os
 [alias]
-  # print the root directory of this repository
-  root = rev-parse --show-toplevel
+	# print the root directory of this repository
+	root = rev-parse --show-toplevel
 
-  # print the topmost git directory (e.g. when you've got submodules upon
-  # submodules and want the top-level repo dir)
-  rroot = !"a=\"$(git rev-parse --git-dir)\";  test \"$a\" = \".git\" && pwd || printf %s\\\\n \"${a%/.git*}\";"
+	# print the topmost git directory (e.g. when you've got submodules upon
+	# submodules and want the top-level repo dir)
+	rroot = !"a=\"$(git rev-parse --git-dir)\";  test \"$a\" = \".git\" && pwd || printf %s\\\\n \"${a%/.git*}\";"
 
-  swi = "!f() { \
-    local BRS=\"$(git branch --sort='-committerdate' --format='%(refname:short)')\"; \
-    local tgt=`echo \"$BRS\" | fzf --preview 'git log --color=always -n10 -p {}'`;   \
-    if [ -n \"$tgt\" ]; then \
-    git switch \"$@\" \"$tgt\"; \
-    fi; \
-    }; f"
-  s = status -uno
-  st = status
-  stm = st --ignore-submodules=untracked
-  vrt = "!f(){ git -c delta.side-by-side=false $@; }; f"
-  run = "!f() { cd ${GIT_PREFIX:-.}; $@; }; f"
-  sh = "!f() { bash \"$@\"; }; f"
-  cpk = cherry-pick
-  drop-range = "!f() { \
-    onto=$1; \
-    last=$2; \
-    branch=${3:-$(git branch --show-current)}; \
-    git rebase --onto $onto $last $branch; \
-  }; f"
-  rfetch = fetch --recurse-submodules=yes
-  showt = -c diff.external=difft show --ext-diff
-  difft = -c diff.external=difft diff --ext-diff
-  logt = -c diff.external=difft log --ext-diff
-  pushf = push --force-with-lease
-  recent-branches = branch --sort='-committerdate' --format='%(color:green)%(committerdate:relative)%(color:reset) %(refname:short)'
-  shash = show -s --pretty=shorthash
-  lhash = show -s --pretty=longhash
-  lgl = log --pretty=onel --graph --author-date-order --branches
-  lgg = log --pretty=onel --graph --author-date-order
-  lgd = log --pretty=oned --graph --author-date-order
-  sw = switch --recurse-submodules
-  info = "!git log -1 --compact-summary ${1:?Missing hash.} #"
-  ws = "!f() { git rebase --whitespace=fix HEAD~${1:-1}; }; f"
-  amend = commit --amend -C HEAD --no-edit
-  reword = commit --amend -c HEAD
-  cleanbr = "!f() { git fetch -p; for branch in $(git branch -vv | grep ': gone]' | awk '{print $1}'); do git branch -D $branch; done; }; f"
-  rebase-last-onto = "!f() { git rebase HEAD~${1:-1} --onto ${2:?Missing onto branch.}; }; f"
-  plaindiff = -c core.pager=less diff
-  plainly = "!f() { git -c core.pager=less $@; }; f"
-  nuke = "!f() { git reset --hard ${1:-HEAD}; git submodule update --recursive --force; }; f"
+	swi = "!f() { \
+		local BRS=\"$(git branch --sort='-committerdate' --format='%(refname:short)')\"; \
+		local tgt=`echo \"$BRS\" | fzf --preview 'git log --color=always -n10 -p {}'`;   \
+		if [ -n \"$tgt\" ]; then \
+		git switch \"$@\" \"$tgt\"; \
+		fi; \
+		}; f"
+	s = status -uno
+	st = status
+	stm = st --ignore-submodules=untracked
+	vrt = "!f(){ git -c delta.side-by-side=false $@; }; f"
+	run = "!f() { cd ${GIT_PREFIX:-.}; $@; }; f"
+	sh = "!f() { bash \"$@\"; }; f"
+	cpk = cherry-pick
+	drop-range = "!f() { \
+		onto=$1; \
+		last=$2; \
+		branch=${3:-$(git branch --show-current)}; \
+		git rebase --onto $onto $last $branch; \
+	}; f"
+	rfetch = fetch --recurse-submodules=yes
+	showt = -c diff.external=difft show --ext-diff
+	difft = -c diff.external=difft diff --ext-diff
+	logt = -c diff.external=difft log --ext-diff
+	pushf = push --force-with-lease
+	recent-branches = branch --sort='-committerdate' --format='%(color:green)%(committerdate:relative)%(color:reset) %(refname:short)'
+	shash = show -s --pretty=shorthash
+	lhash = show -s --pretty=longhash
+	lgl = log --pretty=onel --graph --author-date-order --branches
+	lgg = log --pretty=onel --graph --author-date-order
+	lgd = log --pretty=oned --graph --author-date-order
+	sw = switch --recurse-submodules
+	info = "!git log -1 --compact-summary ${1:?Missing hash.} #"
+	ws = "!f() { git rebase --whitespace=fix HEAD~${1:-1}; }; f"
+	amend = commit --amend -C HEAD --no-edit
+	reword = commit --amend -c HEAD
+	cleanbr = "!f() { git fetch -p; for branch in $(git branch -vv | grep ': gone]' | awk '{print $1}'); do git branch -D $branch; done; }; f"
+	rebase-last-onto = "!f() { git rebase HEAD~${1:-1} --onto ${2:?Missing onto branch.}; }; f"
+	plaindiff = -c core.pager=less diff
+	plainly = "!f() { git -c core.pager=less $@; }; f"
+	nuke = "!f() { git reset --hard ${1:-HEAD}; git submodule update --recursive --force; }; f"
 # FIXME: At some point, only one of these should be strictly necessary, depending on how git
 # addresses the small backcompat issue that arrived with alias.*.command introduction.
 [alias.reset]
-    up = reset --hard '@{upstream}'
+		up = reset --hard '@{upstream}'
 [alias.reset.up]
-    command = reset --hard '@{upstream}'
+		command = reset --hard '@{upstream}'
 [color]
     status = auto
     ui = auto
@@ -80,13 +82,13 @@
 # be useful, need to also use gitattributes to set diff=lisp for some file
 # patterns, e.g. *.el diff=lisp
 [diff "lisp"]
-    xfuncname = "^\\([^ ]+.*$"
+	xfuncname = "^\\([^ ]+.*$"
 [github]
     user = dmringo
 [core]
     fileMode = true
 [include]
-    path = bug.gitconfig
+	path = bug.gitconfig
 [init]
     defaultBranch = main
 [push]
