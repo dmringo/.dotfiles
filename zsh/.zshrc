@@ -84,6 +84,37 @@ keybinds=(
 
 bindkey $keybinds
 
+if cmd_exists zoxide
+then
+  eval "$(zoxide init zsh)"
+
+  zq() {
+    zoxide query "$@"
+  }
+
+  zqi() {
+    zoxide query -i "$@"
+  }
+
+  _zoxide_insert_path() {
+    local selection text
+    selection="$(zqi)" || return
+    [[ -n "$selection" ]] || return
+
+    if [[ "$selection" == *[[:space:]]* ]]
+    then
+      text=${(q)selection}
+    else
+      text=$selection
+    fi
+
+    LBUFFER+="$text"
+  }
+
+  zle -N _zoxide_insert_path
+  bindkey '^X^Z' _zoxide_insert_path
+fi
+
 # Tell gpg about the TTY.  I think this only makes sense in an interactive
 # session.  I also think this is necessary when GPG assumes no TTY, as is the
 # case when $HOME/.gnupg/gpg.conf has 'no-tty' specified.
