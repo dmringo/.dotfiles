@@ -1,0 +1,5 @@
+# symlink as config-os
+[core]
+  ignorecase = true
+[http]
+  sslBackend = schannel

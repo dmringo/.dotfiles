@@ -1,0 +1,11 @@
+# symlink as config-host
+[user]
+  email = davidmringo@gmail.com
+  name = David Ringo
+  # Setting the signing key to to a path solves issues on Windows with its custom OpenSSH enabled
+  # and keeping msys2/git-for-windows paths in the PATH. If specified just by key name, git tries
+  # to use ssh-agent, which will resolve to the msys2 version unless it's manually stubbed out.
+  # When given a path, it can just use the key directly. It's best *not* to have a passphrase in
+  # this setup since the prompt for it may get lost if trying to commit + sign from e.g. VSCode or
+  # another GUI.
+  signingKey = ~/.ssh/id_ed25519.pub
