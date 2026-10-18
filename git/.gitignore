@@ -2,3 +2,7 @@
 # keys for interacting with remotes (github, gitlab), I don't want it kept in
 # this repo
 bug.gitconfig
+
+# Ignore what will likely be symlinks to the actual config files on the host machine
+config-os
+config-host
