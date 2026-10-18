@@ -87,6 +87,9 @@
     user = dmringo
 [core]
     fileMode = true
+	fscache = true
+	fsmonitor = true
+	untrackedcache = true
 [include]
 	path = bug.gitconfig
 [init]
