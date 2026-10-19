@@ -201,6 +201,8 @@ local function create_font_selector_action()
   end)
 end
 
+local font_switcher_action = create_font_selector_action()
+
 -- =============================================================================
 -- Colors & Theme
 -- =============================================================================
@@ -225,6 +227,9 @@ config.window_padding = {
 }
 config.adjust_window_size_when_changing_font_size = false
 
+-- Command Palette configuration
+config.command_palette_rows = 16
+config.ui_key_cap_rendering = 'WindowsLong'
 -- =============================================================================
 -- Cursor & Scrollback
 -- =============================================================================
@@ -290,9 +295,9 @@ config.keys = {
   { key = 'UpArrow', mods = 'ALT', action = act.ActivatePaneDirection 'Up' },
   { key = 'DownArrow', mods = 'ALT', action = act.ActivatePaneDirection 'Down' },
 
-  -- Launcher & Command Palette
+  -- Launcher & Command Palette (ActivateCommandPalette displays keybindings alongside commands)
   { key = 'l', mods = 'CTRL|SHIFT', action = act.ShowLauncher },
-  { key = 'p', mods = 'CTRL|SHIFT', action = act.ShowLauncherArgs { flags = 'FUZZY|COMMANDS' } },
+  { key = 'p', mods = 'CTRL|SHIFT', action = act.ActivateCommandPalette },
 
   -- Search
   { key = 'f', mods = 'CTRL|SHIFT', action = act.Search 'CurrentSelectionOrEmptyString' },
@@ -304,7 +309,7 @@ config.keys = {
   { key = '0', mods = 'CTRL', action = act.ResetFontSize },
 
   -- Font switcher (fuzzy-search monospace fonts)
-  { key = 'f', mods = 'ALT|SHIFT', action = create_font_selector_action() },
+  { key = 'f', mods = 'ALT|SHIFT', action = font_switcher_action },
 }
 
 -- =============================================================================
@@ -314,9 +319,9 @@ wezterm.on('augment-command-palette', function(window, pane)
   return {
     {
       brief = 'Font: Switch Font (System Monospace)',
-      doc = 'Fuzzy-search and switch terminal font from detected system monospace fonts',
+      doc = 'Alt+Shift+F — Fuzzy-search and switch terminal font from detected system monospace fonts',
       icon = 'md_format_font',
-      action = create_font_selector_action(),
+      action = font_switcher_action,
     },
     {
       brief = 'Font: Reset to Default (' .. DEFAULT_FONT .. ')',
