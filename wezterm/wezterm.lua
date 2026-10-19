@@ -298,6 +298,10 @@ config.keys = {
   -- Launcher & Command Palette (ActivateCommandPalette displays keybindings alongside commands)
   { key = 'l', mods = 'CTRL|SHIFT', action = act.ShowLauncher },
   { key = 'p', mods = 'CTRL|SHIFT', action = act.ActivateCommandPalette },
+  -- Fullscreen & Key Passthrough
+  { key = 'F11', action = act.ToggleFullScreen },
+  { key = 'Enter', mods = 'ALT|SHIFT', action = act.ToggleFullScreen },
+  { key = 'Enter', mods = 'ALT', action = act.DisableDefaultAssignment },
 
   -- Search
   { key = 'f', mods = 'CTRL|SHIFT', action = act.Search 'CurrentSelectionOrEmptyString' },
