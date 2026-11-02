@@ -9,7 +9,13 @@ blocks:
   - type: prompt
     alignment: left
     segments:
-      - template: "┌ {{ .UserName }}"
+      - template: '{{ if gt .Code 0 }}({{ .Code }}){{ end }}'
+        foreground: "#ffffff"
+        foreground_templates:
+          - '{{ if gt .Code 0 }}#ff8080{{ end }}'
+        type: text
+        style: plain
+      - template: "{{ .UserName }}"
         foreground: "#757575"
         type: session
         style: plain
@@ -96,12 +102,12 @@ blocks:
   - type: prompt
     alignment: left
     segments:
-      - template: "└ "
-        foreground: "#757575"
-        type: text
-        style: plain
-      - template: $
+      - template: ';'
         foreground: "#ffffff"
+        background_templates:
+          - '{{ if gt .Code 0 }}#c00000{{ end }}'
+        # foreground_templates:
+        #   - '{{ if gt .Code 0 }}#ffffff{{ end }}'
         type: text
         style: plain
     newline: true
