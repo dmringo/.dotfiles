@@ -1,0 +1,322 @@
+#!/usr/bin/env bash
+#
+# git-step: DWIM helper for stopped git operations
+# Automatically detects repository state and executes the appropriate git command
+# for continue, abort, skip, and quit.
+#
+set -euo pipefail
+
+SCRIPT_NAME="git-step"
+
+show_help() {
+    cat <<EOF
+usage: $SCRIPT_NAME [action] [options] [-- <extra-git-args>]
+   or: git continue [options] [-- <extra-git-args>]
+   or: git abort [options]
+   or: git skip [options]
+   or: git quit [options]
+
+DWIM helper for interrupted git operations. Automatically inspects repository
+state to determine whether a rebase, merge, cherry-pick, revert, am, or bisect
+is in progress, and executes the matching git command.
+
+Actions:
+  continue            Resume operation after resolving conflicts
+                      (rebase, merge, cherry-pick, revert, am)
+  abort               Cancel operation and restore previous state
+                      (rebase, merge, cherry-pick, revert, am, bisect)
+  skip                Skip the current commit/patch
+                      (rebase, cherry-pick, revert, am, bisect)
+  quit                Quit without restoring previous HEAD
+                      (rebase, merge, cherry-pick, revert, am)
+  status              Display current operation status and available actions
+                      (default when no action is specified)
+
+Options:
+  -n, --dry-run       Print the command that would be executed without running it
+  -h, --help          Show this help message
+
+All unrecognized flags or arguments are passed directly through to the underlying
+git command (e.g. 'git continue --no-edit').
+EOF
+}
+
+dry_run=0
+action=""
+extra_args=()
+
+# 1. Deduce default action from invocation name (e.g. if invoked as "git-continue")
+invoked_name="$(basename "$0")"
+invoked_name="${invoked_name%.sh}"
+invoked_name="${invoked_name%.cmd}"
+invoked_name="${invoked_name%.exe}"
+invoked_name="${invoked_name#git-}"
+
+case "$invoked_name" in
+    continue|abort|skip|quit|status)
+        action="$invoked_name"
+        ;;
+esac
+
+# 2. Parse command line arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -n|--dry-run)
+            dry_run=1
+            shift
+            ;;
+        continue|abort|skip|quit|status)
+            action="$1"
+            shift
+            ;;
+        --)
+            shift
+            extra_args+=("$@")
+            break
+            ;;
+        *)
+            extra_args+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [ -z "$action" ]; then
+    action="status"
+fi
+
+# 3. Locate git directory
+git_dir="$(git rev-parse --absolute-git-dir 2>/dev/null || git rev-parse --git-dir 2>/dev/null)" || {
+    echo "fatal: not a git repository (or any of the parent directories): .git" >&2
+    exit 128
+}
+
+# 4. Detect in-progress operation
+op=""
+details=""
+
+if [ -d "$git_dir/rebase-merge" ]; then
+    op="rebase"
+    step=""
+    total=""
+    [ -f "$git_dir/rebase-merge/msgnum" ] && step="$(cat "$git_dir/rebase-merge/msgnum" 2>/dev/null || true)"
+    [ -f "$git_dir/rebase-merge/end" ] && total="$(cat "$git_dir/rebase-merge/end" 2>/dev/null || true)"
+    branch=""
+    [ -f "$git_dir/rebase-merge/head-name" ] && branch="$(cat "$git_dir/rebase-merge/head-name" 2>/dev/null || true)"
+    branch="${branch#refs/heads/}"
+    if [ -n "$step" ] && [ -n "$total" ]; then
+        details="step $step/$total${branch:+ on $branch}"
+    elif [ -n "$branch" ]; then
+        details="on $branch"
+    fi
+elif [ -d "$git_dir/rebase-apply" ]; then
+    if [ -f "$git_dir/rebase-apply/rebasing" ]; then
+        op="rebase"
+        step=""
+        total=""
+        [ -f "$git_dir/rebase-apply/next" ] && step="$(cat "$git_dir/rebase-apply/next" 2>/dev/null || true)"
+        [ -f "$git_dir/rebase-apply/last" ] && total="$(cat "$git_dir/rebase-apply/last" 2>/dev/null || true)"
+        branch=""
+        [ -f "$git_dir/rebase-apply/head-name" ] && branch="$(cat "$git_dir/rebase-apply/head-name" 2>/dev/null || true)"
+        branch="${branch#refs/heads/}"
+        if [ -n "$step" ] && [ -n "$total" ]; then
+            details="step $step/$total${branch:+ on $branch}"
+        elif [ -n "$branch" ]; then
+            details="on $branch"
+        fi
+    elif [ -f "$git_dir/rebase-apply/applying" ]; then
+        op="am"
+        step=""
+        total=""
+        [ -f "$git_dir/rebase-apply/next" ] && step="$(cat "$git_dir/rebase-apply/next" 2>/dev/null || true)"
+        [ -f "$git_dir/rebase-apply/last" ] && total="$(cat "$git_dir/rebase-apply/last" 2>/dev/null || true)"
+        if [ -n "$step" ] && [ -n "$total" ]; then
+            details="patch $step/$total"
+        fi
+    else
+        op="rebase"
+    fi
+elif [ -f "$git_dir/MERGE_HEAD" ]; then
+    op="merge"
+    merge_head="$(cut -c1-7 "$git_dir/MERGE_HEAD" 2>/dev/null || true)"
+    [ -n "$merge_head" ] && details="merging $merge_head"
+elif [ -f "$git_dir/CHERRY_PICK_HEAD" ]; then
+    op="cherry-pick"
+    cp_head="$(cut -c1-7 "$git_dir/CHERRY_PICK_HEAD" 2>/dev/null || true)"
+    [ -n "$cp_head" ] && details="picking $cp_head"
+elif [ -f "$git_dir/REVERT_HEAD" ]; then
+    op="revert"
+    rev_head="$(cut -c1-7 "$git_dir/REVERT_HEAD" 2>/dev/null || true)"
+    [ -n "$rev_head" ] && details="reverting $rev_head"
+elif [ -f "$git_dir/sequencer/todo" ]; then
+    first_cmd="$(grep -v '^[[:space:]]*#' "$git_dir/sequencer/todo" 2>/dev/null | grep -v '^[[:space:]]*$' | head -n 1 || true)"
+    case "$first_cmd" in
+        pick\ *|p\ *)
+            op="cherry-pick"
+            details="multi-commit sequence"
+            ;;
+        revert\ *)
+            op="revert"
+            details="multi-commit sequence"
+            ;;
+    esac
+fi
+
+if [ -z "$op" ]; then
+    if [ -f "$git_dir/BISECT_LOG" ] || [ -f "$git_dir/BISECT_START" ]; then
+        op="bisect"
+        details="bisecting"
+    fi
+fi
+
+# 5. Handle cases where no operation is in progress
+if [ -z "$op" ]; then
+    unmerged="$(git diff --name-only --diff-filter=U 2>/dev/null || true)"
+    if [ "$action" = "status" ]; then
+        if [ -n "$unmerged" ]; then
+            echo "No operation in progress (rebase, merge, cherry-pick, revert, am, bisect)."
+            echo "Note: unmerged paths exist in working tree (e.g. from stash pop or conflict resolution):"
+            echo "$unmerged" | sed 's/^/  /'
+        else
+            echo "No operation in progress (clean repository state)."
+        fi
+        exit 0
+    else
+        echo "error: no operation in progress (rebase, merge, cherry-pick, revert, am, or bisect)" >&2
+        if [ -n "$unmerged" ]; then
+            echo "hint: unmerged conflicts exist in working tree (e.g. from git stash pop):" >&2
+            echo "$unmerged" | sed 's/^/  /' >&2
+            echo "hint: mark resolved with 'git add <file>', then commit or restore" >&2
+        fi
+        exit 1
+    fi
+fi
+
+# 6. Status action
+if [ "$action" = "status" ]; then
+    echo "Operation in progress: $op${details:+ ($details)}"
+    case "$op" in
+        rebase|am|cherry-pick|revert)
+            echo "Available actions: continue, abort, skip, quit"
+            ;;
+        merge)
+            echo "Available actions: continue, abort, quit"
+            ;;
+        bisect)
+            echo "Available actions: abort, skip, quit"
+            ;;
+    esac
+    exit 0
+fi
+
+# 7. Map action to the target git command
+cmd_args=()
+
+case "$op" in
+    rebase)
+        case "$action" in
+            continue) cmd_args=("git" "rebase" "--continue") ;;
+            abort)    cmd_args=("git" "rebase" "--abort") ;;
+            skip)     cmd_args=("git" "rebase" "--skip") ;;
+            quit)     cmd_args=("git" "rebase" "--quit") ;;
+            *)
+                echo "error: unknown action '$action' for git rebase" >&2
+                echo "hint: valid actions are: continue, abort, skip, quit" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    am)
+        case "$action" in
+            continue) cmd_args=("git" "am" "--continue") ;;
+            abort)    cmd_args=("git" "am" "--abort") ;;
+            skip)     cmd_args=("git" "am" "--skip") ;;
+            quit)     cmd_args=("git" "am" "--quit") ;;
+            *)
+                echo "error: unknown action '$action' for git am" >&2
+                echo "hint: valid actions are: continue, abort, skip, quit" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    merge)
+        case "$action" in
+            continue) cmd_args=("git" "merge" "--continue") ;;
+            abort)    cmd_args=("git" "merge" "--abort") ;;
+            quit)     cmd_args=("git" "merge" "--quit") ;;
+            skip)
+                echo "error: 'git merge' does not support skip" >&2
+                echo "hint: to resolve conflicts, stage the changes with 'git add' and run 'git continue'" >&2
+                echo "hint: to cancel the merge, run 'git abort'" >&2
+                exit 1
+                ;;
+            *)
+                echo "error: unknown action '$action' for git merge" >&2
+                echo "hint: valid actions are: continue, abort, quit" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    cherry-pick)
+        case "$action" in
+            continue) cmd_args=("git" "cherry-pick" "--continue") ;;
+            abort)    cmd_args=("git" "cherry-pick" "--abort") ;;
+            skip)     cmd_args=("git" "cherry-pick" "--skip") ;;
+            quit)     cmd_args=("git" "cherry-pick" "--quit") ;;
+            *)
+                echo "error: unknown action '$action' for git cherry-pick" >&2
+                echo "hint: valid actions are: continue, abort, skip, quit" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    revert)
+        case "$action" in
+            continue) cmd_args=("git" "revert" "--continue") ;;
+            abort)    cmd_args=("git" "revert" "--abort") ;;
+            skip)     cmd_args=("git" "revert" "--skip") ;;
+            quit)     cmd_args=("git" "revert" "--quit") ;;
+            *)
+                echo "error: unknown action '$action' for git revert" >&2
+                echo "hint: valid actions are: continue, abort, skip, quit" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    bisect)
+        case "$action" in
+            abort|quit) cmd_args=("git" "bisect" "reset") ;;
+            skip)       cmd_args=("git" "bisect" "skip") ;;
+            continue)
+                echo "error: 'git bisect' cannot be continued automatically" >&2
+                echo "hint: mark the commit using 'git bisect good', 'git bisect bad', or 'git bisect <term>'" >&2
+                exit 1
+                ;;
+            *)
+                echo "error: unknown action '$action' for git bisect" >&2
+                echo "hint: valid actions are: abort, skip, quit" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+esac
+
+# 8. Execute or dry-run
+if [ "$dry_run" -eq 1 ]; then
+    if [ "${#extra_args[@]}" -gt 0 ]; then
+        echo "Would run: ${cmd_args[*]} ${extra_args[*]}"
+    else
+        echo "Would run: ${cmd_args[*]}"
+    fi
+    exit 0
+fi
+
+if [ "${#extra_args[@]}" -gt 0 ]; then
+    exec "${cmd_args[@]}" "${extra_args[@]}"
+else
+    exec "${cmd_args[@]}"
+fi
