@@ -149,6 +149,16 @@ ln_config zsh
 ln_config autorandr
 
 
+# AI Agents
+_ln $DOT_HOME/agents/AGENTS.md $HOME/.agents/AGENTS.md
+_ln $DOT_HOME/agents/AGENTS.md $HOME/.omp/agent/AGENTS.md
+_ln $DOT_HOME/agents/AGENTS.md $HOME/.claude/CLAUDE.md
+_ln $DOT_HOME/agents/AGENTS.md $HOME/.gemini/config/plugins/personal/rules/AGENTS.md
+_ln $DOT_HOME/agents/gemini-personal-plugin.json $HOME/.gemini/config/plugins/personal/plugin.json
+_ln $DOT_HOME/agents/AGENTS.md $HOME/.gemini/GEMINI.md
+_ln $DOT_HOME/agents/AGENTS.md $HOME/.codex/AGENTS.md
+_ln $DOT_HOME/agents/AGENTS.md ${XDG_CONFIG_HOME:-$HOME/.config}/opencode/AGENTS.md
+
 
 for f in $DOT_HOME/bin/*
 do
