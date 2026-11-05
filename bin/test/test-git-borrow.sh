@@ -4,7 +4,7 @@
 set -u
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-export PATH="$SCRIPT_DIR/..:$SCRIPT_DIR:$PATH"
+export PATH="$SCRIPT_DIR/..:$SCRIPT_DIR:/usr/bin:$PATH"
 KEEP=${KEEP:-0}
 RUN_FILTERS=("$@")
 
@@ -1715,6 +1715,234 @@ test_classify_source_precedence() {
         "error should clearly say the directory does not exist, not a URL parsing complaint"
 }
 run_test classify_source_precedence test_classify_source_precedence
+
+# (24) `submodule [add]` via URL: auto-creates root, adds entry to .gitmodules,
+# submodule borrows objects from its root via alternates, borrower registered in
+# root, supports -b and --name, and works without explicit 'add' subcommand.
+test_submodule_from_url() {
+    new_env
+    git clone -q https://example.test/org/sub.git "$T/super1"
+    git config --global "borrow.https://example.test/org/subsub.git.root" "$T/develop/subsub"
+
+    # Create submodule via URL with custom name and branch
+    run_borrow_in "$T/super1" submodule add -b main --name custom-subsub https://example.test/org/subsub.git "lib/my-subsub"
+    assert_exit0 "$BORROW_CODE" "submodule add should succeed ($BORROW_ERR)"
+
+    assert_file_exists "$T/develop/subsub/.git" "root for subsub should be auto-created"
+    assert_file_exists "$T/super1/lib/my-subsub/file.txt" "submodule files should be checked out"
+    assert_true_msg "submodule .git should be a gitdir-link file" -- \
+        grep -q '^gitdir:' "$T/super1/lib/my-subsub/.git"
+
+    local sub_gitdir
+    sub_gitdir=$(git -C "$T/super1/lib/my-subsub" rev-parse --absolute-git-dir)
+    assert_contains "$sub_gitdir" "$T/super1/.git/modules/custom-subsub" \
+        "submodule gitdir should live under .git/modules/custom-subsub"
+
+    # Alternates point to root
+    local alt_content
+    alt_content=$(cat "$sub_gitdir/objects/info/alternates")
+    assert_contains "$alt_content" "$T/develop/subsub/.git/objects" \
+        "submodule alternates should point to root objects"
+
+    # Staged in index
+    local staged
+    staged=$(git -C "$T/super1" diff --cached --name-only)
+    assert_contains "$staged" ".gitmodules" ".gitmodules should be staged"
+    assert_contains "$staged" "lib/my-subsub" "submodule gitlink should be staged"
+
+    # Status shows borrower
+    run_borrow status "$T/super1"
+    assert_contains "$BORROW_OUT" "lib/my-subsub: borrower of $T/develop/subsub" \
+        "superproject status should report submodule as borrower"
+
+    # Test syntax without 'add' keyword
+    run_borrow_in "$T/super1" submodule https://example.test/org/subsub.git "lib/second-subsub"
+    assert_exit0 "$BORROW_CODE" "submodule without 'add' keyword should also succeed ($BORROW_ERR)"
+    assert_file_exists "$T/super1/lib/second-subsub/file.txt" "second submodule should be checked out"
+}
+run_test submodule_from_url test_submodule_from_url
+
+# (25) `submodule [add]` from existing PRIMARY worktree:
+# Standalone clone inside superproject is converted into an object-borrower submodule;
+# .git directory is absorbed into superproject's .git/modules/<name>;
+# uncommitted changes and untracked files are preserved; objects are deduped.
+test_submodule_from_existing_primary_worktree() {
+    new_env
+    git clone -q https://example.test/org/sub.git "$T/super2"
+    git config --global "borrow.https://example.test/org/subsub.git.root" "$T/develop/subsub25"
+
+    # Clone standalone repo inside super2 at "vendor/subsub"
+    git clone -q https://example.test/org/subsub.git "$T/super2/vendor/subsub"
+    echo "uncommitted edit" >> "$T/super2/vendor/subsub/file.txt"
+    echo "untracked" > "$T/super2/vendor/subsub/newfile.txt"
+
+    assert_true_msg "vendor/subsub/.git should initially be a directory" -- \
+        [ -d "$T/super2/vendor/subsub/.git" ]
+
+    # Convert it to a submodule
+    run_borrow_in "$T/super2" submodule add vendor/subsub
+    assert_exit0 "$BORROW_CODE" "submodule add on existing primary worktree should succeed ($BORROW_ERR)"
+
+    assert_true_msg "vendor/subsub/.git should now be a gitdir-link file" -- \
+        [ -f "$T/super2/vendor/subsub/.git" ]
+    assert_true_msg "vendor/subsub/.git should contain gitdir:" -- \
+        grep -q '^gitdir:' "$T/super2/vendor/subsub/.git"
+
+    local sub_gitdir
+    sub_gitdir=$(git -C "$T/super2/vendor/subsub" rev-parse --absolute-git-dir)
+    assert_contains "$sub_gitdir" "$T/super2/.git/modules/vendor/subsub" \
+        "absorbed gitdir should live under .git/modules/vendor/subsub"
+
+    # Check alternates point to root
+    local alt_content
+    alt_content=$(cat "$sub_gitdir/objects/info/alternates")
+    assert_contains "$alt_content" "$T/develop/subsub25/.git/objects" \
+        "alternates should point to auto-created root objects"
+
+    # Verify working tree modifications and untracked files survived
+    local sub_status
+    sub_status=$(git -C "$T/super2/vendor/subsub" status --porcelain)
+    assert_contains "$sub_status" "M file.txt" "uncommitted modification should be preserved"
+    assert_contains "$sub_status" "?? newfile.txt" "untracked file should be preserved"
+
+    # Verify superproject has it staged
+    local staged
+    staged=$(git -C "$T/super2" diff --cached --name-only)
+    assert_contains "$staged" ".gitmodules" ".gitmodules should be staged"
+    assert_contains "$staged" "vendor/subsub" "submodule should be staged"
+}
+run_test submodule_from_existing_primary_worktree test_submodule_from_existing_primary_worktree
+
+# (26) `submodule [add]` from existing SECONDARY worktree:
+# A linked worktree (created via worktree add) is converted into an object-borrower submodule;
+# worktree is pruned from the parent repo; submodule gitdir is created under .git/modules;
+# working tree files and HEAD are preserved.
+test_submodule_from_existing_secondary_worktree() {
+    new_env
+    git clone -q https://example.test/org/sub.git "$T/super3"
+    git clone -q https://example.test/org/subsub.git "$T/seed-subsub3"
+    git config --global "borrow.https://example.test/org/subsub.git.root" "$T/develop/subsub26"
+
+    # Create secondary worktree inside super3
+    git -C "$T/seed-subsub3" worktree add -q -b sec-branch "$T/super3/secondary-sub"
+    assert_true_msg "secondary-sub/.git should be a gitdir-link file pointing to seed-subsub3" -- \
+        grep -q 'seed-subsub3' "$T/super3/secondary-sub/.git"
+
+    local sec_head
+    sec_head=$(git -C "$T/super3/secondary-sub" rev-parse HEAD)
+
+    # Convert secondary worktree to submodule
+    run_borrow_in "$T/super3" submodule add secondary-sub
+    assert_exit0 "$BORROW_CODE" "submodule add on secondary worktree should succeed ($BORROW_ERR)"
+
+    # It should no longer be listed as a worktree of seed-subsub3
+    local wt_list
+    wt_list=$(git -C "$T/seed-subsub3" worktree list)
+    assert_not_contains "$wt_list" "secondary-sub" "secondary-sub should be pruned from seed-subsub3 worktrees"
+
+    # Gitdir link now points to super3's modules dir
+    assert_not_contains "$(cat "$T/super3/secondary-sub/.git")" "seed-subsub3" \
+        "secondary-sub/.git should no longer point to seed-subsub3"
+    local sub_gitdir
+    sub_gitdir=$(git -C "$T/super3/secondary-sub" rev-parse --absolute-git-dir)
+    assert_contains "$sub_gitdir" "$T/super3/.git/modules/secondary-sub" \
+        "submodule gitdir should now live under super3/.git/modules/secondary-sub"
+
+    # HEAD and files preserved
+    assert_eq "$(git -C "$T/super3/secondary-sub" rev-parse HEAD)" "$sec_head" \
+        "HEAD commit should match original secondary worktree HEAD"
+    assert_file_exists "$T/super3/secondary-sub/file.txt" "files should be present"
+
+    # Registered as borrower of root
+    local alt_content
+    alt_content=$(cat "$sub_gitdir/objects/info/alternates")
+    assert_contains "$alt_content" "$T/develop/subsub26/.git/objects" \
+        "alternates should point to root objects"
+}
+run_test submodule_from_existing_secondary_worktree test_submodule_from_existing_secondary_worktree
+
+# (27) `submodule [add]` error cases:
+# outside git repo, destination outside superproject, invalid/missing arguments.
+test_submodule_error_cases() {
+    new_env
+    git clone -q https://example.test/org/sub.git "$T/super4"
+
+    # Outside a repo
+    mkdir -p "$T/outside"
+    run_borrow_in "$T/outside" submodule add https://example.test/org/subsub.git
+    assert_exit_nonzero "$BORROW_CODE" "submodule outside a repo should fail"
+    assert_contains "$BORROW_ERR" "not in a Git repository" "error should note not in a Git repository"
+
+    # No arguments
+    run_borrow_in "$T/super4" submodule add
+    assert_exit_nonzero "$BORROW_CODE" "submodule add with no args should fail"
+    assert_contains "$BORROW_ERR" "usage:" "error should print usage"
+
+    # Destination outside superproject
+    run_borrow_in "$T/super4" submodule add https://example.test/org/subsub.git "$T/outside/subsub"
+    assert_exit_nonzero "$BORROW_CODE" "submodule destination outside repo should fail"
+    assert_contains "$BORROW_ERR" "submodule path must be inside repository" "error should note path must be inside repo"
+
+    # Nonexistent local path
+    run_borrow_in "$T/super4" submodule add ./does-not-exist
+    assert_exit_nonzero "$BORROW_CODE" "submodule with nonexistent local path should fail"
+    assert_contains "$BORROW_ERR" "directory does not exist: ./does-not-exist" "error should report directory does not exist"
+
+    # Unsupported subcommand
+    run_borrow_in "$T/super4" submodule update
+    assert_exit_nonzero "$BORROW_CODE" "unsupported submodule subcommand should fail"
+    assert_contains "$BORROW_ERR" "unsupported submodule command: update" "error should report unsupported subcommand"
+}
+run_test submodule_error_cases test_submodule_error_cases
+
+# (28) `submodule [add]` from external tree:
+# Moving an external primary repo into the superproject and converting it to a submodule.
+test_submodule_from_external_tree() {
+    new_env
+    git clone -q https://example.test/org/sub.git "$T/super5"
+    git clone -q https://example.test/org/subsub.git "$T/external-prim"
+    git config --global "borrow.https://example.test/org/subsub.git.root" "$T/develop/subsub28"
+
+    run_borrow_in "$T/super5" submodule add "$T/external-prim" "vendor/external-sub"
+    assert_exit0 "$BORROW_CODE" "submodule add from external tree should succeed ($BORROW_ERR)"
+
+    assert_file_absent "$T/external-prim" "external tree directory should be moved into superproject"
+    assert_file_exists "$T/super5/vendor/external-sub/file.txt" "submodule should be at target path"
+    assert_true_msg "submodule .git should be a gitdir-link file" -- \
+        [ -f "$T/super5/vendor/external-sub/.git" ]
+
+    local sub_gitdir
+    sub_gitdir=$(git -C "$T/super5/vendor/external-sub" rev-parse --absolute-git-dir)
+    assert_contains "$sub_gitdir" "$T/super5/.git/modules/vendor/external-sub" \
+        "gitdir should be inside superproject modules"
+
+    local alt_content
+    alt_content=$(cat "$sub_gitdir/objects/info/alternates")
+    assert_contains "$alt_content" "$T/develop/subsub28/.git/objects" \
+        "alternates should point to root"
+}
+run_test submodule_from_external_tree test_submodule_from_external_tree
+
+# (29) `submodule [add]` with --root and -r (recursive submodule init):
+test_submodule_recursive_and_explicit_root() {
+    new_env
+    git clone -q https://example.test/org/parent.git "$T/super6"
+    # Create an explicit root for sub (which has nested subsub)
+    run_borrow root https://example.test/org/sub.git
+    local explicit_sub_root="$BORROW_OUT"
+
+    # Add submodule pointing to explicit root with -r
+    run_borrow_in "$T/super6" submodule add -r --root "$explicit_sub_root" https://example.test/org/sub.git "lib/explicit-sub"
+    assert_exit0 "$BORROW_CODE" "submodule add with --root and -r should succeed ($BORROW_ERR)"
+
+    assert_file_exists "$T/super6/lib/explicit-sub/file.txt" "submodule files should exist"
+    assert_file_exists "$T/super6/lib/explicit-sub/nested/file.txt" "recursive submodule should be initialized"
+
+    run_borrow status "$T/super6/lib/explicit-sub"
+    assert_contains "$BORROW_OUT" "Role: borrower" "submodule should be a borrower"
+    assert_contains "$BORROW_OUT" "$explicit_sub_root" "submodule should borrow from explicit root"
+}
+run_test submodule_recursive_and_explicit_root test_submodule_recursive_and_explicit_root
 
 # ------------------------------------------------------------- summary ----
 

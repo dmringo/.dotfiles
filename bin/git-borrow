@@ -52,6 +52,7 @@ def usage() -> str:
   {SCRIPT_NAME} add [options] [--] <git worktree add args>
   {SCRIPT_NAME} link [options] [-b|-B <branch> | --detach] [<existing-path>]
   {SCRIPT_NAME} clone [options] [-b|-B <branch> | --detach] [-o <origin>] <url> [<dir>]
+  {SCRIPT_NAME} submodule [add] [options] [-b <branch>] [--name <name>] [--] <url|existing-path> [<path>]
   {SCRIPT_NAME} root [options] [<path>|<url>]   Print (creating if needed) the root
   {SCRIPT_NAME} sync [<root>]                   Refresh borrower refs held by a root
   {SCRIPT_NAME} gc [<root>] [-- <git gc args>]  sync, then git gc in the root
@@ -61,19 +62,22 @@ def usage() -> str:
 Shares Git (and LFS) objects between clones of the same repository via one
 canonical "root" checkout (default: "git config borrow.rootBase" or /develop,
 followed by /<repo-name>):
-  - add:   creates a new worktree in the current repository (like git worktree add).
-  - link:  borrows an existing repository from its root as a linked worktree if
-           possible, or via shared objects/info/alternates otherwise.
-  - clone: resolves/creates the root for <url> and creates <dir> as a worktree of it.
+  - add:       creates a new worktree in the current repository (like git worktree add).
+  - link:      borrows an existing repository from its root as a linked worktree if
+               possible, or via shared objects/info/alternates otherwise.
+  - clone:     resolves/creates the root for <url> and creates <dir> as a worktree of it.
+  - submodule: creates a submodule in the current repository from a URL or
+               existing tree, borrowing objects from its root.
 
 Options:
   --root <path>          Use this root instead of resolving one from remote URLs.
   --lfs=<mode>           LFS handling: hardlink (default), share, none.
-  -b, -B, --branch <br>  link/clone/add: create or reset branch <br> in the worktree.
+  -b, -B, --branch <br>  link/clone/add/submodule: create or reset branch <br>.
   --detach               link/clone/add: detach HEAD in the worktree.
+  --name <name>          submodule: name of the submodule (defaults to path).
   -o, --origin <name>    clone: use <name> instead of 'origin' to track upstream.
-  -r, --recursive        add/link/clone: recurse into submodules (defaults to submodule.recurse).
-  --no-recursive         add/link/clone: do not recurse into submodules.
+  -r, --recursive        add/link/clone/submodule: recurse into submodules (defaults to submodule.recurse).
+  --no-recursive         add/link/clone/submodule: do not recurse into submodules.
   --on-collision=<how>   ask (default), share, or fail on root path/URL collision.
   -j, --jobs <n>         Pass --jobs <n> to git submodule update.
   -g, --global           status: show every known URL->root mapping and each root's borrowers.
@@ -367,6 +371,16 @@ def find_git_dir(path: str | Path) -> Path | None:
 def is_repo(path: str | Path) -> bool:
     with suppress(Exception):
         return os.path.exists(abs_path(path)) and find_git_dir(path) is not None
+    return False
+
+def is_worktree(path: str | Path) -> bool:
+    with suppress(Exception):
+        p = abs_path(path)
+        if not os.path.exists(p) or not is_repo(p):
+            return False
+        if git_out("rev-parse", "--is-bare-repository", repo=p).lower() == "true":
+            return False
+        return toplevel(p) is not None
     return False
 
 
@@ -1120,6 +1134,8 @@ def can_worktreeify(wt: str, common: str, root_common: str) -> bool:
         return False
     if git_out("rev-parse", "--show-superproject-working-tree", repo=wt):
         return False
+    if (parent_top := toplevel(Path(wt).parent)) and not same_path(parent_top, wt):
+        return False
     if git_out("config", "--get", "core.worktree", repo=wt):
         return False
     if sum(1 for l in git_out("worktree", "list", "--porcelain", repo=wt).splitlines() if l.startswith("worktree ")) > 1:
@@ -1219,8 +1235,8 @@ def worktreeify_borrower(
 
     if not same_path(gitdir, common) or not same_path(gitdir, f"{wt_norm}/.git"):
         die(f"--worktreeify needs a standalone clone with a .git directory: {wt_norm}")
-    if git_out("rev-parse", "--show-superproject-working-tree", repo=wt_norm):
-        die(f"--worktreeify does not support submodules (git rejects worktree-backed submodules): {wt_norm}")
+    if git_out("rev-parse", "--show-superproject-working-tree", repo=wt_norm) or ((parent_top := toplevel(Path(wt_norm).parent)) and not same_path(parent_top, wt_norm)):
+        die(f"--worktreeify does not support submodules or repositories inside another repository: {wt_norm}")
     if git_out("config", "--get", "core.worktree", repo=wt_norm):
         die(f"{wt_norm} has core.worktree set")
     if sum(1 for l in git_out("worktree", "list", "--porcelain", repo=wt_norm).splitlines() if l.startswith("worktree ")) > 1:
@@ -1723,6 +1739,268 @@ def cmd_clone(
         init_submodules(target, seed=seed or root, init_all=(seed is None))
 
 
+def cmd_submodule(
+    raw_args: list[str],
+    branch: str | None = None,
+    name: str | None = None,
+    force_flag: bool = False,
+    reference: str | None = None,
+    depth: str | None = None,
+) -> None:
+    global recursive
+    if not (1 <= len(raw_args) <= 2):
+        die(f"usage: {SCRIPT_NAME} submodule [add] [options] <url|existing-path> [<path>]")
+
+    if not (super_wt := toplevel(".")):
+        die("not in a Git repository; run this from inside a repository (or use 'git -C <repo> borrow submodule ...')")
+    super_admin = abs_path(git_out("rev-parse", "--absolute-git-dir", repo=super_wt))
+
+    first_arg = raw_args[0]
+    second_arg = raw_args[1] if len(raw_args) == 2 else None
+
+    if is_worktree(first_arg):
+        existing_tree = abs_path(first_arg)
+        if second_arg:
+            dest_arg = second_arg
+        else:
+            if existing_tree.startswith(f"{super_wt}/"):
+                dest_arg = os.path.relpath(existing_tree, super_wt).replace("\\", "/")
+            else:
+                dest_arg = Path(existing_tree).name
+        dest_path = abs_path(dest_arg if (Path(dest_arg).is_absolute() or re.match(r"^[A-Za-z]:", dest_arg)) else f"{Path.cwd().as_posix()}/{dest_arg}")
+        url = preferred_url(true_remotes(existing_tree)) or preferred_url(true_remotes(common_dir(existing_tree) or existing_tree))
+        if not url and explicit_root:
+            url = preferred_url(true_remotes(explicit_root))
+        if not url:
+            url = abs_path(existing_tree)
+    else:
+        if is_local_url(first_arg) and not os.path.exists(abs_path(first_arg)):
+            die(f"directory does not exist: {first_arg}")
+        if is_local_url(first_arg) and os.path.isdir(abs_path(first_arg)) and not is_repo(first_arg):
+            die(f"not a Git repository: {first_arg}")
+
+        url = first_arg
+        dest_arg = second_arg or url_basename(url) or Path(normalize_path_str(url).rstrip("/")).stem
+        if not dest_arg:
+            die(f"could not determine submodule path from URL: {url}")
+        dest_path = abs_path(dest_arg if (Path(dest_arg).is_absolute() or re.match(r"^[A-Za-z]:", dest_arg)) else f"{Path.cwd().as_posix()}/{dest_arg}")
+        if is_worktree(dest_path):
+            existing_tree = dest_path
+        else:
+            existing_tree = None
+
+    dest_rel = os.path.relpath(dest_path, super_wt).replace("\\", "/")
+    if dest_rel == ".." or dest_rel.startswith("../"):
+        die(f"submodule path must be inside repository {super_wt}: {dest_path}")
+
+    sub_name = name or dest_rel
+
+    if git_ok("config", "-f", ".gitmodules", "--get", f"submodule.{sub_name}.path", repo=super_wt):
+        if is_repo(dest_path):
+            note(f"Submodule '{sub_name}' already exists at {dest_rel}; linking it")
+            link_borrower(dest_path, root_override=explicit_root, prefer_worktree=False)
+            return
+        else:
+            note(f"Submodule '{sub_name}' already registered in .gitmodules; initializing it")
+            init_submodules(super_wt, init_all=True)
+            return
+
+    if recursive is None:
+        recursive = git_out("config", "--bool", "submodule.recurse", repo=super_wt).lower() == "true"
+
+    if existing_tree is None:
+        if os.path.exists(dest_path) and any(os.scandir(dest_path)):
+            die(f"destination path '{dest_path}' already exists and is not an empty directory")
+
+        if explicit_root:
+            root = resolve_explicit_root(explicit_root)
+            map_remotes([("origin", url)], root)
+            add_remotes(root, [("origin", url)])
+        else:
+            root = resolve_root([("origin", url)], seed=None)
+            if not root:
+                die(f"could not resolve a root for {url}")
+
+        root_comm = common_dir(root) or root
+        sub_cmd = ["-c", "protocol.file.allow=always", "submodule", "add"]
+        if quiet:
+            sub_cmd.append("--quiet")
+        if force_flag:
+            sub_cmd.append("--force")
+        if branch:
+            sub_cmd += ["-b", branch]
+        if name:
+            sub_cmd += ["--name", name]
+        if depth:
+            sub_cmd += ["--depth", str(depth)]
+
+        ref_dir = reference or root_comm
+        res = run_git(["-C", super_wt] + sub_cmd + ["--reference", ref_dir, "--", url, dest_rel], capture=False)
+        if res.returncode != 0:
+            fallback_cmd = ["-C", super_wt] + sub_cmd + ["--reference", ref_dir, "--", root, dest_rel]
+            if run_git(fallback_cmd, capture=False).returncode == 0:
+                run_git(["-C", super_wt, "config", "-f", ".gitmodules", f"submodule.{sub_name}.url", url])
+                run_git(["-C", super_wt, "config", f"submodule.{sub_name}.url", url])
+                run_git(["-C", dest_path, "remote", "set-url", "origin", url])
+                run_git(["-C", super_wt, "add", ".gitmodules"])
+            else:
+                die(f"git submodule add failed for {url}")
+
+        link_borrower(dest_path, root_override=root, prefer_worktree=False)
+        if recursive:
+            init_submodules(dest_path, seed=root_comm, init_all=True)
+        return
+
+    if not same_path(existing_tree, dest_path):
+        if os.path.exists(dest_path) and any(os.scandir(dest_path)):
+            die(f"destination path '{dest_path}' already exists and is not an empty directory")
+        note(f"Moving {existing_tree} -> {dest_path}")
+        Path(dest_path).parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(existing_tree, dest_path)
+
+    src_dotgit = Path(dest_path) / ".git"
+    is_primary = src_dotgit.is_dir()
+    is_secondary = src_dotgit.is_file()
+    if not is_primary and not is_secondary:
+        die(f"not a Git worktree: {dest_path}")
+
+    super_check = git_out("rev-parse", "--show-superproject-working-tree", repo=dest_path)
+    if super_check and same_path(super_check, super_wt):
+        note(f"{dest_path} is already a submodule of {super_wt}; linking it")
+        link_borrower(dest_path, root_override=explicit_root, prefer_worktree=False)
+        return
+
+    head_sha = git_out("rev-parse", "HEAD", repo=dest_path)
+    head_sym = git_out("symbolic-ref", "-q", "HEAD", repo=dest_path)
+    if not head_sha:
+        die(f"cannot resolve HEAD in {dest_path}")
+
+    common = common_dir(dest_path)
+    if not common:
+        die(f"could not determine common dir for {dest_path}")
+
+    if explicit_root:
+        root = resolve_explicit_root(explicit_root)
+    else:
+        r = breadcrumb_field(common, "root")
+        if r and is_repo(r):
+            root = main_worktree(r) or r
+        elif is_secondary and (main_wt := main_worktree(common)) and git_out("config", "--bool", "borrow.isRoot", repo=main_wt).lower() == "true":
+            root = main_wt
+        else:
+            remotes = true_remotes(dest_path) or true_remotes(common)
+            if not remotes and url and not is_local_url(url):
+                remotes = [("origin", url)]
+            seed_repo = dest_path if is_primary else (main_worktree(common) or common)
+            root = resolve_root(remotes, seed=seed_repo)
+            if not root:
+                die(f"could not resolve a root for {dest_path}")
+    root_norm = abs_path(root)
+    root_comm = common_dir(root_norm) or root_norm
+    root_objects = f"{root_comm}/objects"
+
+    wt_oids: set[str] = set()
+    if (common_objs := Path(common) / "objects").is_dir():
+        wt_oids.update(read_loose_oids(common_objs))
+        if (wt_pack := common_objs / "pack").is_dir():
+            for idx in wt_pack.glob("pack-*.idx"):
+                if idx.with_suffix(".pack").is_file():
+                    wt_oids.update(read_idx_oids(idx))
+    missing = [oid for oid, ok in get_batcher(root_comm).check_objects_batch(list(wt_oids)).items() if not ok]
+    if missing:
+        run_git(["--git-dir", common, "pack-objects", "-q", f"{root_comm}/objects/pack/pack"], input="\n".join(sorted(missing)) + "\n", env={"GIT_NO_LAZY_FETCH": "1"})
+        get_batcher(root_comm).close()
+
+    target_gitdir = Path(super_admin) / "modules" / sub_name
+    target_gitdir.parent.mkdir(parents=True, exist_ok=True)
+    records = get_submodule_records(dest_path)
+
+    if is_primary:
+        note(f"Converting primary worktree {dest_path} to submodule")
+        if target_gitdir.exists():
+            remove_dir_force(target_gitdir)
+        try:
+            src_dotgit.rename(target_gitdir)
+        except OSError:
+            shutil.copytree(src_dotgit, target_gitdir)
+            remove_dir_force(src_dotgit)
+
+        rel_wt = os.path.relpath(dest_path, target_gitdir).replace("\\", "/")
+        run_git(["config", "-f", (target_gitdir / "config").as_posix(), "core.bare", "false"])
+        run_git(["config", "-f", (target_gitdir / "config").as_posix(), "core.worktree", rel_wt])
+
+        rel_gd = os.path.relpath(target_gitdir, dest_path).replace("\\", "/")
+        write_file_lf(src_dotgit, f"gitdir: {rel_gd}\n")
+
+        for subwt, subgitdir in records:
+            prefix = f"{dest_path}/.git/modules/"
+            if subgitdir.replace("\\", "/").lower().startswith(prefix.lower()):
+                newgd, subwt_p = target_gitdir / "modules" / subgitdir.replace("\\", "/")[len(prefix):], Path(subwt)
+                with suppress(Exception):
+                    rel_sub_gd = os.path.relpath(newgd, subwt_p).replace("\\", "/")
+                    rel_sub_wt = os.path.relpath(subwt_p, newgd).replace("\\", "/")
+                    write_file_lf(subwt_p / ".git", f"gitdir: {rel_sub_gd}\n")
+                    run_git(["config", "-f", (newgd / "config").as_posix(), "core.worktree", rel_sub_wt])
+
+    elif is_secondary:
+        note(f"Converting secondary worktree {dest_path} to submodule")
+        old_admin = Path(abs_path(git_out("rev-parse", "--absolute-git-dir", repo=dest_path)))
+        if target_gitdir.exists():
+            remove_dir_force(target_gitdir)
+        run_git(["init", "--quiet", "--bare", target_gitdir.as_posix()], check=True)
+        ensure_alternate(target_gitdir.as_posix(), root_objects)
+
+        if (old_admin / "index").is_file():
+            shutil.copy2(old_admin / "index", target_gitdir / "index")
+
+        rel_wt = os.path.relpath(dest_path, target_gitdir).replace("\\", "/")
+        run_git(["config", "-f", (target_gitdir / "config").as_posix(), "core.bare", "false"])
+        run_git(["config", "-f", (target_gitdir / "config").as_posix(), "core.worktree", rel_wt])
+
+        if head_sym:
+            write_file_lf(target_gitdir / "HEAD", f"ref: {head_sym}\n")
+            run_git(["--git-dir", target_gitdir.as_posix(), "update-ref", head_sym, head_sha])
+        else:
+            write_file_lf(target_gitdir / "HEAD", f"{head_sha}\n")
+
+        sub_origin_url = url or preferred_url(true_remotes(dest_path)) or preferred_url(true_remotes(common)) or root_norm
+        run_git(["config", "-f", (target_gitdir / "config").as_posix(), "remote.origin.url", sub_origin_url])
+        run_git(["config", "-f", (target_gitdir / "config").as_posix(), "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*"])
+
+        if (old_admin / "modules").is_dir():
+            shutil.move((old_admin / "modules").as_posix(), (target_gitdir / "modules").as_posix())
+            for subwt, subgitdir in records:
+                prefix = f"{old_admin.as_posix()}/modules/"
+                if subgitdir.replace("\\", "/").lower().startswith(prefix.lower()):
+                    newgd, subwt_p = target_gitdir / "modules" / subgitdir.replace("\\", "/")[len(prefix):], Path(subwt)
+                    with suppress(Exception):
+                        rel_sub_gd = os.path.relpath(newgd, subwt_p).replace("\\", "/")
+                        rel_sub_wt = os.path.relpath(subwt_p, newgd).replace("\\", "/")
+                        write_file_lf(subwt_p / ".git", f"gitdir: {rel_sub_gd}\n")
+                        run_git(["config", "-f", (newgd / "config").as_posix(), "core.worktree", rel_sub_wt])
+
+        rel_gd = os.path.relpath(target_gitdir, dest_path).replace("\\", "/")
+        write_file_lf(src_dotgit, f"gitdir: {rel_gd}\n")
+
+        remove_dir_force(old_admin)
+        run_git(["-C", common, "worktree", "prune"])
+
+    sub_cmd = ["-c", "protocol.file.allow=always", "submodule", "add", "-f"]
+    if quiet:
+        sub_cmd.append("--quiet")
+    if branch:
+        sub_cmd += ["-b", branch]
+    if name:
+        sub_cmd += ["--name", name]
+    sub_url = url or preferred_url(true_remotes(dest_path)) or root_norm
+    res = run_git(["-C", super_wt] + sub_cmd + ["--", sub_url, dest_rel], capture=False)
+    if res.returncode != 0:
+        die(f"failed to add submodule {dest_rel} to {super_wt}")
+
+    link_borrower(dest_path, root_override=root_norm, prefer_worktree=False)
+    if recursive:
+        init_submodules(dest_path, seed=root_comm)
+
 def cmd_root(arg: str = ".") -> None:
     if explicit_root:
         sys.stdout.write(f"{resolve_explicit_root(explicit_root)}\n")
@@ -1805,8 +2083,14 @@ def main() -> None:
         sys.exit(0 if argv else 2)
 
     cmd, rest = argv[0], argv[1:]
-    if cmd not in ("add", "link", "clone", "root", "sync", "gc", "forget", "status"):
+    if cmd not in ("add", "link", "clone", "submodule", "root", "sync", "gc", "forget", "status"):
         die(f"unknown command: {cmd} (see --help)")
+
+    if cmd == "submodule":
+        if rest and rest[0] in ("status", "update", "init", "sync", "foreach", "deinit", "absorbgitdirs"):
+            die(f"unsupported submodule command: {rest[0]} (git borrow only supports 'submodule add')")
+        if rest and rest[0] == "add":
+            rest = rest[1:]
 
     class Parser(argparse.ArgumentParser):
         def error(self, message: str) -> NoReturn:
@@ -1819,7 +2103,7 @@ def main() -> None:
     p.add_argument("--on-collision", choices=("ask", "share", "fail"), default="ask")
     p.add_argument("-j", "--jobs")
     p.add_argument("--root", dest="explicit_root")
-    p.add_argument("--force", action="store_true")
+    p.add_argument("-f", "--force", action="store_true")
     p.add_argument("--keep-refs", action="store_true")
     p.add_argument("-r", "--recursive", "--recurse-submodules", dest="recursive", action=argparse.BooleanOptionalAction, default=None)
     p.add_argument("-g", "--global", dest="global_status", action="store_true")
@@ -1828,7 +2112,11 @@ def main() -> None:
         p.add_argument("-B", dest="force_branch")
         p.add_argument("--detach", action="store_true")
         p.add_argument("-o", "--origin", default="origin")
-
+    elif cmd == "submodule":
+        p.add_argument("-b", "--branch", dest="branch")
+        p.add_argument("--name", dest="name")
+        p.add_argument("--reference", dest="reference")
+        p.add_argument("--depth", dest="depth")
     head, tail = (rest[: rest.index("--")], rest[rest.index("--") :]) if "--" in rest else (rest, [])
     if cmd in ("add", "gc"):
         ns, rem = p.parse_known_args(head)
@@ -1854,6 +2142,10 @@ def main() -> None:
         cmd_link(args[0] if args else ".", branch=ns.branch, force_branch=ns.force_branch, detach=ns.detach)
     elif cmd == "clone":
         cmd_clone(args, branch=ns.branch, force_branch=ns.force_branch, detach=ns.detach, origin=ns.origin)
+    elif cmd == "submodule":
+        if args and args[0] == "add":
+            args = args[1:]
+        cmd_submodule(args, branch=ns.branch, name=ns.name, force_flag=ns.force, reference=ns.reference, depth=ns.depth)
     elif cmd == "root":
         if len(args) > 1:
             die(f"usage: {SCRIPT_NAME} root [options] [<path>|<url>]")
