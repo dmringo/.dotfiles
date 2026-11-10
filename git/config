@@ -65,11 +65,10 @@
 	plainly = "!f() { git -c core.pager=less $@; }; f"
 	nuke = "!f() { git reset --hard ${1:-HEAD}; git submodule update --recursive --force; }; f"
 	# DWIM state-aware helpers for stopped operations (rebase/merge/cherry-pick/revert/am/bisect)
-	continue = "!git-step continue"
-	abort = "!git-step abort"
-	skip = "!git-step skip"
-	quit = "!git-step quit"
-	step = "!git-step"
+	continue = "step continue"
+	abort = "step abort"
+	skip = "step skip"
+	quit = "step quit"
 # FIXME: At some point, only one of these should be strictly necessary, depending on how git
 # addresses the small backcompat issue that arrived with alias.*.command introduction.
 [alias.reset]
