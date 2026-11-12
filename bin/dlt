@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# This is roughly a "smart" delta (https://dandavison.github.io/delta/) wrapper for use in various
+# pager contexts. When delta is unavailable, it tries to fall back to behaving like diff or a
+# suitable pager for git.
+if ! command -v delta >/dev/null 2>&1; then
+	opnds=()
+	ignored=()
+	takeopts=true
+	for arg in "$@"; do
+		if [[ $takeopts == true && $arg == -- ]]; then
+			takeopts=false
+		elif [[ $takeopts == false || $arg != -* ]]; then
+			opnds+=("$arg")
+		else
+			ignored+=("$arg")
+		fi
+	done
+	printf "dlt: ignoring unknown options: %s\n" "${ignored[@]}" >&2
+	if [[ ${#opnds[@]} -gt 0 ]]; then
+		exec diff -u -- "${opnds[@]}"
+	fi
+
+	if [[ -t 1 ]] && command -v less >/dev/null 2>&1; then
+		exec less -R
+	fi
+	exec cat
+fi
+
+cols="${COLUMNS:-$(tput cols)}"
+DELTA_FEATURES=$(test ${cols:-0} -gt 200 && echo "side-by-side") delta --file-transformation 's/^/file: /' "$@"
