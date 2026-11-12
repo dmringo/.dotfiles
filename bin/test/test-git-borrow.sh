@@ -642,14 +642,16 @@ test_keep_pack_handling() {
     # Stale .keep: looks like a fetch-pack left it behind, but that pid is gone.
     local dead_pid
     dead_pid=$(( $(cat /proc/sys/kernel/pid_max 2>/dev/null || echo 99999) - 2 ))
-    printf 'fetch-pack %s on %s\n' "$dead_pid" "$(hostname)" > "$base.keep"
+    local my_host
+    my_host=$(hostname 2>/dev/null || uname -n)
+    printf 'fetch-pack %s on %s\n' "$dead_pid" "$my_host" > "$base.keep"
     run_borrow link "$T/work/wt8"
     assert_exit0 "$BORROW_CODE" "link should succeed with a stale .keep ($BORROW_ERR)"
     assert_contains "$BORROW_ERR" "STALE" "stale .keep pack should be reported as STALE"
     assert_file_exists "$base.pack" "stale-keep pack should not be removed automatically"
 
     # Live .keep: pid of a real, currently-running process (this shell).
-    printf 'fetch-pack %s on %s\n' "$$" "$(hostname)" > "$base.keep"
+    printf 'fetch-pack %s on %s\n' "$$" "$my_host" > "$base.keep"
     run_borrow link "$T/work/wt8"
     assert_exit0 "$BORROW_CODE" "link should succeed with a live .keep ($BORROW_ERR)"
     assert_contains "$BORROW_ERR" "in use by running fetch-pack" "live .keep pack should be reported as in use"
@@ -1943,6 +1945,29 @@ test_submodule_recursive_and_explicit_root() {
     assert_contains "$BORROW_OUT" "$explicit_sub_root" "submodule should borrow from explicit root"
 }
 run_test submodule_recursive_and_explicit_root test_submodule_recursive_and_explicit_root
+
+# (30) On POSIX/Linux (including WSL), a `git.exe` on PATH (from Windows interop)
+# must be ignored in favor of native `git`.
+test_posix_ignores_git_exe_in_path() {
+    new_env
+    local shimdir
+    shimdir=$(mktemp -d)
+    ALL_TEMP_DIRS+=("$shimdir")
+    cat > "$shimdir/git.exe" <<'EOF'
+#!/bin/sh
+echo "error: poison git.exe was called" >&2
+exit 1
+EOF
+    chmod +x "$shimdir/git.exe"
+
+    git clone -q https://example.test/org/subsub.git "$T/work/wt30"
+    if [ "$(uname -s | tr '[:upper:]' '[:lower:]')" = "linux" ]; then
+        PATH="$shimdir:$PATH" run_borrow status "$T/work/wt30"
+        assert_exit0 "$BORROW_CODE" "status on Linux should succeed ignoring git.exe ($BORROW_ERR)"
+        assert_not_contains "$BORROW_ERR" "poison git.exe" "should not invoke git.exe on Linux"
+    fi
+}
+run_test posix_ignores_git_exe_in_path test_posix_ignores_git_exe_in_path
 
 # ------------------------------------------------------------- summary ----
 

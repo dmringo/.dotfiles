@@ -130,7 +130,7 @@ def normalize_path_str(p: str | Path) -> str:
     s = str(p).strip()
     if s == "~" or s.startswith(("~/", "~\\")):
         s = f"{Path.home().as_posix()}{s[1:]}"
-    if m := re.match(r"^/([a-zA-Z])(?:/(.*))?$", s):
+    if (os.name == "nt" or sys.platform in ("msys", "cygwin")) and (m := re.match(r"^/([a-zA-Z])(?:/(.*))?$", s)):
         s = f"{m.group(1).upper()}:/{m.group(2) or ''}"
     if os.name == "nt" and (s == "/tmp" or s.startswith("/tmp/")):
         tmp = Path(tempfile.gettempdir()).as_posix()
@@ -159,7 +159,9 @@ def same_path(p1: str | Path | None, p2: str | Path | None) -> bool:
         return False
     with suppress(Exception):
         return Path(abs_path(p1)).resolve() == Path(abs_path(p2)).resolve()
-    return str(p1).replace("\\", "/").rstrip("/").lower() == str(p2).replace("\\", "/").rstrip("/").lower()
+    if os.name == "nt" or sys.platform in ("msys", "cygwin"):
+        return str(p1).replace("\\", "/").rstrip("/").lower() == str(p2).replace("\\", "/").rstrip("/").lower()
+    return str(p1).replace("\\", "/").rstrip("/") == str(p2).replace("\\", "/").rstrip("/")
 
 
 def _win_make_writable(p: Path | str) -> None:
@@ -222,16 +224,6 @@ def url_basename(url: str) -> str | None:
 
 def prompt_tty(prompt_msg: str) -> str:
     err_msg = "need an answer but there is no terminal; resolve with 'git config borrow.<url>.root <path>' or --on-collision"
-    if os.name != "nt" and os.path.exists("/dev/tty"):
-        try:
-            with open("/dev/tty", "r") as f:
-                sys.stderr.write(prompt_msg)
-                sys.stderr.flush()
-                if line := f.readline():
-                    return line.rstrip("\r\n")
-        except Exception:
-            pass
-        die(err_msg)
     sys.stderr.write(prompt_msg)
     sys.stderr.flush()
     if line := sys.stdin.readline():
@@ -243,17 +235,41 @@ def prompt_tty(prompt_msg: str) -> str:
 
 @functools.cache
 def get_git() -> list[str]:
+    if os.name != "nt":
+        return [shutil.which("git") or "git"]
+
+    def _is_wsl_stub(s: str) -> bool:
+        norm = s.lower().replace("\\", "/")
+        return norm.endswith("/system32/bash.exe") or "/microsoft/windowsapps/" in norm
+
+    bash = None
+    if (shell := os.environ.get("SHELL", "")) and shell.lower().endswith("bash.exe") and not _is_wsl_stub(shell):
+        if Path(shell).is_file():
+            bash = shell
+    if not bash:
+        for entry in os.environ.get("PATH", "").split(os.pathsep):
+            if not (entry := entry.strip("\"'")):
+                continue
+            bp = Path(abs_path(entry) if entry.startswith("/") else entry) / "bash.exe"
+            if bp.is_file() and not _is_wsl_stub(bp.as_posix()):
+                bash = bp.as_posix()
+                break
+
     for entry in os.environ.get("PATH", "").split(os.pathsep):
         if not (entry := entry.strip("\"'")):
             continue
-        p = Path(entry)
-        if os.name == "nt" and (script := p / "git").is_file():
+        p = Path(abs_path(entry)) if entry.startswith("/") else Path(entry)
+        if (script := p / "git").is_file():
+            header = b""
             with suppress(Exception):
-                if script.read_bytes()[:2] == b"#!":
-                    return ["bash", script.as_posix()]
-            return [script.as_posix()]
+                header = script.read_bytes()[:2]
+            if header == b"MZ":
+                return [script.as_posix()]
+            if bash:
+                return [bash, "-c", 'exec "$@"', "_", script.as_posix()]
         if (exe := p / "git.exe").is_file():
             return [exe.as_posix()]
+
     return [shutil.which("git") or "git"]
 
 def run_git(
