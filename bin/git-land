@@ -23,7 +23,10 @@ Commands (when rebase is stopped on conflict):
   quit                Quit without restoring previous branch
 Options:
   -k, --keep          Keep <branch> instead of deleting it, resetting it to its
-                      head commit prior to the rebase (resembles cherry-pick)
+                      head commit prior to the rebase (resembles cherry-pick).
+                      Automatically implied if <branch> is active in another worktree.
+  -d, --delete        Force deletion of <branch> even if active in another worktree
+                      (leaves the other worktree on a detached HEAD).
   -n, --dry-run       Print the commands that would be executed without running them
   -h, --help          Show this help message
 
@@ -51,6 +54,7 @@ finish_land() {
     local branch="$2"
     local keep="$3"
     local orig_branch_sha="$4"
+    local other_wt="${5:-}"
 
     if ! git merge-base --is-ancestor "$target" "$branch" 2>/dev/null; then
         echo "error: '$branch' is not rebased onto '$target' (was the rebase aborted?)" >&2
@@ -67,10 +71,19 @@ finish_land() {
         git branch -f "$branch" "$orig_branch_sha"
         local short_sha
         short_sha="$(git rev-parse --short "$orig_branch_sha")"
-        echo "Successfully landed '$branch' onto '$target' (kept '$branch' at $short_sha)."
+        if [ -n "$other_wt" ] && [ -d "$other_wt" ]; then
+            git -C "$other_wt" switch "$branch" --quiet 2>/dev/null || true
+            echo "Successfully landed '$branch' onto '$target' (kept in '$other_wt' at $short_sha)."
+        else
+            echo "Successfully landed '$branch' onto '$target' (kept '$branch' at $short_sha)."
+        fi
     else
         git branch -d "$branch"
-        echo "Successfully landed '$branch' onto '$target'."
+        if [ -n "$other_wt" ] && [ -d "$other_wt" ]; then
+            echo "Successfully landed '$branch' onto '$target' (left '$other_wt' detached)."
+        else
+            echo "Successfully landed '$branch' onto '$target'."
+        fi
     fi
 }
 
@@ -90,6 +103,11 @@ while [ $# -gt 0 ]; do
             ;;
         -k|--keep)
             keep=1
+            keep_explicit=1
+            shift
+            ;;
+        -d|--delete|--no-keep)
+            keep=0
             keep_explicit=1
             shift
             ;;
@@ -139,8 +157,7 @@ if [ -d "$state_dir" ]; then
     saved_branch="$(cat "$state_dir/branch" 2>/dev/null || true)"
     saved_keep="$(cat "$state_dir/keep" 2>/dev/null || echo 0)"
     saved_orig_sha="$(cat "$state_dir/orig_branch_sha" 2>/dev/null || true)"
-
-    # If keep was explicitly specified on resume, respect it; otherwise use saved value
+    saved_other_wt="$(cat "$state_dir/other_wt" 2>/dev/null || true)"
     if [ "$keep_explicit" -eq 1 ]; then
         effective_keep="$keep"
     else
@@ -159,6 +176,9 @@ if [ -d "$state_dir" ]; then
         cleanup_state
         if [ "$action" = "abort" ] && [ -n "$saved_target" ]; then
             git switch "$saved_target" 2>/dev/null || true
+            if [ -n "$saved_other_wt" ] && [ -d "$saved_other_wt" ] && [ -n "$saved_branch" ]; then
+                git -C "$saved_other_wt" switch "$saved_branch" --quiet 2>/dev/null || true
+            fi
             echo "Landed operation aborted. Returned to '$saved_target'."
         else
             echo "Landed operation quit."
@@ -195,7 +215,7 @@ if [ -d "$state_dir" ]; then
                 exit 1
             fi
         fi
-        finish_land "$saved_target" "$saved_branch" "$effective_keep" "$saved_orig_sha"
+        finish_land "$saved_target" "$saved_branch" "$effective_keep" "$saved_orig_sha" "$saved_other_wt"
         exit 0
     fi
 fi
@@ -240,6 +260,10 @@ if [ -n "$other_wt" ]; then
         echo "hint: commit or stash changes in '$other_wt' first" >&2
         exit 1
     fi
+    # Active in worktree implies -k unless --delete was explicitly passed
+    if [ "$keep_explicit" -eq 0 ]; then
+        keep=1
+    fi
 fi
 
 if [ "$dry_run" -eq 1 ]; then
@@ -251,6 +275,9 @@ if [ "$dry_run" -eq 1 ]; then
     echo "  git switch -C \"$target\""
     if [ "$keep" -eq 1 ]; then
         echo "  git branch -f \"$branch\" $(git rev-parse --short "$orig_branch_sha")"
+        if [ -n "$other_wt" ]; then
+            echo "  git -C \"$other_wt\" switch \"$branch\""
+        fi
     else
         echo "  git branch -d \"$branch\""
     fi
@@ -264,9 +291,14 @@ echo "$branch" > "$state_dir/branch"
 echo "$keep" > "$state_dir/keep"
 echo "$orig_branch_sha" > "$state_dir/orig_branch_sha"
 echo "$orig_target_sha" > "$state_dir/orig_target_sha"
+[ -n "$other_wt" ] && echo "$other_wt" > "$state_dir/other_wt"
 
 if [ -n "$other_wt" ]; then
-    echo "Note: detaching HEAD in worktree '$other_wt' to allow landing '$branch'..."
+    if [ "$keep" -eq 1 ]; then
+        echo "Note: branch '$branch' is active in worktree '$other_wt' (implying -k/--keep)..."
+    else
+        echo "Note: detaching HEAD in worktree '$other_wt' to allow landing '$branch'..."
+    fi
     git -C "$other_wt" checkout --detach HEAD --quiet
 fi
 
@@ -277,4 +309,4 @@ if ! git rebase ${rebase_args[@]+"${rebase_args[@]}"} "$target" "$branch"; then
     exit 1
 fi
 
-finish_land "$target" "$branch" "$keep" "$orig_branch_sha"
+finish_land "$target" "$branch" "$keep" "$orig_branch_sha" "$other_wt"

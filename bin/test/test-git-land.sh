@@ -306,6 +306,78 @@ repo="$(setup_repo)"
 )
 if [ $? -eq 0 ]; then test_pass "git-step integration"; else test_fail "git-step" "failed git-step integration"; fi
 rm -rf "$repo"
+# -------------------------------------------------------------
+echo "11. Branch active in another worktree implies -k"
+repo="$(setup_repo)"
+(
+    cd "$repo"
+    wt_dir="$(mktemp -d)"
+    git branch -q feature
+    git worktree add -q "$wt_dir" feature
+    (
+        cd "$wt_dir"
+        echo "feat commit" > feat.txt
+        git add feat.txt
+        git commit -q -m "feat work"
+    )
+    orig_feat_sha="$(git rev-parse feature)"
+
+    echo "main commit" > main.txt
+    git add main.txt
+    git commit -q -m "main work"
+
+    # Landing without -k should imply -k because feature is in $wt_dir
+    "$GIT_LAND" feature >/dev/null
+
+    [ "$(git branch --show-current)" = "main" ] || exit 1
+    git log --oneline | grep -q "feat work" || exit 2
+    # Feature branch still exists and points to orig_feat_sha
+    git show-ref --verify --quiet refs/heads/feature || exit 3
+    [ "$(git rev-parse feature)" = "$orig_feat_sha" ] || exit 4
+    # Other worktree is re-attached to feature
+    [ "$(git -C "$wt_dir" branch --show-current)" = "feature" ] || exit 5
+    [ "$(git -C "$wt_dir" rev-parse HEAD)" = "$orig_feat_sha" ] || exit 6
+
+    rm -rf "$wt_dir"
+    git worktree prune
+)
+if [ $? -eq 0 ]; then test_pass "active in worktree implies -k"; else test_fail "worktree implies -k" "failed"; fi
+rm -rf "$repo"
+
+# -------------------------------------------------------------
+echo "12. Branch active in another worktree with --delete forces deletion"
+repo="$(setup_repo)"
+(
+    cd "$repo"
+    wt_dir="$(mktemp -d)"
+    git branch -q feature
+    git worktree add -q "$wt_dir" feature
+    (
+        cd "$wt_dir"
+        echo "feat commit" > feat.txt
+        git add feat.txt
+        git commit -q -m "feat work"
+    )
+
+    echo "main commit" > main.txt
+    git add main.txt
+    git commit -q -m "main work"
+
+    # Landing with --delete forces deletion
+    "$GIT_LAND" --delete feature >/dev/null
+
+    [ "$(git branch --show-current)" = "main" ] || exit 1
+    git log --oneline | grep -q "feat work" || exit 2
+    # Feature branch was deleted
+    git show-ref --verify --quiet refs/heads/feature && exit 3
+    # Other worktree is left detached
+    [ -z "$(git -C "$wt_dir" branch --show-current)" ] || exit 4
+
+    rm -rf "$wt_dir"
+    git worktree prune
+)
+if [ $? -eq 0 ]; then test_pass "active in worktree with --delete deletes branch"; else test_fail "worktree --delete" "failed"; fi
+rm -rf "$repo"
 
 echo ""
 echo "Summary: $PASS passed, $FAIL failed."
