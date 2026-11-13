@@ -1,0 +1,259 @@
+#!/usr/bin/env bash
+#
+# git-land: Rebase a topic branch onto the current branch, fast-forward, and clean up.
+#
+set -euo pipefail
+
+SCRIPT_NAME="git-land"
+
+show_help() {
+    cat <<EOF
+usage: $SCRIPT_NAME [options] <branch> [-- <rebase-options>]
+   or: $SCRIPT_NAME [continue | abort]
+   or: git land [options] <branch> [-- <rebase-options>]
+   or: git land [continue | abort]
+
+Rebase a topic branch onto the current branch, fast-forward the current
+branch to the rebased tip, and clean up the topic branch.
+
+Commands (when rebase is stopped on conflict):
+  continue            Resume rebase and complete the landing (default when no args)
+  abort               Cancel rebase and restore previous state
+  skip                Skip the current commit
+  quit                Quit without restoring previous branch
+Options:
+  -k, --keep          Keep <branch> instead of deleting it, resetting it to its
+                      head commit prior to the rebase (resembles cherry-pick)
+  -n, --dry-run       Print the commands that would be executed without running them
+  -h, --help          Show this help message
+
+All unrecognized flags or arguments after '--' are forwarded directly to 'git rebase'.
+EOF
+}
+
+# 1. Locate git directory
+git_dir="$(git rev-parse --git-dir 2>/dev/null)" || {
+    echo "fatal: not a git repository (or any of the parent directories): .git" >&2
+    exit 128
+}
+state_dir="$git_dir/git-land"
+
+is_rebasing() {
+    [ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ]
+}
+
+cleanup_state() {
+    rm -rf "$state_dir"
+}
+
+finish_land() {
+    local target="$1"
+    local branch="$2"
+    local keep="$3"
+    local orig_branch_sha="$4"
+
+    if ! git merge-base --is-ancestor "$target" "$branch" 2>/dev/null; then
+        echo "error: '$branch' is not rebased onto '$target' (was the rebase aborted?)" >&2
+        cleanup_state
+        exit 1
+    fi
+
+    cleanup_state
+
+    # Switch back to target and fast-forward to the rebased tip
+    git switch -C "$target"
+
+    if [ "$keep" -eq 1 ]; then
+        git branch -f "$branch" "$orig_branch_sha"
+        local short_sha
+        short_sha="$(git rev-parse --short "$orig_branch_sha")"
+        echo "Successfully landed '$branch' onto '$target' (kept '$branch' at $short_sha)."
+    else
+        git branch -d "$branch"
+        echo "Successfully landed '$branch' onto '$target'."
+    fi
+}
+
+# 2. Parse command line arguments
+keep=0
+keep_explicit=0
+dry_run=0
+action=""
+branch=""
+rebase_args=()
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -k|--keep)
+            keep=1
+            keep_explicit=1
+            shift
+            ;;
+        -n|--dry-run)
+            dry_run=1
+            shift
+            ;;
+        continue|--continue)
+            action="continue"
+            shift
+            ;;
+        abort|--abort)
+            action="abort"
+            shift
+            ;;
+        skip|--skip)
+            action="skip"
+            shift
+            ;;
+        quit|--quit)
+            action="quit"
+            shift
+            ;;
+        --)
+            shift
+            rebase_args+=("$@")
+            break
+            ;;
+        -*)
+            rebase_args+=("$1")
+            shift
+            ;;
+        *)
+            if [ -z "$branch" ]; then
+                branch="$1"
+            else
+                rebase_args+=("$1")
+            fi
+            shift
+            ;;
+    esac
+done
+
+# 3. Handle in-progress or resumed land operation
+if [ -d "$state_dir" ]; then
+    saved_target="$(cat "$state_dir/target" 2>/dev/null || true)"
+    saved_branch="$(cat "$state_dir/branch" 2>/dev/null || true)"
+    saved_keep="$(cat "$state_dir/keep" 2>/dev/null || echo 0)"
+    saved_orig_sha="$(cat "$state_dir/orig_branch_sha" 2>/dev/null || true)"
+
+    # If keep was explicitly specified on resume, respect it; otherwise use saved value
+    if [ "$keep_explicit" -eq 1 ]; then
+        effective_keep="$keep"
+    else
+        effective_keep="$saved_keep"
+    fi
+
+    # Handle explicit abort or quit
+    if [ "$action" = "abort" ] || [ "$action" = "quit" ]; then
+        if is_rebasing; then
+            if [ "$action" = "abort" ]; then
+                git rebase --abort
+            else
+                git rebase --quit
+            fi
+        fi
+        cleanup_state
+        if [ "$action" = "abort" ] && [ -n "$saved_target" ]; then
+            git switch "$saved_target" 2>/dev/null || true
+            echo "Landed operation aborted. Returned to '$saved_target'."
+        else
+            echo "Landed operation quit."
+        fi
+        exit 0
+    fi
+
+    if [ "$action" = "skip" ]; then
+        if is_rebasing; then
+            exec git rebase --skip
+        else
+            echo "error: no rebase in progress to skip" >&2
+            exit 1
+        fi
+    fi
+
+    # If user provided a different branch while a rebase is actively in progress
+    if [ -n "$branch" ] && [ "$branch" != "$saved_branch" ] && is_rebasing; then
+        echo "error: a land operation is already in progress for branch '$saved_branch'" >&2
+        echo "hint: run 'git land continue' or 'git land abort'" >&2
+        exit 1
+    fi
+
+    # If not currently rebasing and user asked for a new branch, previous state was abandoned
+    if [ -n "$branch" ] && [ "$branch" != "$saved_branch" ] && ! is_rebasing; then
+        cleanup_state
+        # Fall through to fresh invocation below
+    else
+        # Resuming land
+        if is_rebasing; then
+            if ! git rebase --continue; then
+                echo "" >&2
+                echo "hint: more conflicts remain. Resolve them and run 'git land' to finish." >&2
+                exit 1
+            fi
+        fi
+        finish_land "$saved_target" "$saved_branch" "$effective_keep" "$saved_orig_sha"
+        exit 0
+    fi
+fi
+
+# 4. Handle fresh invocation
+if [ "$action" = "continue" ] || [ "$action" = "abort" ] || [ "$action" = "skip" ] || [ "$action" = "quit" ]; then
+    echo "error: no land operation in progress" >&2
+    exit 1
+fi
+
+if [ -z "$branch" ]; then
+    show_help >&2
+    exit 1
+fi
+
+target="$(git branch --show-current)"
+
+[ -n "$target" ] || { echo "error: cannot land in detached HEAD state" >&2; exit 1; }
+[ "$branch" != "$target" ] || { echo "error: cannot land branch '$branch' onto itself" >&2; exit 1; }
+
+git show-ref --verify --quiet "refs/heads/$branch" || {
+    echo "error: branch '$branch' not found" >&2
+    exit 1
+}
+
+if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "error: working tree has uncommitted changes; please stash or commit them" >&2
+    exit 1
+fi
+
+orig_branch_sha="$(git rev-parse --verify "refs/heads/$branch")"
+orig_target_sha="$(git rev-parse --verify "refs/heads/$target")"
+
+if [ "$dry_run" -eq 1 ]; then
+    echo "Would execute:"
+    echo "  git rebase ${rebase_args[@]+"${rebase_args[@]}" }\"$target\" \"$branch\""
+    echo "  git switch -C \"$target\""
+    if [ "$keep" -eq 1 ]; then
+        echo "  git branch -f \"$branch\" $(git rev-parse --short "$orig_branch_sha")"
+    else
+        echo "  git branch -d \"$branch\""
+    fi
+    exit 0
+fi
+
+# Persist state before initiating rebase
+mkdir -p "$state_dir"
+echo "$target" > "$state_dir/target"
+echo "$branch" > "$state_dir/branch"
+echo "$keep" > "$state_dir/keep"
+echo "$orig_branch_sha" > "$state_dir/orig_branch_sha"
+echo "$orig_target_sha" > "$state_dir/orig_target_sha"
+
+if ! git rebase ${rebase_args[@]+"${rebase_args[@]}"} "$target" "$branch"; then
+    echo "" >&2
+    echo "hint: rebase interrupted by conflict." >&2
+    echo "hint: after resolving conflicts, run 'git land' to finish (or 'git land abort')." >&2
+    exit 1
+fi
+
+finish_land "$target" "$branch" "$keep" "$orig_branch_sha"
