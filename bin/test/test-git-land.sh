@@ -265,6 +265,47 @@ repo="$(setup_repo)"
 )
 if [ $? -eq 0 ]; then test_pass "worktree support"; else test_fail "worktree" "failed in linked worktree"; fi
 rm -rf "$repo"
+# -------------------------------------------------------------
+echo "10. git-step integration (status, continue, abort)"
+repo="$(setup_repo)"
+(
+    cd "$repo"
+    git_step="$SCRIPT_DIR/../git-step"
+    orig_main_sha="$(git rev-parse main)"
+    git checkout -q -b feature
+    echo "feat conflict" > file.txt
+    git commit -q -am "feat 1"
+    orig_feat_sha="$(git rev-parse feature)"
+
+    git checkout -q main
+    echo "main conflict" > file.txt
+    git commit -q -am "main 1"
+
+    # Start land and hit conflict
+    "$GIT_LAND" -k feature >/dev/null 2>&1 && exit 1
+
+    # 1. git-step status should report 'land'
+    status_out="$("$git_step" status)"
+    echo "$status_out" | grep -q "Operation in progress: land" || exit 2
+    echo "$status_out" | grep -q "landing feature onto main" || exit 3
+
+    # 2. git-step abort should cancel land and return to main
+    "$git_step" abort >/dev/null
+    [ "$(git branch --show-current)" = "main" ] || exit 4
+    [ "$(git rev-parse feature)" = "$orig_feat_sha" ] || exit 5
+
+    # 3. Start again, resolve conflict, git-step continue should finish land
+    "$GIT_LAND" -k feature >/dev/null 2>&1 && exit 6
+    echo "resolved" > file.txt
+    git add file.txt
+    "$git_step" continue >/dev/null
+
+    [ "$(git branch --show-current)" = "main" ] || exit 7
+    [ "$(git rev-parse feature)" = "$orig_feat_sha" ] || exit 8
+    git log -1 --pretty=%s | grep -q "feat 1" || exit 9
+)
+if [ $? -eq 0 ]; then test_pass "git-step integration"; else test_fail "git-step" "failed git-step integration"; fi
+rm -rf "$repo"
 
 echo ""
 echo "Summary: $PASS passed, $FAIL failed."

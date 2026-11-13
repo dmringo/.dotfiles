@@ -17,18 +17,18 @@ usage: $SCRIPT_NAME [action] [options] [-- <extra-git-args>]
    or: git quit [options]
 
 DWIM helper for interrupted git operations. Automatically inspects repository
-state to determine whether a rebase, merge, cherry-pick, revert, am, or bisect
-is in progress, and executes the matching git command.
+state to determine whether a rebase, merge, cherry-pick, revert, am, bisect,
+or land is in progress, and executes the matching git command.
 
 Actions:
   continue            Resume operation after resolving conflicts
-                      (rebase, merge, cherry-pick, revert, am)
+                      (rebase, merge, cherry-pick, revert, am, land)
   abort               Cancel operation and restore previous state
-                      (rebase, merge, cherry-pick, revert, am, bisect)
+                      (rebase, merge, cherry-pick, revert, am, bisect, land)
   skip                Skip the current commit/patch
-                      (rebase, cherry-pick, revert, am, bisect)
+                      (rebase, cherry-pick, revert, am, bisect, land)
   quit                Quit without restoring previous HEAD
-                      (rebase, merge, cherry-pick, revert, am)
+                      (rebase, merge, cherry-pick, revert, am, land)
   status              Display current operation status and available actions
                       (default when no action is specified)
 
@@ -99,7 +99,38 @@ git_dir="$(git rev-parse --absolute-git-dir 2>/dev/null || git rev-parse --git-d
 op=""
 details=""
 
-if [ -d "$git_dir/rebase-merge" ]; then
+if [ -d "$git_dir/git-land" ]; then
+    land_target="$(cat "$git_dir/git-land/target" 2>/dev/null || true)"
+    land_branch="$(cat "$git_dir/git-land/branch" 2>/dev/null || true)"
+    if [ -d "$git_dir/rebase-merge" ]; then
+        op="land"
+        step=""
+        total=""
+        [ -f "$git_dir/rebase-merge/msgnum" ] && step="$(cat "$git_dir/rebase-merge/msgnum" 2>/dev/null || true)"
+        [ -f "$git_dir/rebase-merge/end" ] && total="$(cat "$git_dir/rebase-merge/end" 2>/dev/null || true)"
+        if [ -n "$step" ] && [ -n "$total" ]; then
+            details="step $step/$total, landing $land_branch onto $land_target"
+        elif [ -n "$land_branch" ] && [ -n "$land_target" ]; then
+            details="landing $land_branch onto $land_target"
+        fi
+    elif [ -d "$git_dir/rebase-apply" ]; then
+        op="land"
+        step=""
+        total=""
+        [ -f "$git_dir/rebase-apply/next" ] && step="$(cat "$git_dir/rebase-apply/next" 2>/dev/null || true)"
+        [ -f "$git_dir/rebase-apply/last" ] && total="$(cat "$git_dir/rebase-apply/last" 2>/dev/null || true)"
+        if [ -n "$step" ] && [ -n "$total" ]; then
+            details="step $step/$total, landing $land_branch onto $land_target"
+        elif [ -n "$land_branch" ] && [ -n "$land_target" ]; then
+            details="landing $land_branch onto $land_target"
+        fi
+    elif git merge-base --is-ancestor "$land_target" "$land_branch" 2>/dev/null; then
+        op="land"
+        details="landing $land_branch onto $land_target (rebase complete, pending fast-forward)"
+    fi
+fi
+
+if [ -z "$op" ] && [ -d "$git_dir/rebase-merge" ]; then
     op="rebase"
     step=""
     total=""
@@ -178,7 +209,7 @@ if [ -z "$op" ]; then
     unmerged="$(git diff --name-only --diff-filter=U 2>/dev/null || true)"
     if [ "$action" = "status" ]; then
         if [ -n "$unmerged" ]; then
-            echo "No operation in progress (rebase, merge, cherry-pick, revert, am, bisect)."
+            echo "No operation in progress (rebase, merge, cherry-pick, revert, am, bisect, land)."
             echo "Note: unmerged paths exist in working tree (e.g. from stash pop or conflict resolution):"
             echo "$unmerged" | sed 's/^/  /'
         else
@@ -186,7 +217,7 @@ if [ -z "$op" ]; then
         fi
         exit 0
     else
-        echo "error: no operation in progress (rebase, merge, cherry-pick, revert, am, or bisect)" >&2
+        echo "error: no operation in progress (rebase, merge, cherry-pick, revert, am, bisect, or land)" >&2
         if [ -n "$unmerged" ]; then
             echo "hint: unmerged conflicts exist in working tree (e.g. from git stash pop):" >&2
             echo "$unmerged" | sed 's/^/  /' >&2
@@ -200,7 +231,7 @@ fi
 if [ "$action" = "status" ]; then
     echo "Operation in progress: $op${details:+ ($details)}"
     case "$op" in
-        rebase|am|cherry-pick|revert)
+        rebase|am|cherry-pick|revert|land)
             echo "Available actions: continue, abort, skip, quit"
             ;;
         merge)
@@ -217,6 +248,47 @@ fi
 cmd_args=()
 
 case "$op" in
+    land)
+        git_land_cmd="git-land"
+        if ! command -v git-land >/dev/null 2>&1; then
+            if [ -x "$(dirname "$0")/git-land" ]; then
+                git_land_cmd="$(dirname "$0")/git-land"
+            else
+                git_land_cmd="git"
+            fi
+        fi
+        case "$action" in
+            continue)
+                if [ "$git_land_cmd" = "git" ]; then
+                    cmd_args=("git" "land" "continue")
+                else
+                    cmd_args=("$git_land_cmd" "continue")
+                fi
+                ;;
+            abort)
+                if [ "$git_land_cmd" = "git" ]; then
+                    cmd_args=("git" "land" "abort")
+                else
+                    cmd_args=("$git_land_cmd" "abort")
+                fi
+                ;;
+            skip)
+                cmd_args=("git" "rebase" "--skip")
+                ;;
+            quit)
+                if [ "$git_land_cmd" = "git" ]; then
+                    cmd_args=("git" "land" "quit")
+                else
+                    cmd_args=("$git_land_cmd" "quit")
+                fi
+                ;;
+            *)
+                echo "error: unknown action '$action' for git land" >&2
+                echo "hint: valid actions are: continue, abort, skip, quit" >&2
+                exit 1
+                ;;
+        esac
+        ;;
     rebase)
         case "$action" in
             continue) cmd_args=("git" "rebase" "--continue") ;;
