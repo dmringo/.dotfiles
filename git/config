@@ -6,7 +6,7 @@
 #
 # If ~/.gitconfig is present, `--global` always refers to it, otherwise it refers to the path in 2.
 # `git config set ...` always indents with tabs
-# This is important to remember when editing config files manually, as mixing spaces and tabs can lead to unexpected behavior.  
+# This is important to remember when editing config files manually, as mixing spaces and tabs can lead to unexpected behavior.
 #
 # everything in *this* file (.config/git/config) is meant to be shared in some way. To get
 # host/platform-specific settings, use a separate file (e.g. config-host) and include it
@@ -69,8 +69,6 @@
 	abort = "step abort"
 	skip = "step skip"
 	quit = "step quit"
-	step = "!git-step"
-	land = "!git-land"
 # FIXME: At some point, only one of these should be strictly necessary, depending on how git
 # addresses the small backcompat issue that arrived with alias.*.command introduction.
 [alias.reset]
