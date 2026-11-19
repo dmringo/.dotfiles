@@ -368,7 +368,7 @@ test_link_standalone_guard_and_dedupe() {
 run_test link_standalone_guard_and_dedupe test_link_standalone_guard_and_dedupe
 
 # (4) Canonical precondition refusals: partial clones, foreign alternates,
-# .keep packs, and reftable repos fail fast with clear diagnostics.
+# and .keep packs fail fast with clear diagnostics.
 test_canonical_precondition_refusals() {
     new_env
     # Partial clone
@@ -394,16 +394,6 @@ test_canonical_precondition_refusals() {
     run_borrow link --force "$T/work/kept"
     assert_exit_nonzero "$BORROW_CODE" ".keep pack should be refused"
     assert_contains "$BORROW_ERR" ".keep" "error should mention .keep pack"
-
-    # Reftable (if git supports --ref-format=reftable)
-    if git init -q --ref-format=reftable "$T/work/rt" 2>/dev/null; then
-        git -C "$T/work/rt" remote add origin https://example.test/org/subsub.git
-        git -C "$T/work/rt" fetch -q origin
-        git -C "$T/work/rt" checkout -q -b main origin/main
-        run_borrow link --force "$T/work/rt"
-        assert_exit_nonzero "$BORROW_CODE" "reftable repo should be refused"
-        assert_contains "$BORROW_ERR" "reftable" "error should mention reftable"
-    fi
 }
 run_test canonical_precondition_refusals test_canonical_precondition_refusals
 
@@ -1004,6 +994,95 @@ test_remote_url_and_cli_edge_cases() {
     assert_exit_nonzero "$BORROW_CODE" "hub must reject --detach flag"
 }
 run_test remote_url_and_cli_edge_cases test_remote_url_and_cli_edge_cases
+
+# (16) Reftable hubs, borrowers, mixed backends, pseudo-refs (ORIG_HEAD), and absorbgitdirs.
+test_reftable_hubs_and_borrowers() {
+    new_env
+    if ! git init -q --ref-format=reftable "$T/rt_probe" 2>/dev/null; then
+        printf 'SKIP reftable tests (git lacks --ref-format=reftable)\n'
+        return
+    fi
+    rm -rf "$T/rt_probe"
+
+    # (a) Mixed: files hub + reftable standalone borrower (with ORIG_HEAD inside reftable + linked worktree ORIG_HEAD).
+    local fhub="$T/hubs/example.test/org/subsub.git"
+    git init -q --ref-format=reftable --initial-branch=main "$T/work/rt_b"
+    git -C "$T/work/rt_b" remote add origin https://example.test/org/subsub.git
+    git -C "$T/work/rt_b" fetch -q origin
+    git -C "$T/work/rt_b" reset -q --hard origin/main
+    ( cd "$T/work/rt_b" && echo "v1" > orig.txt && git add orig.txt && git commit -q -m "orig1" \
+        && git reset -q --hard HEAD^ && git reflog expire --expire=now --all )
+    local orig_oid_primary orig_oid_wt
+    orig_oid_primary=$(git -C "$T/work/rt_b" rev-parse -q --verify ORIG_HEAD)
+    assert_ne "$orig_oid_primary" "" "reftable primary should have ORIG_HEAD"
+    # Create a linked reftable worktree on rt_b whose own reftable ORIG_HEAD points to an orphaned commit.
+    git -C "$T/work/rt_b" worktree add -q -b rt_side "$T/work/rt_b_wt" origin/main
+    ( cd "$T/work/rt_b_wt" && echo "wt1" > wto.txt && git add wto.txt && git commit -q -m "wt_orig" \
+        && git reset -q --hard HEAD^ && git reflog expire --expire=now --all )
+    orig_oid_wt=$(git -C "$T/work/rt_b_wt" rev-parse -q --verify ORIG_HEAD)
+    assert_ne "$orig_oid_wt" "" "reftable linked worktree should have ORIG_HEAD"
+
+    run_borrow link --force "$T/work/rt_b"
+    assert_exit0 "$BORROW_CODE" "linking reftable borrower to files hub should succeed ($BORROW_ERR)"
+    run_borrow gc "$fhub" -- --prune=now
+    assert_exit0 "$BORROW_CODE" "gc on files hub with reftable borrower should succeed ($BORROW_ERR)"
+    assert_true_msg "reftable primary ORIG_HEAD commit pinned across hub gc" -- \
+        bash -c 'git -C "$1" cat-file -e "$2" && git -C "$3" cat-file -e "$2"' _ "$fhub" "$orig_oid_primary" "$T/work/rt_b"
+    assert_true_msg "reftable linked-worktree ORIG_HEAD commit pinned across hub gc" -- \
+        bash -c 'git -C "$1" cat-file -e "$2" && git -C "$3" cat-file -e "$2"' _ "$fhub" "$orig_oid_wt" "$T/work/rt_b"
+    assert_true_msg "reftable borrower fsck-clean after dedupe + gc" -- \
+        bash -c 'git -C "$1" fsck --connectivity-only --no-progress >/dev/null 2>&1' _ "$T/work/rt_b"
+
+    # (b) Reftable bare hub via init.defaultRefFormat=reftable + worktrees + mixed files borrower + submodule absorb.
+    git config --global init.defaultRefFormat reftable
+    local rthub="$T/hubs/example.test/org/sub.git"
+    run_borrow clone -r https://example.test/org/sub.git "$T/work/rt_wt1"
+    git config --global --unset init.defaultRefFormat
+    assert_exit0 "$BORROW_CODE" "clone -r with init.defaultRefFormat=reftable should succeed ($BORROW_ERR)"
+    assert_eq "$(git -C "$rthub" config --get extensions.refStorage)" "reftable" "bare hub should use reftable"
+    assert_eq "$(git -C "$T/work/rt_wt1" config --get extensions.refStorage)" "reftable" "worktree inherits reftable"
+    assert_eq "$(git -C "$T/work/rt_wt1" symbolic-ref --short HEAD)" "main" "reftable clone checks out main"
+    assert_file_exists "$T/work/rt_wt1/nested/file.txt" "recursive submodule populated under reftable hub"
+
+    run_borrow_in "$T/work/rt_wt1" add "$T/work/rt_wt2"
+    assert_exit0 "$BORROW_CODE" "borrow add from reftable worktree should succeed ($BORROW_ERR)"
+    assert_eq "$(git -C "$T/work/rt_wt2" symbolic-ref --short HEAD)" "rt_wt2" "second reftable worktree gets dir-name branch"
+
+    # Link a classic `files` borrower against the `reftable` bare hub.
+    git init -q --ref-format=files --initial-branch=main "$T/work/files_b"
+    git -C "$T/work/files_b" remote add origin https://example.test/org/sub.git
+    git -C "$T/work/files_b" fetch -q origin
+    git -C "$T/work/files_b" reset -q --hard origin/main
+    ( cd "$T/work/files_b" && git checkout -q --detach HEAD && echo "fb" > fb.txt \
+        && git add fb.txt && git commit -q -m "files borrower commit" )
+    local fb_oid
+    fb_oid=$(git -C "$T/work/files_b" rev-parse HEAD)
+    run_borrow link --force --hub "$rthub" "$T/work/files_b"
+    assert_exit0 "$BORROW_CODE" "linking files borrower onto reftable hub should succeed ($BORROW_ERR)"
+    run_borrow gc "$rthub" -- --prune=now
+    assert_exit0 "$BORROW_CODE" "gc on reftable hub should succeed ($BORROW_ERR)"
+    assert_true_msg "files borrower commit preserved by reftable hub gc" -- \
+        bash -c 'git -C "$1" cat-file -e "$2" && git -C "$3" cat-file -e "$2"' _ "$rthub" "$fb_oid" "$T/work/files_b"
+
+    # Lightweight absorb of a primary reftable standalone repo as a submodule.
+    git init -q --ref-format=reftable --initial-branch=main "$T/work/rt_wt1/vendor/rt-sub"
+    git -C "$T/work/rt_wt1/vendor/rt-sub" remote add origin https://example.test/org/subsub.git
+    git -C "$T/work/rt_wt1/vendor/rt-sub" fetch -q origin
+    git -C "$T/work/rt_wt1/vendor/rt-sub" reset -q --hard origin/main
+    echo "rt-dirty" >> "$T/work/rt_wt1/vendor/rt-sub/file.txt"
+    run_borrow_in "$T/work/rt_wt1" submodule vendor/rt-sub
+    assert_exit0 "$BORROW_CODE" "absorbing reftable standalone submodule should succeed ($BORROW_ERR)"
+    assert_true_msg "reftable submodule .git converted to gitdir link" -- test -f "$T/work/rt_wt1/vendor/rt-sub/.git"
+    assert_eq "$(git -C "$T/work/rt_wt1/vendor/rt-sub" config --get extensions.refStorage)" "reftable" \
+        "absorbed submodule preserves reftable format"
+    assert_contains "$(cat "$(git -C "$T/work/rt_wt1/vendor/rt-sub" rev-parse --absolute-git-dir)/objects/info/alternates")" \
+        "$fhub/objects" "absorbed reftable submodule borrows from hub"
+
+    run_borrow status "$rthub"
+    assert_exit0 "$BORROW_CODE" "status on reftable hub should succeed ($BORROW_ERR)"
+    assert_contains "$BORROW_OUT" "Role: hub" "status identifies reftable hub"
+}
+run_test reftable_hubs_and_borrowers test_reftable_hubs_and_borrowers
 
 # ------------------------------------------------------------- summary ----
 

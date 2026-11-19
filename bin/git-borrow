@@ -1065,8 +1065,6 @@ def _validate_bare_hub(hub: Repo) -> None:
     where = hub.path.as_posix()
     if not hub.is_bare:
         die(f"hub path {where} is not a bare repository (bare hubs only)")
-    if hub.is_reftable:
-        die(f"hub {where} uses extensions.refStorage=reftable; reftable hubs are not supported")
     if hub.is_partial:
         die(f"hub {where} is a partial clone; partial hubs are not supported")
     if hub.object_format != "sha1":
@@ -1309,12 +1307,28 @@ def _collect_borrower_extra_oids(borrower: Repo) -> list[str]:
     dirs = [borrower.common]
     if (wt_dir := borrower.common / "worktrees").is_dir():
         dirs.extend(d for d in wt_dir.iterdir() if d.is_dir())
+    is_rt = borrower.is_reftable
+    pseudo_set = frozenset(_PSEUDO_REFS)
     for d in dirs:
         for name in _PSEUDO_REFS:
             if (pf := d / name).is_file():
                 with suppress(OSError, UnicodeDecodeError):
                     for line in pf.read_text("utf-8").splitlines():
                         add_oid(line.strip())
+        if is_rt:
+            res = run_git(
+                ["--git-dir", d.as_posix(), "for-each-ref", "--include-root-refs", "--format=%(refname) %(objectname)"]
+            )
+            if res.returncode == 0:
+                for line in res.stdout.splitlines():
+                    refname, _, oid = line.partition(" ")
+                    if refname in pseudo_set:
+                        add_oid(oid.strip())
+            else:
+                for name in _PSEUDO_REFS:
+                    r = run_git(["--git-dir", d.as_posix(), "rev-parse", "-q", "--verify", name])
+                    if r.returncode == 0:
+                        add_oid(r.stdout.strip())
     return ordered
 
 
@@ -1380,8 +1394,6 @@ def _verify_canonical_borrower(borrower: Repo, hub: Repo) -> None:
         die(f"{where} is a partial clone (promisor remote); partial clones are not supported")
     if borrower.is_shallow:
         die(f"{where} is a shallow clone; shallow clones are not supported")
-    if borrower.is_reftable:
-        die(f"{where} uses extensions.refStorage=reftable; reftable borrowers are not supported")
     if borrower.object_format != hub.object_format:
         die(
             f"{where} uses objectFormat={borrower.object_format}, "
