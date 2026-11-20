@@ -1084,6 +1084,120 @@ test_reftable_hubs_and_borrowers() {
 }
 run_test reftable_hubs_and_borrowers test_reftable_hubs_and_borrowers
 
+# (17) `worktreeify` standalone-to-linked-worktree conversion, safety guards, rollback, and alias.
+test_worktreeify_helper_and_guards() {
+    new_env
+    local repo_dir="$T/work/standalone_wtify"
+    local hub="$T/hubs/example.test/org/sub.git"
+    local subsub_hub="$T/hubs/example.test/org/subsub.git"
+
+    # Configure a second uninitialized submodule alongside initialized `nested` on upstream `sub.git`.
+    git clone -q https://example.test/org/sub.git "$T/scratch_wtify"
+    ( cd "$T/scratch_wtify" && git submodule add -q https://example.test/org/subsub.git nested2 \
+        && git add -A && git commit -q -m "add nested2" && git push -q origin HEAD:main )
+
+    # Standalone clone with only `nested` initialized (nested2 uninitialized), extra remote, and LFS blob.
+    git clone -q https://example.test/org/sub.git "$repo_dir"
+    ( cd "$repo_dir" && git submodule update -q --init -- nested )
+    git -C "$repo_dir" remote add personal git@personal.invalid:david/sub.git
+    mkdir -p "$repo_dir/.git/lfs/objects/cc"
+    printf 'wtify-lfs-blob' > "$repo_dir/.git/lfs/objects/cc/blob.bin"
+
+    # (a) Running inside repo is refused cleanly before modifying anything.
+    run_borrow_in "$repo_dir" worktreeify
+    assert_exit_nonzero "$BORROW_CODE" "worktreeify from inside repo must fail"
+    assert_contains "$BORROW_ERR" "inside it" "should explain CWD-inside refusal"
+    assert_true_msg ".git remains intact directory" -- test -d "$repo_dir/.git"
+
+    # (b) Submodule target refused (prefer link).
+    run_borrow worktreeify "$repo_dir/nested"
+    assert_exit_nonzero "$BORROW_CODE" "worktreeify on submodule must fail"
+    assert_contains "$BORROW_ERR" "git borrow link" "should direct submodules to link"
+
+    # (c) Dirty/untracked/ignored/stash/unpushed checks prevent data loss.
+    echo "untracked" > "$repo_dir/untracked.txt"
+    run_borrow worktreeify "$repo_dir"
+    assert_exit_nonzero "$BORROW_CODE" "worktreeify with untracked file must fail"
+    assert_contains "$BORROW_ERR" "uncommitted or untracked" "should refuse untracked file"
+    rm -f "$repo_dir/untracked.txt"
+
+    echo "*.ign" > "$repo_dir/.git/info/exclude"
+    echo "secret=1" > "$repo_dir/local.ign"
+    run_borrow worktreeify "$repo_dir"
+    assert_exit_nonzero "$BORROW_CODE" "worktreeify with ignored file must fail"
+    assert_contains "$BORROW_ERR" "ignored files" "should refuse ignored files"
+    rm -f "$repo_dir/local.ign"
+
+    echo "edit" >> "$repo_dir/file.txt"
+    git -C "$repo_dir" stash push -q
+    run_borrow worktreeify "$repo_dir"
+    assert_exit_nonzero "$BORROW_CODE" "worktreeify with stash must fail"
+    assert_contains "$BORROW_ERR" "stash" "should refuse stash entries"
+    git -C "$repo_dir" stash drop -q
+
+    ( cd "$repo_dir" && echo "local" > loc.txt && git add loc.txt && git commit -q -m "unpushed" )
+    run_borrow worktreeify "$repo_dir"
+    assert_exit_nonzero "$BORROW_CODE" "worktreeify with unpushed commit must fail"
+    assert_contains "$BORROW_ERR" "local commits" "should refuse unpushed commits"
+    git -C "$repo_dir" reset -q --hard origin/main
+
+    # (d) Mid-flight failure after rename rolls back cleanly without losing repo_dir.
+    git clone -q https://example.test/org/subsub.git "$T/work/bad_hub_trap"
+    run_borrow worktreeify --hub "$T/work/bad_hub_trap" "$repo_dir"
+    assert_exit_nonzero "$BORROW_CODE" "invalid --hub should fail worktreeify"
+    assert_true_msg "rollback restored standalone .git directory" -- test -d "$repo_dir/.git"
+    assert_file_exists "$repo_dir/.git/lfs/objects/cc/blob.bin" "rollback preserved local LFS blob"
+    assert_eq "$(ls -d "$T/work"/.standalone_wtify.worktreeify-* 2>/dev/null || true)" "" \
+        "no backup staging dir left after rollback"
+
+    # (e) Clean worktreeify via `git worktreeify` alias: preserves branch, remotes, submodules & LFS.
+    assert_eq "$(git config --file "$SCRIPT_DIR/../../git/config" --get alias.worktreeify)" \
+        "borrow worktreeify" "dotfiles git/config exposes alias.worktreeify"
+    git config --global alias.worktreeify "borrow worktreeify"
+    local wtify_out wtify_err wtify_code
+    wtify_out=$(mktemp) wtify_err=$(mktemp)
+    git worktreeify "$repo_dir" >"$wtify_out" 2>"$wtify_err" </dev/null
+    wtify_code=$?
+    BORROW_OUT=$(cat "$wtify_out")
+    BORROW_ERR=$(cat "$wtify_err")
+    rm -f "$wtify_out" "$wtify_err"
+    assert_exit0 "$wtify_code" "git worktreeify alias should succeed ($BORROW_ERR)"
+
+    assert_true_msg ".git should now be a linked-worktree file" -- test -f "$repo_dir/.git"
+    assert_eq "$(git -C "$repo_dir" rev-parse --path-format=absolute --git-common-dir)" "$hub" \
+        "worktree common dir points at bare hub"
+    assert_eq "$(git -C "$repo_dir" symbolic-ref --short HEAD)" "main" "checked out branch preserved"
+    assert_file_exists "$repo_dir/nested/file.txt" "previously initialized submodule populated"
+    assert_file_absent "$repo_dir/nested2/.git" "uninitialized submodule stayed uninitialized"
+    assert_contains "$(cat "$(git -C "$repo_dir/nested" rev-parse --absolute-git-dir)/objects/info/alternates")" \
+        "$subsub_hub/objects" "initialized submodule borrows from its canonical hub"
+    assert_true_msg "submodule git working tree is functional (not broken tmp core.worktree)" -- \
+        git -C "$repo_dir/nested" status --short
+    assert_eq "$(git -C "$hub" config --get remote.personal.url)" "git@personal.invalid:david/sub.git" \
+        "extra remote absorbed onto bare hub"
+    assert_file_exists "$hub/lfs/objects/cc/blob.bin" "LFS blob migrated to shared hub/lfs"
+    assert_eq "$(ls -d "$T/work"/.standalone_wtify.worktreeify-* 2>/dev/null || true)" "" \
+        "no backup dir left behind"
+
+    # Idempotent re-run on already-worktreeified repo succeeds cleanly as no-op.
+    run_borrow worktreeify "$repo_dir"
+    assert_exit0 "$BORROW_CODE" "worktreeify on existing hub worktree is a safe no-op ($BORROW_ERR)"
+    assert_contains "$BORROW_ERR" "already a worktree of hub" "should explain no-op"
+
+    # (f) Upgrading a `link --force` borrower cleans up its old `[borrower.<id>]` hub entry.
+    git clone -q https://example.test/org/sub.git "$T/work/upgraded_b"
+    run_borrow link --force "$T/work/upgraded_b"
+    assert_exit0 "$BORROW_CODE" "pre-link standalone repo"
+    local old_id
+    old_id=$(breadcrumb_borrower_id "$T/work/upgraded_b")
+    run_borrow worktreeify "$T/work/upgraded_b"
+    assert_exit0 "$BORROW_CODE" "worktreeify on link --force repo should succeed ($BORROW_ERR)"
+    assert_true_msg "upgraded repo is now a linked worktree" -- test -f "$T/work/upgraded_b/.git"
+    assert_eq "$(git -C "$hub" config --get-regexp "^borrower\\.$old_id\\." || true)" "" \
+        "old borrower registration removed after worktreeify"
+}
+run_test worktreeify_helper_and_guards test_worktreeify_helper_and_guards
+
 # ------------------------------------------------------------- summary ----
 
 printf '\n==== %d/%d tests passed ====\n' "$PASS_COUNT" "$TEST_COUNT"

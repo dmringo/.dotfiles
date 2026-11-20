@@ -69,6 +69,7 @@
 	abort = "step abort"
 	skip = "step skip"
 	quit = "step quit"
+	worktreeify = "borrow worktreeify"
 # FIXME: At some point, only one of these should be strictly necessary, depending on how git
 # addresses the small backcompat issue that arrived with alias.*.command introduction.
 [alias.reset]

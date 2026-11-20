@@ -54,6 +54,7 @@ def usage() -> str:
     return f"""usage:
   {SCRIPT_NAME} clone [options] [-b|-B <branch> | --detach] [-o <origin>] <url> [<dir>]
   {SCRIPT_NAME} add [options] [--] <git worktree add args>
+  {SCRIPT_NAME} worktreeify [options] [-f|--force] [<path>]
   {SCRIPT_NAME} link [options] [-f|--force] [<path>]
   {SCRIPT_NAME} submodule [add] [options] [-b <branch>] [--name <name>] [--] <url|existing-path> [<path>]
   {SCRIPT_NAME} hub [options] [<path>|<url>]      Print (creating if needed) the bare hub
@@ -65,10 +66,11 @@ def usage() -> str:
 Shares Git (and LFS) objects via managed bare object hubs under
 "git config borrow.hubBase" (or $XDG_CACHE_HOME/git-borrow, ~/.cache/git-borrow),
 keyed deterministically by canonical URL (<hubBase>/<host>/<path>.git):
-  - clone:     resolves/creates the bare hub for <url> and creates <dir> as a linked worktree.
-  - add:       creates a new linked worktree in the current repository (like git worktree add).
-  - link:      borrows a submodule (or standalone repo with --force) from its hub via alternates.
-  - submodule: adds a submodule from a URL or primary standalone repo, borrowing from its hub.
+  - clone:       resolves/creates the bare hub for <url> and creates <dir> as a linked worktree.
+  - add:         creates a new linked worktree in the current repository (like git worktree add).
+  - worktreeify: converts a standalone clone into a linked worktree of its bare hub.
+  - link:        borrows a submodule (or standalone repo with --force) from its hub via alternates.
+  - submodule:   adds a submodule from a URL or primary standalone repo, borrowing from its hub.
 
 Options:
   --hub, --root <path|url>  Use this hub (or URL's hub) to unify multiple remotes on one hub.
@@ -77,10 +79,11 @@ Options:
   --detach                  clone/add: detach HEAD in the new worktree.
   --name <name>             submodule: name of the submodule (defaults to path).
   -o, --origin <name>       clone: use <name> instead of 'origin' for the hub remote.
-  -r, --recursive           clone/add/link/submodule: recurse into submodules (defaults to submodule.recurse).
-  --no-recursive            clone/add/link/submodule: do not recurse into submodules.
+  -r, --recursive           clone/add/worktreeify/link/submodule: recurse into submodules.
+  --no-recursive            clone/add/worktreeify/link/submodule: do not recurse into submodules.
   -j, --jobs <n>            Pass --jobs <n> to git submodule update.
-  -f, --force               link: allow standalone repo; forget: skip safety check; add/gc/submodule: pass -f.
+  -f, --force               worktreeify: discard local dirty/ignored/unpushed state; link: allow standalone;
+                            forget: skip safety check; add/gc/submodule: pass -f.
   --keep-refs               forget: unregister borrower but retain its archived refs in the hub.
   -g, --global              status: show all canonical URL->hub mappings, hubs, remotes, and borrowers.
   -q, --quiet               Less output.
@@ -1385,32 +1388,48 @@ def _active_gc_pid(common: Path) -> int | None:
     return pid if pid_alive(pid) else None
 
 
-def _verify_canonical_borrower(borrower: Repo, hub: Repo) -> None:
+def _verify_common_repo_health(
+    repo: Repo,
+    *,
+    object_format: str = "sha1",
+    allowed_alt_target: Path | None = None,
+    bare_error: str | None = None,
+) -> None:
     """Fail fast on exotic repository configurations instead of attempting fragile surgery."""
-    where = borrower.common.as_posix()
-    if borrower.is_bare:
-        die(f"{where} is a bare repository; cannot link a bare repository as a borrower")
-    if borrower.is_partial:
+    where = repo.common.as_posix()
+    if repo.is_bare:
+        die(bare_error or f"{where} is a bare repository; operation requires a working tree")
+    if repo.is_partial:
         die(f"{where} is a partial clone (promisor remote); partial clones are not supported")
-    if borrower.is_shallow:
+    if repo.is_shallow:
         die(f"{where} is a shallow clone; shallow clones are not supported")
-    if borrower.object_format != hub.object_format:
-        die(
-            f"{where} uses objectFormat={borrower.object_format}, "
-            f"which does not match hub {hub.path.as_posix()} ({hub.object_format})"
-        )
-    if foreign_alts := [a for a in borrower.alternate_dirs() if not same_path(a, hub.objects_dir)]:
+    if repo.object_format != object_format:
+        die(f"{where} uses objectFormat={repo.object_format}; expected {object_format}")
+    foreign_alts = [
+        a for a in repo.alternate_dirs()
+        if allowed_alt_target is None or not same_path(a, allowed_alt_target)
+    ]
+    if foreign_alts:
         die(
             f"{where} already has foreign alternates ({', '.join(a.as_posix() for a in foreign_alts)}); "
             "dissociate first with 'git repack -a -d' and remove objects/info/alternates"
         )
-    if keep_files := sorted(borrower.pack_dir.glob("pack-*.keep")):
+    if keep_files := sorted(repo.pack_dir.glob("pack-*.keep")):
         die(
             f"{where} has .keep pack file(s) ({', '.join(p.name for p in keep_files)}); "
             "remove stale .keep files or wait for running git transfer"
         )
-    if (active_pid := _active_gc_pid(borrower.common)) is not None:
+    if (active_pid := _active_gc_pid(repo.common)) is not None:
         die(f"active git gc (pid {active_pid}) appears to be running in {where}; try again later")
+
+
+def _verify_canonical_borrower(borrower: Repo, hub: Repo) -> None:
+    _verify_common_repo_health(
+        borrower,
+        object_format=hub.object_format,
+        allowed_alt_target=hub.objects_dir,
+        bare_error=f"{borrower.common.as_posix()} is a bare repository; cannot link a bare repository as a borrower",
+    )
 
 
 @contextmanager
@@ -1546,7 +1565,7 @@ def link_borrower(
     if not checkout.superproject() and not allow_standalone:
         die(
             f"{checkout.path.as_posix()} is a standalone repository, not a submodule; "
-            f"prefer creating a linked worktree via '{SCRIPT_NAME} clone' (or pass --force to borrow via alternates)"
+            f"prefer '{SCRIPT_NAME} worktreeify' or '{SCRIPT_NAME} clone' (or pass --force to borrow via alternates)"
         )
     remotes = checkout.remotes()
     if not remotes and not hub_override:
@@ -1932,6 +1951,64 @@ def _strip_branch_flags(args: list[str]) -> list[str]:
     return out
 
 
+def _clone_into_worktree(
+    remotes: list[Remote],
+    target: Path,
+    opts: Opts,
+    *,
+    seed: Repo | None,
+    spec: CheckoutSpec,
+    origin: str,
+    init_all: bool,
+    migrate_lfs_from: Repo | None = None,
+) -> tuple[Repo, Repo]:
+    hub, created = resolve_hub(remotes, opts, seed=seed, explicit_hub=opts.explicit_hub)
+    try:
+        pref = preferred_remote(remotes)
+        rem = (pref and hub.remote_for(pref.url)) or origin
+        if not created:
+            fetch_args = ["-c", "gc.auto=0", "fetch", "--prune", "--no-recurse-submodules"] + (
+                ["--quiet"] if opts.quiet else []
+            )
+            if hub.git(*fetch_args, rem, capture=opts.quiet).returncode != 0:
+                warn(f"could not fetch {rem} in hub {hub.path.as_posix()}; using cached objects")
+
+        if migrate_lfs_from is not None and opts.lfs_mode != "none" and has_lfs(migrate_lfs_from):
+            local_objs = migrate_lfs_from.common / "lfs" / "objects"
+            if local_objs.is_dir() and not same_path(migrate_lfs_from.lfs_dir, hub.lfs_dir):
+                hub.lfs_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(local_objs, hub.lfs_dir / "objects", dirs_exist_ok=True)
+
+        checkout = materialize_worktree(hub, target, opts, rem=rem, spec=spec)
+        eff_opts = Opts(
+            quiet=opts.quiet,
+            force=opts.force,
+            keep_refs=opts.keep_refs,
+            global_status=opts.global_status,
+            lfs_mode=opts.lfs_mode,
+            jobs=opts.jobs,
+            recursive=checkout.recursion_default if opts.recursive is None else opts.recursive,
+            explicit_hub=opts.explicit_hub,
+        )
+        finish_new_checkout(
+            checkout, eff_opts,
+            hub=hub,
+            breadcrumb_from=hub.path,
+            init_seed=seed,
+            init_all=init_all,
+        )
+        return hub, checkout
+    except BaseException:
+        if target.exists():
+            with suppress(OSError):
+                rmtree_force(target)
+                hub.git("worktree", "prune")
+        if created:
+            with suppress(BaseException):
+                _cleanup_failed_new_hub(hub.path)
+        raise
+
+
 def cmd_clone(raw_args: list[str], opts: Opts, *, spec: CheckoutSpec, origin: str) -> None:
     if not 1 <= len(raw_args) <= 2:
         die(f"usage: {SCRIPT_NAME} clone [options] <url> [<dir>]")
@@ -1961,32 +2038,7 @@ def cmd_clone(raw_args: list[str], opts: Opts, *, spec: CheckoutSpec, origin: st
     else:
         remotes = [Remote(origin, url)]
 
-    hub, created = resolve_hub(remotes, opts, seed=seed, explicit_hub=opts.explicit_hub)
-    try:
-        pref = preferred_remote(remotes)
-        rem = (pref and hub.remote_for(pref.url)) or origin
-        if not created:
-            fetch_args = ["-c", "gc.auto=0", "fetch", "--prune", "--no-recurse-submodules"] + (
-                ["--quiet"] if opts.quiet else []
-            )
-            if hub.git(*fetch_args, rem, capture=opts.quiet).returncode != 0:
-                warn(f"could not fetch {rem} in hub {hub.path.as_posix()}; using cached objects")
-
-        checkout = materialize_worktree(hub, target, opts, rem=rem, spec=spec)
-        if opts.recursive is None:
-            opts.recursive = checkout.recursion_default
-        finish_new_checkout(
-            checkout, opts,
-            hub=hub,
-            breadcrumb_from=hub.path,
-            init_seed=seed,
-            init_all=(seed is None),
-        )
-    except BaseException:
-        if created:
-            with suppress(BaseException):
-                _cleanup_failed_new_hub(hub.path)
-        raise
+    _clone_into_worktree(remotes, target, opts, seed=seed, spec=spec, origin=origin, init_all=(seed is None))
 
 
 def cmd_add(raw_args: list[str], opts: Opts) -> None:
@@ -2037,6 +2089,129 @@ def cmd_add(raw_args: list[str], opts: Opts) -> None:
             breadcrumb_from=from_repo.path,
             init_seed=from_repo,
         )
+
+
+def _verify_worktreeify_clean(repo: Repo, *, force: bool) -> None:
+    where = repo.path.as_posix()
+    for name in _PSEUDO_REFS[:-1]:
+        if repo.out("rev-parse", "-q", "--verify", name):
+            die(f"{where} has an in-progress operation ({name}); finish or abort it first")
+    if not repo.out("rev-parse", "-q", "--verify", "HEAD"):
+        die(f"{where} has no commits (unborn HEAD); cannot convert to a linked worktree")
+
+    if not force:
+        if repo.out("status", "--porcelain=v1", "--untracked-files=normal"):
+            die(f"{where} has uncommitted or untracked changes; commit/stash them first (or pass --force to discard)")
+        if repo.out("ls-files", "--others", "--ignored", "--exclude-standard"):
+            die(f"{where} has ignored files that would be lost; clean them first (or pass --force to discard)")
+        if repo.ok("rev-parse", "-q", "--verify", "refs/stash"):
+            die(f"{where} has stash entries (refs/stash); apply/drop them first (or pass --force to discard)")
+        if repo.out("rev-list", "--max-count=1", "HEAD", "--branches", "--tags", "--not", "--remotes"):
+            die(f"{where} has local commits not on any remote; push them first (or pass --force to discard)")
+
+    for entry in repo.submodules():
+        if not entry.path:
+            continue
+        sub_p = abs_path(repo.path / entry.path)
+        if (sub := Repo.discover(sub_p)) and same_path(sub.path, sub_p):
+            _verify_worktreeify_clean(sub, force=force)
+
+
+def cmd_worktreeify(target: str, opts: Opts) -> None:
+    """Convert a standalone primary clone into a linked worktree of its canonical bare hub."""
+    target_p = abs_path(target)
+    src = Repo.open(target_p) or Repo.discover(target_p)
+    if not src or src.is_bare:
+        die(f"not a Git worktree: {target}")
+    if target != "." and not same_path(src.path, target_p):
+        die(f"{target} is a subdirectory of {src.path.as_posix()}; pass the repository root")
+
+    if (existing_hub := src.associated_hub()) and same_path(src.common, existing_hub.common):
+        opts.note(f"{src.path.as_posix()} is already a worktree of hub {existing_hub.path.as_posix()}; nothing to do")
+        return
+    if src.superproject():
+        die(f"{src.path.as_posix()} is a submodule; use '{SCRIPT_NAME} link' instead")
+    if not src.is_primary:
+        die(f"{src.path.as_posix()} is already a linked worktree, not a standalone primary clone")
+    if len(src.worktrees()) > 1:
+        die(f"cannot worktreeify {src.path.as_posix()}: repository has existing linked worktrees")
+    cwd = abs_path(".")
+    if same_path(cwd, src.path) or path_under(cwd, src.path) is not None:
+        die(f"cannot worktreeify {src.path.as_posix()} while current working directory is inside it; run from its parent directory")
+
+    _verify_common_repo_health(
+        src,
+        object_format="sha1",
+        allowed_alt_target=existing_hub.objects_dir if existing_hub else None,
+    )
+    remotes = src.remotes()
+    if not remotes and not opts.explicit_hub:
+        die(f"{src.path.as_posix()} has no non-local remote URL (pass --hub to specify)")
+
+    _verify_worktreeify_clean(src, force=opts.force)
+
+    cur_branch = src.out("symbolic-ref", "--short", "-q", "HEAD") or None
+    init_subs = [
+        sub
+        for entry in src.submodules()
+        if entry.path and (sub := Repo.discover(src.path / entry.path)) and same_path(sub.path, src.path / entry.path)
+    ]
+    recursive = opts.recursive if opts.recursive is not None else (src.recursion_default or bool(init_subs))
+    old_b_id = src.borrower_id if existing_hub else None
+
+    bak = src.path.with_name(f".{src.path.name}.worktreeify-{os.getpid()}")
+    idx = 0
+    while bak.exists():
+        idx += 1
+        bak = src.path.with_name(f".{src.path.name}.worktreeify-{os.getpid()}-{idx}")
+
+    opts.note(f"Converting standalone repository {src.path.as_posix()} to a linked worktree...")
+    # Release Windows directory handles held by fsmonitor before atomic rename.
+    for r in (src, *init_subs):
+        with suppress(BorrowError):
+            r.git("fsmonitor--daemon", "stop")
+    try:
+        src.path.rename(bak)
+    except OSError as e:
+        die(f"cannot rename {src.path.as_posix()} for conversion (check for open handles/editors): {e}")
+
+    try:
+        bak_repo = Repo.open(bak)
+        if not bak_repo:
+            die(f"failed to reopen staged repository {bak.as_posix()}")
+        wt_opts = Opts(
+            quiet=opts.quiet,
+            force=opts.force,
+            keep_refs=opts.keep_refs,
+            global_status=opts.global_status,
+            lfs_mode=opts.lfs_mode,
+            jobs=opts.jobs,
+            recursive=recursive,
+            explicit_hub=opts.explicit_hub,
+        )
+        hub, _ = _clone_into_worktree(
+            remotes,
+            src.path,
+            wt_opts,
+            seed=bak_repo,
+            spec=CheckoutSpec(branch=cur_branch, detach=(cur_branch is None)),
+            origin="origin",
+            init_all=False,
+            migrate_lfs_from=bak_repo,
+        )
+    except BaseException:
+        if src.path.exists():
+            with suppress(OSError):
+                rmtree_force(src.path)
+        if bak.exists() and not src.path.exists():
+            with suppress(OSError):
+                bak.rename(src.path)
+        raise
+
+    rmtree_force(bak)
+    if existing_hub and old_b_id:
+        forget_borrower_record(existing_hub, old_b_id, keep_refs=False)
+    opts.note(f"Worktreeified {src.path.as_posix()} -> hub {hub.path.as_posix()}")
 
 
 def cmd_link(target: str, opts: Opts) -> None:
@@ -2379,7 +2554,9 @@ def cmd_status(target: str, opts: Opts) -> None:
 # 8. CLI Parser & Dispatch
 # =============================================================================
 
-_COMMANDS = frozenset({"clone", "add", "link", "submodule", "hub", "root", "sync", "gc", "forget", "status"})
+_COMMANDS = frozenset(
+    {"clone", "add", "worktreeify", "link", "submodule", "hub", "root", "sync", "gc", "forget", "status"}
+)
 _UNSUPPORTED_SUBMODULE_CMDS = frozenset({"status", "update", "init", "sync", "foreach", "deinit", "absorbgitdirs"})
 
 
@@ -2392,16 +2569,16 @@ def _build_parser(cmd: str) -> argparse.ArgumentParser:
     p.add_argument("-h", "--help", action="store_true")
     p.add_argument("-q", "--quiet", action="store_true")
 
-    if cmd in ("clone", "add", "link", "submodule"):
+    if cmd in ("clone", "add", "worktreeify", "link", "submodule"):
         p.add_argument("--lfs", dest="lfs_mode", choices=("share", "none"), default="share")
         p.add_argument("-j", "--jobs")
         p.add_argument(
             "-r", "--recursive", "--recurse-submodules",
             dest="recursive", action=argparse.BooleanOptionalAction, default=None,
         )
-    if cmd in ("clone", "link", "submodule", "hub", "root", "sync", "gc", "forget"):
+    if cmd in ("clone", "worktreeify", "link", "submodule", "hub", "root", "sync", "gc", "forget"):
         p.add_argument("--hub", "--root", dest="explicit_hub")
-    if cmd in ("add", "link", "submodule", "gc", "forget"):
+    if cmd in ("add", "worktreeify", "link", "submodule", "gc", "forget"):
         p.add_argument("-f", "--force", action="store_true")
     if cmd == "forget":
         p.add_argument("--keep-refs", action="store_true")
@@ -2447,6 +2624,10 @@ def _dispatch(argv: list[str]) -> int:
         cmd_clone(args, opts, spec=CheckoutSpec(ns.branch, ns.force_branch, ns.detach), origin=ns.origin)
     elif cmd == "add":
         cmd_add(args, opts)
+    elif cmd == "worktreeify":
+        if len(args) > 1:
+            die(f"usage: {SCRIPT_NAME} worktreeify [options] [-f|--force] [<path>]")
+        cmd_worktreeify(args[0] if args else ".", opts)
     elif cmd == "link":
         if len(args) > 1:
             die(f"usage: {SCRIPT_NAME} link [options] [-f|--force] [<path>]")
