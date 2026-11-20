@@ -54,7 +54,7 @@ def usage() -> str:
     return f"""usage:
   {SCRIPT_NAME} clone [options] [-b|-B <branch> | --detach] [-o <origin>] <url> [<dir>]
   {SCRIPT_NAME} add [options] [--] <git worktree add args>
-  {SCRIPT_NAME} worktreeify [options] [-f|--force] [<path>]
+  {SCRIPT_NAME} adopt [options] [-f|--force] [<path>]
   {SCRIPT_NAME} link [options] [-f|--force] [<path>]
   {SCRIPT_NAME} submodule [add] [options] [-b <branch>] [--name <name>] [--] <url|existing-path> [<path>]
   {SCRIPT_NAME} hub [options] [<path>|<url>]      Print (creating if needed) the bare hub
@@ -66,11 +66,11 @@ def usage() -> str:
 Shares Git (and LFS) objects via managed bare object hubs under
 "git config borrow.hubBase" (or $XDG_CACHE_HOME/git-borrow, ~/.cache/git-borrow),
 keyed deterministically by canonical URL (<hubBase>/<host>/<path>.git):
-  - clone:       resolves/creates the bare hub for <url> and creates <dir> as a linked worktree.
-  - add:         creates a new linked worktree in the current repository (like git worktree add).
-  - worktreeify: converts a standalone clone into a linked worktree of its bare hub.
-  - link:        borrows a submodule (or standalone repo with --force) from its hub via alternates.
-  - submodule:   adds a submodule from a URL or primary standalone repo, borrowing from its hub.
+  - clone:     resolves/creates the bare hub for <url> and creates <dir> as a linked worktree.
+  - add:       creates a new linked worktree in the current repository (like git worktree add).
+  - adopt:     converts a standalone clone into a linked worktree of its bare hub.
+  - link:      borrows a submodule (or standalone repo with --force) from its hub via alternates.
+  - submodule: adds a submodule from a URL or primary standalone repo, borrowing from its hub.
 
 Options:
   --hub, --root <path|url>  Use this hub (or URL's hub) to unify multiple remotes on one hub.
@@ -79,10 +79,10 @@ Options:
   --detach                  clone/add: detach HEAD in the new worktree.
   --name <name>             submodule: name of the submodule (defaults to path).
   -o, --origin <name>       clone: use <name> instead of 'origin' for the hub remote.
-  -r, --recursive           clone/add/worktreeify/link/submodule: recurse into submodules.
-  --no-recursive            clone/add/worktreeify/link/submodule: do not recurse into submodules.
+  -r, --recursive           clone/add/adopt/link/submodule: recurse into submodules.
+  --no-recursive            clone/add/adopt/link/submodule: do not recurse into submodules.
   -j, --jobs <n>            Pass --jobs <n> to git submodule update.
-  -f, --force               worktreeify: discard local dirty/ignored/unpushed state; link: allow standalone;
+  -f, --force               adopt: discard local dirty/ignored/unpushed state; link: allow standalone;
                             forget: skip safety check; add/gc/submodule: pass -f.
   --keep-refs               forget: unregister borrower but retain its archived refs in the hub.
   -g, --global              status: show all canonical URL->hub mappings, hubs, remotes, and borrowers.
@@ -1234,6 +1234,7 @@ def resolve_hub(
         _validate_bare_hub(hub)
         hub.absorb_remotes(remotes, opts)
         ensure_hub_setup(hub, opts)
+        record_hub_mappings(remotes, hub.path, opts)
         return hub, False
 
     if path_occupied(hub_path):
@@ -1494,6 +1495,48 @@ def has_lfs(*repos: Repo | None) -> bool:
     return False
 
 
+def _copy_lfs_objects(src: Repo, hub: Repo, opts: Opts) -> None:
+    if opts.lfs_mode == "none" or not has_lfs(src):
+        return
+    local_objs = src.common / "lfs" / "objects"
+    if local_objs.is_dir() and not same_path(src.lfs_dir, hub.lfs_dir):
+        hub.lfs_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(local_objs, hub.lfs_dir / "objects", dirs_exist_ok=True)
+
+
+def _migrate_stashes(src: Repo, dst: Repo, opts: Opts, *, fetch_into: Repo) -> None:
+    """Replay stash reflog entries oldest-to-newest without clobbering existing stashes."""
+    if not src.ok("rev-parse", "-q", "--verify", "refs/stash"):
+        return
+    res = src.git("log", "-g", "--format=%H%x00%gs", "refs/stash")
+    if res.returncode != 0 or not res.stdout.strip():
+        return
+    entries: list[tuple[str, str]] = []
+    for line in res.stdout.splitlines():
+        oid, sep, msg = line.partition("\0")
+        oid = oid.strip()
+        if sep and oid:
+            entries.append((oid, msg.rstrip("\r\n")))
+    if not entries:
+        return
+    entries.reverse()
+    oids = list(dict.fromkeys(oid for oid, _ in entries))
+    opts.note(f"Preserving {len(entries)} stash(es) from {src.path.as_posix()} -> {dst.path.as_posix()}")
+    fres = fetch_into.git(
+        "-c", "protocol.file.allow=always",
+        "-c", "gc.auto=0",
+        "-c", "maintenance.auto=false",
+        "fetch", "--quiet", "--no-tags", "--no-recurse-submodules",
+        "--upload-pack=git -c uploadpack.allowAnySHA1InWant=true upload-pack",
+        src.common.as_posix(),
+        *oids,
+    )
+    if fres.returncode != 0:
+        die(f"failed to copy stash objects from {src.path.as_posix()}: {fres.stderr.strip() or f'exit {fres.returncode}'}")
+    for oid, msg in entries:
+        dst.git("stash", "store", "-m", msg, oid, check=True)
+
+
 def configure_shared_lfs(checkout: Repo, hub: Repo, opts: Opts, *, migrate_existing: bool) -> None:
     """Point `checkout` at the hub's shared `lfs.storage` directory (preserving existing media)."""
     if opts.lfs_mode == "none" or not has_lfs(checkout, hub):
@@ -1507,9 +1550,7 @@ def configure_shared_lfs(checkout: Repo, hub: Repo, opts: Opts, *, migrate_exist
         )
     hub.lfs_dir.mkdir(parents=True, exist_ok=True)
     if migrate_existing:
-        local_objs = checkout.common / "lfs" / "objects"
-        if local_objs.is_dir() and not same_path(checkout.lfs_dir, hub.lfs_dir):
-            shutil.copytree(local_objs, hub.lfs_dir / "objects", dirs_exist_ok=True)
+        _copy_lfs_objects(checkout, hub, opts)
     checkout.target_config.set("lfs.storage", hub.lfs_dir.as_posix())
     if not checkout.ok("lfs", "checkout"):
         warn(f"git lfs checkout failed in {checkout.path.as_posix()}")
@@ -1565,7 +1606,7 @@ def link_borrower(
     if not checkout.superproject() and not allow_standalone:
         die(
             f"{checkout.path.as_posix()} is a standalone repository, not a submodule; "
-            f"prefer '{SCRIPT_NAME} worktreeify' or '{SCRIPT_NAME} clone' (or pass --force to borrow via alternates)"
+            f"prefer '{SCRIPT_NAME} adopt' or '{SCRIPT_NAME} clone' (or pass --force to borrow via alternates)"
         )
     remotes = checkout.remotes()
     if not remotes and not hub_override:
@@ -1766,7 +1807,15 @@ def init_submodules(
             if RemoteUrl(url).is_local:
                 die(f"submodule {entry.path} has local/unresolvable URL '{url}'; cannot borrow from a hub")
 
-            hub, _ = resolve_hub([Remote("origin", RemoteUrl(url))], opts, seed=sub_seed)
+            sub_norm = RemoteUrl(url).canonical
+            sub_remotes = [Remote("origin", RemoteUrl(url))]
+            if sub_seed is not None:
+                sub_remotes.extend(
+                    r for r in sub_seed.remotes() if r.url.canonical != sub_norm
+                )
+            hub, _ = resolve_hub(sub_remotes, opts, seed=sub_seed)
+            if sub_seed is not None:
+                _copy_lfs_objects(sub_seed, hub, opts)
             opts.note(f"Initializing submodule {entry.path} borrowing from hub {hub.path.as_posix()}")
             if not _clone_submodule_from_hub(wt, entry.name, entry.path, url, hub, opts):
                 warn(
@@ -1779,6 +1828,9 @@ def init_submodules(
                     die(f"failed to initialize submodule {entry.path} from {url}")
             if sub := Repo.open(sub_path):
                 link_borrower(sub.path, opts, hub_override=hub.path.as_posix())
+                if sub_seed is not None and sub_seed.ok("rev-parse", "-q", "--verify", "refs/stash"):
+                    _migrate_stashes(sub_seed, sub, opts, fetch_into=hub)
+                    sync_borrower(hub, sub.borrower_id, sub.common)
                 init_submodules(sub, opts, seed=sub_seed, init_all=init_all)
         else:
             opts.note(f"Skipping uninitialized submodule {sub_path.as_posix()}")
@@ -1960,7 +2012,7 @@ def _clone_into_worktree(
     spec: CheckoutSpec,
     origin: str,
     init_all: bool,
-    migrate_lfs_from: Repo | None = None,
+    migrate_from: Repo | None = None,
 ) -> tuple[Repo, Repo]:
     hub, created = resolve_hub(remotes, opts, seed=seed, explicit_hub=opts.explicit_hub)
     try:
@@ -1973,11 +2025,8 @@ def _clone_into_worktree(
             if hub.git(*fetch_args, rem, capture=opts.quiet).returncode != 0:
                 warn(f"could not fetch {rem} in hub {hub.path.as_posix()}; using cached objects")
 
-        if migrate_lfs_from is not None and opts.lfs_mode != "none" and has_lfs(migrate_lfs_from):
-            local_objs = migrate_lfs_from.common / "lfs" / "objects"
-            if local_objs.is_dir() and not same_path(migrate_lfs_from.lfs_dir, hub.lfs_dir):
-                hub.lfs_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copytree(local_objs, hub.lfs_dir / "objects", dirs_exist_ok=True)
+        if migrate_from is not None:
+            _copy_lfs_objects(migrate_from, hub, opts)
 
         checkout = materialize_worktree(hub, target, opts, rem=rem, spec=spec)
         eff_opts = Opts(
@@ -1997,6 +2046,8 @@ def _clone_into_worktree(
             init_seed=seed,
             init_all=init_all,
         )
+        if migrate_from is not None:
+            _migrate_stashes(migrate_from, checkout, eff_opts, fetch_into=hub)
         return hub, checkout
     except BaseException:
         if target.exists():
@@ -2091,21 +2142,19 @@ def cmd_add(raw_args: list[str], opts: Opts) -> None:
         )
 
 
-def _verify_worktreeify_clean(repo: Repo, *, force: bool) -> None:
+def _verify_adopt_clean(repo: Repo, *, force: bool) -> None:
     where = repo.path.as_posix()
     for name in _PSEUDO_REFS[:-1]:
         if repo.out("rev-parse", "-q", "--verify", name):
             die(f"{where} has an in-progress operation ({name}); finish or abort it first")
     if not repo.out("rev-parse", "-q", "--verify", "HEAD"):
-        die(f"{where} has no commits (unborn HEAD); cannot convert to a linked worktree")
+        die(f"{where} has no commits (unborn HEAD); cannot adopt as a linked worktree")
 
     if not force:
         if repo.out("status", "--porcelain=v1", "--untracked-files=normal"):
             die(f"{where} has uncommitted or untracked changes; commit/stash them first (or pass --force to discard)")
         if repo.out("ls-files", "--others", "--ignored", "--exclude-standard"):
             die(f"{where} has ignored files that would be lost; clean them first (or pass --force to discard)")
-        if repo.ok("rev-parse", "-q", "--verify", "refs/stash"):
-            die(f"{where} has stash entries (refs/stash); apply/drop them first (or pass --force to discard)")
         if repo.out("rev-list", "--max-count=1", "HEAD", "--branches", "--tags", "--not", "--remotes"):
             die(f"{where} has local commits not on any remote; push them first (or pass --force to discard)")
 
@@ -2114,10 +2163,10 @@ def _verify_worktreeify_clean(repo: Repo, *, force: bool) -> None:
             continue
         sub_p = abs_path(repo.path / entry.path)
         if (sub := Repo.discover(sub_p)) and same_path(sub.path, sub_p):
-            _verify_worktreeify_clean(sub, force=force)
+            _verify_adopt_clean(sub, force=force)
 
 
-def cmd_worktreeify(target: str, opts: Opts) -> None:
+def cmd_adopt(target: str, opts: Opts) -> None:
     """Convert a standalone primary clone into a linked worktree of its canonical bare hub."""
     target_p = abs_path(target)
     src = Repo.open(target_p) or Repo.discover(target_p)
@@ -2134,10 +2183,10 @@ def cmd_worktreeify(target: str, opts: Opts) -> None:
     if not src.is_primary:
         die(f"{src.path.as_posix()} is already a linked worktree, not a standalone primary clone")
     if len(src.worktrees()) > 1:
-        die(f"cannot worktreeify {src.path.as_posix()}: repository has existing linked worktrees")
+        die(f"cannot adopt {src.path.as_posix()}: repository has existing linked worktrees")
     cwd = abs_path(".")
     if same_path(cwd, src.path) or path_under(cwd, src.path) is not None:
-        die(f"cannot worktreeify {src.path.as_posix()} while current working directory is inside it; run from its parent directory")
+        die(f"cannot adopt {src.path.as_posix()} while current working directory is inside it; run from its parent directory")
 
     _verify_common_repo_health(
         src,
@@ -2148,7 +2197,7 @@ def cmd_worktreeify(target: str, opts: Opts) -> None:
     if not remotes and not opts.explicit_hub:
         die(f"{src.path.as_posix()} has no non-local remote URL (pass --hub to specify)")
 
-    _verify_worktreeify_clean(src, force=opts.force)
+    _verify_adopt_clean(src, force=opts.force)
 
     cur_branch = src.out("symbolic-ref", "--short", "-q", "HEAD") or None
     init_subs = [
@@ -2159,13 +2208,13 @@ def cmd_worktreeify(target: str, opts: Opts) -> None:
     recursive = opts.recursive if opts.recursive is not None else (src.recursion_default or bool(init_subs))
     old_b_id = src.borrower_id if existing_hub else None
 
-    bak = src.path.with_name(f".{src.path.name}.worktreeify-{os.getpid()}")
+    bak = src.path.with_name(f".{src.path.name}.adopt-{os.getpid()}")
     idx = 0
     while bak.exists():
         idx += 1
-        bak = src.path.with_name(f".{src.path.name}.worktreeify-{os.getpid()}-{idx}")
+        bak = src.path.with_name(f".{src.path.name}.adopt-{os.getpid()}-{idx}")
 
-    opts.note(f"Converting standalone repository {src.path.as_posix()} to a linked worktree...")
+    opts.note(f"Adopting standalone repository {src.path.as_posix()} into linked worktree...")
     # Release Windows directory handles held by fsmonitor before atomic rename.
     for r in (src, *init_subs):
         with suppress(BorrowError):
@@ -2197,7 +2246,7 @@ def cmd_worktreeify(target: str, opts: Opts) -> None:
             spec=CheckoutSpec(branch=cur_branch, detach=(cur_branch is None)),
             origin="origin",
             init_all=False,
-            migrate_lfs_from=bak_repo,
+            migrate_from=bak_repo,
         )
     except BaseException:
         if src.path.exists():
@@ -2211,7 +2260,7 @@ def cmd_worktreeify(target: str, opts: Opts) -> None:
     rmtree_force(bak)
     if existing_hub and old_b_id:
         forget_borrower_record(existing_hub, old_b_id, keep_refs=False)
-    opts.note(f"Worktreeified {src.path.as_posix()} -> hub {hub.path.as_posix()}")
+    opts.note(f"Adopted {src.path.as_posix()} -> hub {hub.path.as_posix()}")
 
 
 def cmd_link(target: str, opts: Opts) -> None:
@@ -2555,7 +2604,7 @@ def cmd_status(target: str, opts: Opts) -> None:
 # =============================================================================
 
 _COMMANDS = frozenset(
-    {"clone", "add", "worktreeify", "link", "submodule", "hub", "root", "sync", "gc", "forget", "status"}
+    {"clone", "add", "adopt", "link", "submodule", "hub", "root", "sync", "gc", "forget", "status"}
 )
 _UNSUPPORTED_SUBMODULE_CMDS = frozenset({"status", "update", "init", "sync", "foreach", "deinit", "absorbgitdirs"})
 
@@ -2569,16 +2618,16 @@ def _build_parser(cmd: str) -> argparse.ArgumentParser:
     p.add_argument("-h", "--help", action="store_true")
     p.add_argument("-q", "--quiet", action="store_true")
 
-    if cmd in ("clone", "add", "worktreeify", "link", "submodule"):
+    if cmd in ("clone", "add", "adopt", "link", "submodule"):
         p.add_argument("--lfs", dest="lfs_mode", choices=("share", "none"), default="share")
         p.add_argument("-j", "--jobs")
         p.add_argument(
             "-r", "--recursive", "--recurse-submodules",
             dest="recursive", action=argparse.BooleanOptionalAction, default=None,
         )
-    if cmd in ("clone", "worktreeify", "link", "submodule", "hub", "root", "sync", "gc", "forget"):
+    if cmd in ("clone", "adopt", "link", "submodule", "hub", "root", "sync", "gc", "forget"):
         p.add_argument("--hub", "--root", dest="explicit_hub")
-    if cmd in ("add", "worktreeify", "link", "submodule", "gc", "forget"):
+    if cmd in ("add", "adopt", "link", "submodule", "gc", "forget"):
         p.add_argument("-f", "--force", action="store_true")
     if cmd == "forget":
         p.add_argument("--keep-refs", action="store_true")
@@ -2624,10 +2673,10 @@ def _dispatch(argv: list[str]) -> int:
         cmd_clone(args, opts, spec=CheckoutSpec(ns.branch, ns.force_branch, ns.detach), origin=ns.origin)
     elif cmd == "add":
         cmd_add(args, opts)
-    elif cmd == "worktreeify":
+    elif cmd == "adopt":
         if len(args) > 1:
-            die(f"usage: {SCRIPT_NAME} worktreeify [options] [-f|--force] [<path>]")
-        cmd_worktreeify(args[0] if args else ".", opts)
+            die(f"usage: {SCRIPT_NAME} adopt [options] [-f|--force] [<path>]")
+        cmd_adopt(args[0] if args else ".", opts)
     elif cmd == "link":
         if len(args) > 1:
             die(f"usage: {SCRIPT_NAME} link [options] [-f|--force] [<path>]")
